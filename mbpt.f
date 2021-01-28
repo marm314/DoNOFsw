@@ -237,8 +237,8 @@ C  Compute w^s mn = sum_ia <im|an>* (X^s _ia + Y^s_ia) -> see MolGW paper (i is 
       ALLOCATE(wmn(NBF,NBF,Nab))
       IF(TUNEMBPT) ALLOCATE(wmn2(NBF,NBF,Nab))
       write(*,*) ' '
-      if(TUNEMBPT) then   ! Do GW for NOF-GW
-       write(*,*) 'Computing GW correction for NOF-GW'
+      if(TUNEMBPT) then   ! Do GW for NOFc-GW
+       write(*,*) 'Computing GW correction for NOFc-GW'
       else                        ! Do standard GW NOT FOR NOF
        write(*,*) 'Computing GW standard correction'
       endif
@@ -261,7 +261,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  MP2 Ec energy 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       if(TUNEMBPT) then
-       write(*,*) 'Computing MP2 correction for NOF-MP2'
+       write(*,*) 'Computing MP2 correction for NOFc-MP2'
       else
        write(*,*) 'Computing MP2 standard correction'
       endif
@@ -272,7 +272,7 @@ C  Integrated Ec RPA, AC-SOSEX, and RPA+AC-SOSEX, etc.
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       if(TUNEMBPT) then
        write(*,*) 'Computing integrated RPA+AC-SOSEX correction 
-     & for NOF-RPA and NOF-RPA+AC-SOSEX'
+     & for NOFc-RPA and NOFc-RPA+AC-SOSEX'
       else
        write(*,*)'Computing integrated RPA+AC-SOSEX standard correction'
       endif
@@ -321,33 +321,33 @@ C-----------------------------------------------------------------------
      *       1X,'Last coupled orbital        (NLAS) =',I5,/, 
      *       1X,'Size of A+B and A-B (NAB=NOCxNVIR) =',I5) 
     2 FORMAT(3X,F15.10,' ',F15.10,' ')
-    3 FORMAT(/,1X,'E(SD)                 ',5X,F20.10,' a.u.',/,
-     * 1X,'E(SD+ND)              ',5X,F20.10,' a.u.',/,
-     * 1X,'E(PNOFi)              ',5X,F20.10,' a.u.',/,
+    3 FORMAT(/,1X,'E(SD)                  ',5X,F20.10,' a.u.',/,
+     * 1X,'E(SD+ND)               ',5X,F20.10,' a.u.',/,
+     * 1X,'E(PNOFi)               ',5X,F20.10,' a.u.',/,
      * ' ',/,
-     * 1X,'Ec(ND)                ',5X,F20.10,' a.u.',/,
-     * 1X,'Ec(RPA-FURCHE)        ',5X,F20.10,' a.u.',/,
-     * 1X,'Ec(RPA)               ',5X,F20.10,' a.u.',/,
-     * 1X,'Ec(AC-SOSEX)          ',5X,F20.10,' a.u.',/,
-     * 1X,'Ec(RPA+AC-SOSEX)      ',5X,F20.10,' a.u.',/,
-     * 1X,'Ec(GW@GM)             ',5X,F20.10,' a.u.',/,
-     * 1X,'Ec(SOSEX@GM)          ',5X,F20.10,' a.u.',/,
-     * 1X,'Ec(GW@GM+SOSEX@GM)    ',5X,F20.10,' a.u.',/,
-     * 1X,'Ec(MP2)               ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(ND)                 ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(RPA-FURCHE)         ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(RPA)                ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(AC-SOSEX)           ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(RPA+AC-SOSEX)       ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(GW@GM)              ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(SOSEX@GM)           ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(GW@GM+SOSEX@GM)     ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(MP2)                ',5X,F20.10,' a.u.',/,
      * ' ',/,
-     * 1X,'E(RPA-FURCHE)         ',5X,F20.10,' a.u.',/,
-     * 1X,'E(RPA)                ',5X,F20.10,' a.u.',/,
-     * 1X,'E(RPA+AC-SOSEX)       ',5X,F20.10,' a.u.',/,
-     * 1X,'E(GW@GM)              ',5X,F20.10,' a.u.',/,
-     * 1X,'E(GW@GM+SOSEX@GM)     ',5X,F20.10,' a.u.',/,
-     * 1X,'E(MP2)                ',5X,F20.10,' a.u.',/,
+     * 1X,'E(RPA-FURCHE)          ',5X,F20.10,' a.u.',/,
+     * 1X,'E(RPA)                 ',5X,F20.10,' a.u.',/,
+     * 1X,'E(RPA+AC-SOSEX)        ',5X,F20.10,' a.u.',/,
+     * 1X,'E(GW@GM)               ',5X,F20.10,' a.u.',/,
+     * 1X,'E(GW@GM+SOSEX@GM)      ',5X,F20.10,' a.u.',/,
+     * 1X,'E(MP2)                 ',5X,F20.10,' a.u.',/,
      * ' ',/,
-     * 1X,'E(NOF-RPA-FURCHE)     ',5X,F20.10,' a.u.',/,
-     * 1X,'E(NOF-RPA)            ',5X,F20.10,' a.u.',/,
-     * 1X,'E(NOF-RPA+AC-SOSEX)   ',5X,F20.10,' a.u.',/,
-     * 1X,'E(NOF-GW@GM)          ',5X,F20.10,' a.u.',/,
-     * 1X,'E(NOF-GW@GM+SOSEX@GM) ',5X,F20.10,' a.u.',/,
-     * 1X,'E(NOF-MP2)            ',5X,F20.10,' a.u.')
+     * 1X,'E(NOFc-RPA-FURCHE)     ',5X,F20.10,' a.u.',/,
+     * 1X,'E(NOFc-RPA)            ',5X,F20.10,' a.u.',/,
+     * 1X,'E(NOFc-RPA+AC-SOSEX)   ',5X,F20.10,' a.u.',/,
+     * 1X,'E(NOFc-GW@GM)          ',5X,F20.10,' a.u.',/,
+     * 1X,'E(NOFc-GW@GM+SOSEX@GM) ',5X,F20.10,' a.u.',/,
+     * 1X,'E(NOFc-MP2)            ',5X,F20.10,' a.u.')
     4 FORMAT(/,1X,'E(SD)                 ',5X,F20.10,' a.u.',/,
      * 1X,'E(PNOFi)              ',5X,F20.10,' a.u.',/,
      * ' ',/,
