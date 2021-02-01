@@ -263,8 +263,8 @@ C-----------------------------------------------------------------------
        COMMON/INPNOF_SC2MCPT/SC2MCPT
        LOGICAL OIMP2
        COMMON/INPNOF_OIMP2/OIMP2
-       LOGICAL MBPT,TUNEMBPT,TDHF,MBPTMEM
-       COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,MBPTMEM
+       LOGICAL MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD_READ
+       COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD_READ
        COMMON/INPNOF_CGM/ICGMETHOD
        LOGICAL CHKORTHO,ORTHO
        COMMON/INPNOF_ORTHOGONALITY/CHKORTHO,ORTHO
@@ -4235,6 +4235,9 @@ C
 C.......... MBPTMEM             Use MBPT with large memory allocation for ERIs
 C                     = T       (DEFAULT)
 C
+C.......... CCSD_READ           NOFc-CCSD read T1 and T2 amplitudes
+C                     = T       (DEFAULT)
+C
 C.......... NO1PT2              Frozen MOs in perturbative calculations
 C                               Maximum index of NOs with Occupation = 1
 C                      = -1     = NO1 (DEFAULT)
@@ -4396,7 +4399,7 @@ C-----------------------------------------------------------------------
      &                DIAGLAG,IAIMPAC,IEKT,NOUTRDM,NTHRESHDM,NSQT,
      &                NOUTCJK,NTHRESHCJK,NOUTTijab,NTHRESHTijab,
      &                ORTHO,CHKORTHO,FROZEN,IFROZEN,ICGMETHOD,
-     &                MBPT,TUNEMBPT,TDHF,MBPTMEM
+     &                MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD_READ
 C-----------------------------------------------------------------------
 C     Preset values to namelist variables
 C-----------------------------------------------------------------------
@@ -4447,6 +4450,7 @@ C     Options for pertubative calculations
       TUNEMBPT=.FALSE.
       MBPTMEM=.TRUE.
       TDHF=.FALSE.
+      CCSD_READ=.FALSE.
 
 C     Input Options for Gamma (Occ), C and Diagonal F
       RESTART=.FALSE.

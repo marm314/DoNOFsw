@@ -29,19 +29,21 @@ C MBPT
       INTEGER::i,j,k,l,a,b,info,last_coup
       INTEGER::order
       INTEGER,DIMENSION(NIJKL)::IERI
-      REAL::AUtoEV,EPNOF,ESDc,EcRPA,EcMP2,EcGoWo,EcGMSOS,EcGoWoSOS 
-      REAL::iEcRPA,iEcSOSEX,iEcRPASOS,mu
-      REAL,DIMENSION(NIJKL)::ERI
-      REAL,DIMENSION(NBF5)::RO
-      REAL,DIMENSION(NBF5,NBF5)::CJ12,CK12
-      REAL,DIMENSION(NBF,NBF)::AHCORE,ADIPx,ADIPy,ADIPz
-      REAL,DIMENSION(NBF,NBF)::ELAG,COEF
-      REAL,ALLOCATABLE,DIMENSION(:)::OCC,EIG,BIGOMEGA,TEMPV
-      REAL,ALLOCATABLE,DIMENSION(:)::CINTER,CINTRA 
-      REAL,ALLOCATABLE,DIMENSION(:,:)::TEMPM,TEMPM2,FOCKm,ApB,AmB
-      REAL,ALLOCATABLE,DIMENSION(:,:)::XmY,XpY 
-      REAL,ALLOCATABLE,DIMENSION(:,:,:,:)::ERImol,ERImol2
-      REAL,ALLOCATABLE,DIMENSION(:,:,:)::wmn,wmn2
+      DOUBLE PRECISION::AUtoEV,EPNOF,ESDc,EcRPA,EcMP2,EcGoWo,EcGMSOS
+      DOUBLE PRECISION::EcGoWoSOS 
+      DOUBLE PRECISION::iEcRPA,iEcSOSEX,iEcRPASOS,EcCCSD,mu
+      DOUBLE PRECISION,DIMENSION(NIJKL)::ERI
+      DOUBLE PRECISION,DIMENSION(NBF5)::RO
+      DOUBLE PRECISION,DIMENSION(NBF5,NBF5)::CJ12,CK12
+      DOUBLE PRECISION,DIMENSION(NBF,NBF)::AHCORE,ADIPx,ADIPy,ADIPz
+      DOUBLE PRECISION,DIMENSION(NBF,NBF)::ELAG,COEF
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:)::OCC,EIG,BIGOMEGA,TEMPV
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:)::CINTER,CINTRA 
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::TEMPM,TEMPM2,FOCKm
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::ApB,AmB
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::XmY,XpY 
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:,:,:)::ERImol,ERImol2
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:,:)::wmn,wmn2
 C-----------------------------------------------------------------------
 C     NCO:  Number of HF occupied MOs (OCC=1 in SD)
 C     NVIR: Number of HF virtual  MOs (OCC=0 in SD)
@@ -272,7 +274,7 @@ C  Integrated Ec RPA, AC-SOSEX, and RPA+AC-SOSEX, etc.
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       if(TUNEMBPT) then
        write(*,*) 'Computing integrated RPA+AC-SOSEX correction 
-     & for NOFc-RPA and NOFc-RPA+AC-SOSEX'
+     &for NOFc-RPA and NOFc-RPA+AC-SOSEX'
       else
        write(*,*)'Computing integrated RPA+AC-SOSEX standard correction'
       endif
@@ -281,6 +283,18 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       call rpa_sosex_eq(NA,NCO,NBF,Nab,ERImol,ERImol2,EIG,BIGOMEGA,wmn,
      &  iEcRPA,iEcSOSEX,TUNEMBPT)
       iEcRPASOS=iEcRPA+iEcSOSEX
+      DEALLOCATE(wmn,BIGOMEGA)
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C  Ec CCSD 
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      if(TUNEMBPT) then
+       write(*,*) 'Computing CCSD correction for NOFc-CCSD'
+      else
+       write(*,*)'Computing CCSD standard correction'
+      endif
+      EcCCSD=0.0d0
+      call ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
+     &  CCSD_READ)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Write  Ec energies and final results
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -293,21 +307,20 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       EPNOF=EELEC+EN
       IF(TUNEMBPT) THEN ! SD + DYN + ND (can be used with CANONICAL orbs with ICOEF=0)
       write(6,3)ESD,ESDc,EPNOF,ECndl,EcRPA,iEcRPA,
-     & iEcSOSEX,iEcRPASOS,EcGoWo,EcGMSOS,EcGoWoSOS,EcMP2,
+     & iEcSOSEX,iEcRPASOS,EcGoWo,EcGMSOS,EcGoWoSOS,EcMP2,EcCCSD,
      & ESD+EcRPA,ESD+iEcRPA,
      & ESD+iEcRPASOS,ESD+EcGoWo,ESD+EcGoWoSOS,
-     & ESD+EcMP2,ESDc+EcRPA,ESDc+iEcRPA,ESDc+iEcRPASOS,
-     & ESDc+EcGoWo,ESDc+EcGoWoSOS,ESDc+EcMP2
+     & ESD+EcMP2,ESD+EcCCSD,ESDc+EcRPA,ESDc+iEcRPA,ESDc+iEcRPASOS,
+     & ESDc+EcGoWo,ESDc+EcGoWoSOS,ESDc+EcMP2,ESDc+EcCCSD
       ENDIF
       IF(TUNEMBPT.eqv..false.) then ! HF(NOF orbs) + DYN (NOF orbs = CANONICAL orbs for ICOEF=0)
       write(6,4)ESD,EPNOF,EcRPA,iEcRPA,iEcSOSEX,iEcRPASOS,
-     & EcGoWo,EcGMSOS,EcGoWoSOS,EcMP2,ESD+EcRPA,ESD+iEcRPA,
-     & ESD+iEcRPASOS,ESD+EcGoWo,ESD+EcGoWoSOS,ESD+EcMP2
+     & EcGoWo,EcGMSOS,EcGoWoSOS,EcMP2,EcCCSD,ESD+EcRPA,ESD+iEcRPA,
+     & ESD+iEcRPASOS,ESD+EcGoWo,ESD+EcGoWoSOS,ESD+EcMP2,ESD+EcCCSD
       ENDIF
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Deallocate and clean 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      DEALLOCATE(wmn,BIGOMEGA)
       IF(TUNEMBPT) DEALLOCATE(ERImol2,wmn2)
       DEALLOCATE(EIG,ERImol)
       RETURN
@@ -334,6 +347,7 @@ C-----------------------------------------------------------------------
      * 1X,'Ec(SOSEX@GM)           ',5X,F20.10,' a.u.',/,
      * 1X,'Ec(GW@GM+SOSEX@GM)     ',5X,F20.10,' a.u.',/,
      * 1X,'Ec(MP2)                ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(CCSD)               ',5X,F20.10,' a.u.',/,
      * ' ',/,
      * 1X,'E(RPA-FURCHE)          ',5X,F20.10,' a.u.',/,
      * 1X,'E(RPA)                 ',5X,F20.10,' a.u.',/,
@@ -341,13 +355,15 @@ C-----------------------------------------------------------------------
      * 1X,'E(GW@GM)               ',5X,F20.10,' a.u.',/,
      * 1X,'E(GW@GM+SOSEX@GM)      ',5X,F20.10,' a.u.',/,
      * 1X,'E(MP2)                 ',5X,F20.10,' a.u.',/,
+     * 1X,'E(CCSD)                ',5X,F20.10,' a.u.',/,
      * ' ',/,
      * 1X,'E(NOFc-RPA-FURCHE)     ',5X,F20.10,' a.u.',/,
      * 1X,'E(NOFc-RPA)            ',5X,F20.10,' a.u.',/,
      * 1X,'E(NOFc-RPA+AC-SOSEX)   ',5X,F20.10,' a.u.',/,
      * 1X,'E(NOFc-GW@GM)          ',5X,F20.10,' a.u.',/,
      * 1X,'E(NOFc-GW@GM+SOSEX@GM) ',5X,F20.10,' a.u.',/,
-     * 1X,'E(NOFc-MP2)            ',5X,F20.10,' a.u.')
+     * 1X,'E(NOFc-MP2)            ',5X,F20.10,' a.u.',/,
+     * 1X,'E(NOFc-CCSD)           ',5X,F20.10,' a.u.')
     4 FORMAT(/,1X,'E(SD)                 ',5X,F20.10,' a.u.',/,
      * 1X,'E(PNOFi)              ',5X,F20.10,' a.u.',/,
      * ' ',/,
@@ -359,13 +375,15 @@ C-----------------------------------------------------------------------
      * 1X,'Ec(SOSEX@GM)          ',5X,F20.10,' a.u.',/,
      * 1X,'Ec(GW@GM+SOSEX@GM)    ',5X,F20.10,' a.u.',/,
      * 1X,'Ec(MP2)               ',5X,F20.10,' a.u.',/,
+     * 1X,'Ec(CCSD)              ',5X,F20.10,' a.u.',/,
      * ' ',/,
      * 1X,'E(RPA-FURCHE)         ',5X,F20.10,' a.u.',/,
      * 1X,'E(RPA)                ',5X,F20.10,' a.u.',/,
      * 1X,'E(RPA+AC-SOSEX)       ',5X,F20.10,' a.u.',/,
      * 1X,'E(GW@GM)              ',5X,F20.10,' a.u.',/,
      * 1X,'E(GW@GM+SOSEX@GM)     ',5X,F20.10,' a.u.',/,
-     * 1X,'E(MP2)                ',5X,F20.10,' a.u.')
+     * 1X,'E(MP2)                ',5X,F20.10,' a.u.',/,
+     * 1X,'E(CCSD)               ',5X,F20.10,' a.u.')
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE MBPTCALC
 
@@ -374,14 +392,14 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       implicit none
       integer::ii
       integer,intent(in)::i,j,a,b,nbf,nab,order
-      real::integrated_omega,Fpq
-      real,dimension(nbf),intent(in)::EIG
-      real,dimension(nab)::BIGOMEGA
-      real,dimension(nbf,nbf,nab),intent(in)::wmn
-      real,dimension(order),intent(in)::freqs,weights
-      real,intent(in)::ERImolijab
+      double precision::integrated_omega,Fpq
+      double precision,dimension(nbf),intent(in)::EIG
+      double precision,dimension(nab)::BIGOMEGA
+      double precision,dimension(nbf,nbf,nab),intent(in)::wmn
+      double precision,dimension(order),intent(in)::freqs,weights
+      double precision,intent(in)::ERImolijab
       complex,dimension(order),intent(in)::cfreqs
-      real::tol4
+      double precision::tol4
       complex::integral,wpqrsc
       tol4=1.0D-4
       integral=0.0d0
@@ -393,9 +411,9 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      & Fpq(i,a,nbf,EIG,freqs(ii))*Fpq(j,b,nbf,EIG,freqs(ii))*
      & wpqrsc
       enddo
-      integrated_omega=real(integral)
-      if(aimag(integral).gt.tol4) then
-       write(6,12) i,j,a,b,aimag(integral)
+      integrated_omega=REAL(integral)
+      if(AIMAG(integral).gt.tol4) then
+       write(6,12) i,j,a,b,AIMAG(integral)
       endif
       return
    12 FORMAT('WARNING! LARGE IMAGINARY FREQ. INTEG. IN',1X,I5,1X,I5,
@@ -405,9 +423,9 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       function Fpq(p,q,nbf,EIG,freq)
       implicit none
       integer,intent(in)::p,q,nbf
-      real,intent(in)::freq
-      real,dimension(nbf),intent(in)::EIG
-      real::Fpq
+      double precision,intent(in)::freq
+      double precision,dimension(nbf),intent(in)::EIG
+      double precision::Fpq
        Fpq=2.0d0*(EIG(p)-EIG(q))/((EIG(p)-EIG(q))**2.0d0+freq**2.0d0)
       return
       end function
@@ -417,9 +435,9 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       implicit none
       integer::ii
       integer,intent(in)::p,q,r,s,nab,nbf
-      real,intent(in)::ERImolpqrs
-      real,dimension(nab),intent(in)::BIGOMEGA
-      real,dimension(nbf,nbf,nab),intent(in)::wmn
+      double precision,intent(in)::ERImolpqrs
+      double precision,dimension(nab),intent(in)::BIGOMEGA
+      double precision,dimension(nbf,nbf,nab),intent(in)::wmn
       complex,intent(in)::freqc
       complex::wpqrsc
       wpqrsc=ERImolpqrs 
@@ -432,10 +450,10 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       subroutine tune_coefs(CINTER,CINTRA,OCC,NBF,NA)
       implicit none
       integer,intent(in)::NBF,NA
-      real,dimension(nbf),intent(in)::OCC
-      real,dimension(nbf),intent(inout)::CINTER,CINTRA
+      double precision,dimension(nbf),intent(in)::OCC
+      double precision,dimension(nbf),intent(inout)::CINTER,CINTRA
       integer::ii
-      real::hi
+      double precision::hi
       CINTER=1.0d0
       CINTRA=1.0d0
       do ii=1,NBF
@@ -459,11 +477,11 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       implicit none
       logical,intent(inout)::diagF
       integer,intent(in)::NBF,NCO,NVIR,NCWO,NFR,NA
-      real,dimension(NBF),intent(inout)::CINTER,CINTRA,EIG
-      real,dimension(NBF,NBF),intent(inout)::FOCKm,EIGENVE
+      double precision,dimension(NBF),intent(inout)::CINTER,CINTRA,EIG
+      double precision,dimension(NBF,NBF),intent(inout)::FOCKm,EIGENVE
       integer,allocatable,dimension(:)::coup
-      real,allocatable,dimension(:)::TEMPV
-      real::tol6
+      double precision,allocatable,dimension(:)::TEMPV
+      double precision::tol6
       integer::i,k,in,kn,lmin_i,lmax_i,last_coup
       allocate(coup(NVIR))
       coup=0
@@ -534,10 +552,10 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       implicit none
       logical,intent(in)::TDHF
       integer,intent(in)::NBF,NCO,NVIR,NCWO,NFR,NA
-      real,dimension(NBF),intent(in)::CINTER,CINTRA
-      real,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
+      double precision,dimension(NBF),intent(in)::CINTER,CINTRA
+      double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
       integer::i,j,k,l,kn,ln,lmin_i,lmax_i,last_coup
-      real::Ciikl,Cijkl
+      double precision::Ciikl,Cijkl
       last_coup=NA+ncwo*(nco-nfr)
       do i=1,NA
        lmin_i = NA+ncwo*(nco-i)+1
@@ -610,16 +628,18 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       implicit none
       LOGICAL,intent(in)::TDHF
       INTEGER,intent(in)::Nbf,Nab,NCO,NA
-      REAL,intent(inout)::EcRPA
-      REAL,intent(in)::AUtoEV
-      REAL,DIMENSION(NBF,NBF),intent(in)::ADIPx,ADIPy,ADIPz,COEF
-      REAL,DIMENSION(Nab),intent(in)::BIGOMEGA
-      REAL,DIMENSION(Nab,Nab),intent(in)::XpY
+      DOUBLE PRECISION,intent(inout)::EcRPA
+      DOUBLE PRECISION,intent(in)::AUtoEV
+      DOUBLE PRECISION,DIMENSION(NBF,NBF),intent(in)::ADIPx,ADIPy,ADIPz
+      DOUBLE PRECISION,DIMENSION(NBF,NBF),intent(in)::COEF
+      DOUBLE PRECISION,DIMENSION(Nab),intent(in)::BIGOMEGA
+      DOUBLE PRECISION,DIMENSION(Nab,Nab),intent(in)::XpY
       INTEGER::i,j,k,l,a
-      REAL::tol10,tol6
-      REAL,ALLOCATABLE,DIMENSION(:,:) ::MDIPx,MDIPy,MDIPz
-      REAL,ALLOCATABLE,DIMENSION(:,:) ::COEFT,TEMPM,STATICPOL
-      REAL,ALLOCATABLE,DIMENSION(:) ::OSCSTR,DIPSUM
+      DOUBLE PRECISION::tol10,tol6
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) ::MDIPx,MDIPy,MDIPz
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) ::COEFT,TEMPM
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) ::STATICPOL
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:) ::OSCSTR,DIPSUM
       tol6=1.0D-6
       tol10=1.0D-10
 C  Prepare dipole moment from AO to MO
@@ -710,9 +730,10 @@ C  Static polarizability alpha_xx' = <x|Xi(r,r',w=0)|x'>
       implicit none
       logical,intent(in)::TUNEMBPT
       integer,intent(in)::NBF,Nab,NA
-      real,dimension(NBF,NBF,Nab),intent(inout)::wmn,wmn2 
-      real,dimension(Nab,Nab),intent(in)::XpY
-      real,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol,ERImol2
+      double precision,dimension(NBF,NBF,Nab),intent(inout)::wmn,wmn2 
+      double precision,dimension(Nab,Nab),intent(in)::XpY
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol2
       integer::i,j,k,l,a,b
       do k=1,Nab
        do i=1,NBF
@@ -748,14 +769,14 @@ C  Very symple Eq: Ec = 2 sum _i sum_a sum_s [ (wia)^s ]**2 /(e(i)-e(a)-Omega(s)
       implicit none
       logical,intent(in)::TUNEMBPT
       integer,intent(in)::NCO,NBF,Nab,NA
-      real,intent(inout)::EcGoWo,EcGMSOS
-      real,dimension(Nab),intent(in)::BIGOMEGA
-      real,dimension(NBF),intent(in)::EIG
-      real,dimension(Nab,Nab),intent(in)::XpY
-      real,dimension(NBF,NBF,Nab),intent(in)::wmn,wmn2
-      real,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol
+      double precision,intent(inout)::EcGoWo,EcGMSOS
+      double precision,dimension(Nab),intent(in)::BIGOMEGA
+      double precision,dimension(NBF),intent(in)::EIG
+      double precision,dimension(Nab,Nab),intent(in)::XpY
+      double precision,dimension(NBF,NBF,Nab),intent(in)::wmn,wmn2
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol
       integer::i,j,a,b,s,l,fst_virt
-      real::tol10
+      double precision::tol10
       tol10=1.0D-10
       fst_virt=NA+1
       ! Doubly occ part (simplified version)
@@ -834,11 +855,12 @@ C      enddo
       implicit none
       logical,intent(in)::TUNEMBPT
       integer,intent(in)::NCO,NBF,NA
-      real,intent(inout)::EcMP2
-      real,dimension(NBF),intent(in)::EIG
-      real,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol,ERImol2
+      double precision,intent(inout)::EcMP2
+      double precision,dimension(NBF),intent(in)::EIG
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol2
       integer::i,j,a,b
-      real::tol10
+      double precision::tol10
       tol10=1.0D-10
       do a=NA+1,NBF
        do b=NA+1,NBF
@@ -895,15 +917,16 @@ C      enddo
       implicit none
       logical,intent(in)::TUNEMBPT
       integer,intent(in)::NCO,NBF,Nab,NA
-      real,intent(inout)::iEcRPA,iEcSOSEX
-      real,dimension(Nab),intent(in)::BIGOMEGA
-      real,dimension(NBF),intent(in)::EIG
-      real,dimension(NBF,NBF,Nab),intent(in)::wmn
-      real,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol,ERImol2
-      real,allocatable,dimension(:)::freqs,weights
+      double precision,intent(inout)::iEcRPA,iEcSOSEX
+      double precision,dimension(Nab),intent(in)::BIGOMEGA
+      double precision,dimension(NBF),intent(in)::EIG
+      double precision,dimension(NBF,NBF,Nab),intent(in)::wmn
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(in)::ERImol2
+      double precision,allocatable,dimension(:)::freqs,weights
       complex,allocatable,dimension(:)::cfreqs
       integer::order,i,j,a,b
-      real::PI,r0,rlast,integral,integrated_omega
+      double precision::PI,r0,rlast,integral,integrated_omega
       PI=3.141592653589793238D+00
 C  Quadrature 0 to Inf
       r0=0.0d0
@@ -980,14 +1003,100 @@ C  RPA + SOSEX integrated
       iEcSOSEX=0.5d+0*iECSOSEX/PI ! Use 1/2 because spinless 2e- integrals (only alpha,alpha,alpha,alpha and beta,beta,beta,beta)
       DEALLOCATE(weights,freqs,cfreqs) 
       end subroutine rpa_sosex_eq
+      
+      subroutine ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
+     & CCSD_READ)
+      USE m_ccsd
+      implicit none
+      logical,intent(in)::TUNEMBPT,CCSD_READ
+      integer,intent(in)::NCO,NBF,NA
+      double precision,intent(inout)::EcCCSD
+      double precision,dimension(NBF),intent(in)::EIG
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(inout)::ERImol
+      double precision,dimension(NBF,NBF,NBF,NBF),intent(inout)::ERImol2
+      double precision,allocatable,dimension(:,:)::FockM
+      double precision,allocatable,dimension(:,:,:,:)::ERItmp
+      integer::i,j,a,b,Nocc,verbose=0,iter=0,NCO2,NA2,maxiter=1000000
+      double precision::error=1.0d0,Eccsd,Eccsd_new,tol7
+      allocate(FockM(NBF,NBF),ERItmp(NBF,NBF,NBF,NBF))
+      FockM=0.0d0
+      do i=1,NBF
+       FockM(i,i)=EIG(i)     
+      enddo
+      ERItmp=0.0d0
+      do i=1,NBF
+       do j=1,NBF
+        do a=1,NBF
+         do b=1,NBF
+          ERItmp(i,j,a,b)=ERImol(i,j,b,a)
+         enddo
+        enddo
+       enddo
+      enddo
+      ERImol=0.0d0
+      ERImol=ERItmp
+      IF(TUNEMBPT) then
+       ERItmp=0.0d0
+       do i=1,NBF
+        do j=1,NBF
+         do a=1,NBF
+          do b=1,NBF
+           ERItmp(i,j,a,b)=ERImol2(i,j,b,a)
+          enddo
+         enddo
+        enddo
+       enddo
+       ERImol2=0.0d0
+       ERImol2=ERItmp
+      ENDIF
+      deallocate(ERItmp)
+      tol7=1.0e-7
+      if(NA-NCO==0) then
+       Nocc=NCO
+       NCO2=NCO*2
+       NA2=NCO2
+      else
+       Nocc=NCO+NA
+       NCO2=NCO*2
+       NA2=NA*2
+      endif
+      call ccsd_init(NBF,Nocc,verbose,FockM,ERImol)
+      if(CCSD_READ) then
+       call ccsd_read_guess() 
+      endif
+      deallocate(FockM)
+      do
+       if(error>tol7 .and. iter<maxiter) then
+        call ccsd_update_t1t2(ERImol)
+        IF(TUNEMBPT) then
+         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2)
+        ELSE
+         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
+        ENDIF
+        error=abs(Eccsd-Eccsd_new)
+        Eccsd=Eccsd_new
+        iter=iter+1
+       else
+        exit
+       endif
+      enddo
+      write(*,*)
+      write(*,*) 'CCSD iterative procedure finished after ',iter,
+     & ' iterations'
+      write(*,*)
+      EcCCSD=Eccsd_new
+      call ccsd_write_last()
+      call ccsd_clean()
+      end subroutine ccsd_eq
 
       subroutine transform2(NBF,TEMPM2,ERImol,ERImol2)
       implicit none
       integer,intent(in)::NBF
-      real,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol,ERImol2
-      real,dimension(nbf,nbf),intent(in)::TEMPM2
+      double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
+      double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol2
+      double precision,dimension(nbf,nbf),intent(in)::TEMPM2
       integer::i,j,k,l,m
-      real::tol10,aux,aux2
+      double precision::tol10,aux,aux2
       tol10=1.0D-10
       write(*,*) ' '
       write(*,*) ' Starting transformation <IJ|KL> -> <PQ|RS>'
@@ -1162,9 +1271,9 @@ C  RPA + SOSEX integrated
       subroutine transform2mem(NBF,TEMPM2,ERImol)
       implicit none
       integer,intent(in)::NBF
-      real,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
-      real,dimension(nbf,nbf),intent(in)::TEMPM2
-      real,dimension(:,:,:,:),allocatable::TMPDM2
+      double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
+      double precision,dimension(nbf,nbf),intent(in)::TEMPM2
+      double precision,dimension(:,:,:,:),allocatable::TMPDM2
       integer::i,j,k,l,m
       write(*,*) ' '
       write(*,*) ' Starting transformation <IJ|KL> -> <PQ|RS>'
@@ -1233,7 +1342,7 @@ C  RPA + SOSEX integrated
 C      subroutine print2eint(nbf,erimol)
 C      implicit none
 C      integer,intent(in)::nbf
-C      real,dimension(nbf,nbf,nbf,nbf),intent(in)::erimol
+C      double precision,dimension(nbf,nbf,nbf,nbf),intent(in)::erimol
 C      integer::i,j,k,l
 C      do i=1,nbf
 C       do j=1,nbf
