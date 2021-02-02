@@ -1060,30 +1060,51 @@ C  RPA + SOSEX integrated
        NCO2=NCO*2
        NA2=NA*2
       endif
-      call ccsd_init(NBF,Nocc,verbose,FockM,ERImol)
+      ! Option A
+      !IF(TUNEMBPT) then
+      ! call ccsd_init(NBF,Nocc,verbose,FockM,ERImol2) 
+      !ELSE
+      ! call ccsd_init(NBF,Nocc,verbose,FockM,ERImol) 
+      !ENDIF
+      ! Option B
+      call ccsd_init(NBF,Nocc,verbose,FockM,ERImol) 
       if(CCSD_READ) then
        call ccsd_read_guess() 
       endif
       deallocate(FockM)
+      write(*,*) ' '
       do
        if(error>tol7 .and. iter<maxiter) then
+        ! Option A
+        !IF(TUNEMBPT) then
+        ! call ccsd_update_t1t2(ERImol2)
+        !ELSE
+        ! call ccsd_update_t1t2(ERImol)
+        !ENDIF
+        ! Option B
         call ccsd_update_t1t2(ERImol)
+        ! Option A
+        !Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
+        ! Option B
         IF(TUNEMBPT) then
-         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2)
+         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
         ELSE
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
         ENDIF
         error=abs(Eccsd-Eccsd_new)
         Eccsd=Eccsd_new
         iter=iter+1
+        if(mod(iter,5)==0) then
+         write(*,'(a,F15.10,a,i5)') ' CCSD energy ',Eccsd,' iter. ',iter
+        endif
        else
         exit
        endif
       enddo
-      write(*,*)
+      write(*,*) ' '
       write(*,*) 'CCSD iterative procedure finished after ',iter,
      & ' iterations'
-      write(*,*)
+      write(*,*) ' '
       EcCCSD=Eccsd_new
       call ccsd_write_last()
       call ccsd_clean()

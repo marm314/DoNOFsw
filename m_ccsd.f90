@@ -13,7 +13,7 @@ double precision,dimension(:,:),allocatable::ts,tsnew,Fae,Fmi,Fme,FockM
 double precision,dimension(:,:,:,:),allocatable::td,tdnew,Wmnij,Wabef,Wmbej
 
 private::Nocc,Mbasis2,zero,half,one_fourth,ts,tsnew,Fae,Fmi,Fme,td,tdnew,Wmnij,Wabef,Wmbej,FockM,tol8
-private::ccsd_update_interm,ccsd_update_t1,ccsd_update_t2,spin_int,Dai,Dabij,taus,tau,slbasis,verbose,iter_local
+private::ccsd_update_interm,ccsd_update_t1_t2,spin_int,taus,tau,slbasis,verbose,iter_local
 public::ccsd_init,ccsd_read_guess,ccsd_write_last,ccsd_update_t1t2,ccsd_energy,ccsd_clean,ccsd_en_nof
 
 contains
@@ -98,14 +98,14 @@ do i=1,Nocc
  do j=1,Nocc
   do a=Nocc+1,Mbasis2
    do b=Nocc+1,Mbasis2
-    write(iunit) i,j,a,b,td(i,j,a,b)
+    if(abs(td(i,j,a,b))>tol8) write(iunit) i,j,a,b,td(i,j,a,b)
    enddo
   enddo
  enddo
 enddo
 do i=1,Nocc
  do a=Nocc+1,Mbasis2
-  write(iunit) i,0,a,0,ts(i,a)
+  if(abs(ts(i,a))>tol8) write(iunit) i,0,a,0,ts(i,a)
  enddo
 enddo
 write(iunit) 0,0,0,0,zero
@@ -122,20 +122,17 @@ double precision::tol8=1d-8
 ! Procedures
 iter_local=iter_local+1
 call ccsd_update_interm(ERImol)
-call ccsd_update_t1(ERImol)
-do i=1,Nocc
- do a=Nocc+1,Mbasis2
-  if(abs(ts(i,a))<tol8) then
-   tsnew(i,a)=zero
-  endif
- enddo
-enddo
-call ccsd_update_t2(ERImol)
+call ccsd_update_t1_t2(ERImol)
 do i=1,Nocc
  do j=1,Nocc
   do a=Nocc+1,Mbasis2
+   if(j==1) then                 
+    if(abs(tsnew(i,a))<tol8) then
+     tsnew(i,a)=zero             
+    endif                        
+   endif                         
    do b=Nocc+1,Mbasis2
-    if(abs(td(i,j,a,b))<tol8) then
+    if(abs(tdnew(i,j,a,b))<tol8) then
      tdnew(i,j,a,b)=zero
     endif
    enddo
@@ -183,6 +180,7 @@ ccsd_en_nof=zero
 do a=Nsocc+1,Mbasis2
  do b=Nsocc+1,Mbasis2
   do i=1,Ndocc
+!   if(b==Nsocc+1) ccsd_ene_nof=ccsd_en_nof+FockM(i,a)*ts(i,a) ! This is 0, the FockM is diag.
    do j=1,Ndocc
 ccsd_en_nof=ccsd_en_nof+one_fourth*spin_int(i,j,a,b,ERImol)*td(i,j,a,b)+half*spin_int(i,j,a,b,ERImol)*ts(i,a)*ts(j,b)
    enddo
@@ -213,6 +211,117 @@ end subroutine ccsd_clean
 !!-----------------------------------------------------------
 !! Private
 !!-----------------------------------------------------------
+!subroutine ccsd_update_interm(ERImol)
+!implicit none
+!! Arguments
+!double precision,dimension(:,:,:,:),intent(in)::ERImol
+!! Local variables
+!integer::i,j,m,n,a,b,e,f
+!! Procedures
+!! Fae
+!Fae=zero
+!do a=Nocc+1,Mbasis2
+! do e=Nocc+1,Mbasis2
+!  if(a/=e) then
+!   Fae(a,e)=FockM(a,e)
+!  end if
+!  do m=1,Nocc
+!   Fae(a,e)=Fae(a,e)-half*FockM(m,e)*ts(m,a)
+!   do f=Nocc+1,Mbasis2
+!    Fae(a,e)=Fae(a,e)+ts(m,f)*spin_int(m,a,f,e,ERImol)
+!    do n=1,Nocc
+!     Fae(a,e)=Fae(a,e)-half*taus(a,f,m,n)*spin_int(m,n,e,f,ERImol)
+!    enddo
+!   enddo
+!  enddo
+! enddo
+!enddo
+!! Fmi
+!Fmi=zero
+!do m=1,Nocc
+! do i=1,Nocc
+!  if(i/=m) then
+!   Fmi(m,i)=FockM(m,i)
+!  endif
+!  do e=Nocc+1,Mbasis2
+!   Fmi(m,i)=Fmi(m,i)+half*ts(i,e)*FockM(m,e)
+!   do n=1,Nocc
+!    Fmi(m,i)=Fmi(m,i)+ts(n,e)*spin_int(m,n,i,e,ERImol)
+!    do f=Nocc+1,Mbasis2
+!     Fmi(m,i)=Fmi(m,i)+half*taus(e,f,i,n)*spin_int(m,n,e,f,ERImol)
+!    enddo
+!   enddo
+!  enddo
+! enddo
+!enddo
+!! Fme
+!Fme=zero
+!do m=1,Nocc
+! do e=Nocc+1,Mbasis2
+! Fme(m,e)=FockM(m,e)
+!  do n=1,Nocc
+!   do f=Nocc+1,Mbasis2
+!    Fme(m,e)=Fme(m,e)+ts(n,f)*spin_int(m,n,e,f,ERImol)
+!   enddo
+!  enddo
+! enddo
+!enddo
+!! Wmnij
+!Wmnij=zero
+!do m=1,Nocc
+! do n=1,Nocc
+!  do i=1,Nocc
+!   do j=1,Nocc
+!    Wmnij(m,n,i,j)=spin_int(m,n,i,j,ERImol)
+!    do e=Nocc+1,Mbasis2
+!     Wmnij(m,n,i,j)=Wmnij(m,n,i,j)+ts(j,e)*spin_int(m,n,i,e,ERImol)-ts(i,e)*spin_int(m,n,j,e,ERImol)
+!     do f=Nocc+1,Mbasis2
+!      Wmnij(m,n,i,j)=Wmnij(m,n,i,j)+one_fourth*tau(e,f,i,j)*spin_int(m,n,e,f,ERImol)
+!     enddo
+!    enddo
+!   enddo
+!  enddo
+! enddo
+!enddo
+!! Wabef
+!Wabef=zero
+!do a=Nocc+1,Mbasis2
+! do b=Nocc+1,Mbasis2
+!  do e=Nocc+1,Mbasis2
+!   do f=Nocc+1,Mbasis2
+!    Wabef(a,b,e,f)=spin_int(a,b,e,f,ERImol)
+!    do m=1,Nocc
+!     Wabef(a,b,e,f)=Wabef(a,b,e,f)-ts(m,b)*spin_int(a,m,e,f,ERImol)+ts(m,a)*spin_int(b,m,e,f,ERImol)
+!     do n=1,Nocc
+!      Wabef(a,b,e,f)=Wabef(a,b,e,f)+one_fourth*tau(a,b,m,n)*spin_int(m,n,e,f,ERImol)
+!     enddo
+!    enddo
+!   enddo
+!  enddo
+! enddo
+!enddo
+!! Wmbej
+!Wmbej=zero
+!do m=1,Nocc
+! do b=Nocc+1,Mbasis2
+!  do e=Nocc+1,Mbasis2
+!   do j=1,Nocc
+!    Wmbej(m,b,e,j)=spin_int(m,b,e,j,ERImol)
+!    do f=Nocc+1,Mbasis2
+!     Wmbej(m,b,e,j)=Wmbej(m,b,e,j)+ts(j,f)*spin_int(m,b,e,f,ERImol)
+!    enddo
+!    do n=1,Nocc
+!     Wmbej(m,b,e,j)=Wmbej(m,b,e,j)-ts(n,b)*spin_int(m,n,e,j,ERImol)
+!     do f=Nocc+1,Mbasis2
+!      Wmbej(m,b,e,j)=Wmbej(m,b,e,j)-(half*td(j,n,f,b)+ts(j,f)*ts(n,b))*spin_int(m,n,e,f,ERImol)
+!     enddo
+!    enddo
+!   enddo
+!  enddo
+! enddo
+!enddo
+!end subroutine ccsd_update_interm
+
 subroutine ccsd_update_interm(ERImol)
 implicit none
 ! Arguments
@@ -220,94 +329,72 @@ double precision,dimension(:,:,:,:),intent(in)::ERImol
 ! Local variables
 integer::i,j,m,n,a,b,e,f
 ! Procedures
-! Fae
-Fae=zero
-do a=Nocc+1,Mbasis2
- do e=Nocc+1,Mbasis2
-  if(a/=e) then
-   Fae(a,e)=FockM(a,e)
-  end if
-  do m=1,Nocc
-   Fae(a,e)=Fae(a,e)-half*FockM(m,e)*ts(m,a)
-   do f=Nocc+1,Mbasis2
-    Fae(a,e)=Fae(a,e)+ts(m,f)*spin_int(m,a,f,e,ERImol)
-    do n=1,Nocc
-     Fae(a,e)=Fae(a,e)-half*taus(a,f,m,n)*spin_int(m,n,e,f,ERImol)
-    enddo
-   enddo
-  enddo
- enddo
-enddo
-! Fmi
-Fmi=zero
+! Fmi and Wmnij
+Fmi=zero;Wmnij=zero
 do m=1,Nocc
  do i=1,Nocc
   if(i/=m) then
    Fmi(m,i)=FockM(m,i)
   endif
-  do e=Nocc+1,Mbasis2
-   Fmi(m,i)=Fmi(m,i)+half*ts(i,e)*FockM(m,e)
-   do n=1,Nocc
-    Fmi(m,i)=Fmi(m,i)+ts(n,e)*spin_int(m,n,i,e,ERImol)
-    do f=Nocc+1,Mbasis2
-     Fmi(m,i)=Fmi(m,i)+half*taus(e,f,i,n)*spin_int(m,n,e,f,ERImol)
-    enddo
-   enddo
-  enddo
- enddo
-enddo
-! Fme
-Fme=zero
-do m=1,Nocc
- do e=Nocc+1,Mbasis2
- Fme(m,e)=FockM(m,e)
   do n=1,Nocc
-   do f=Nocc+1,Mbasis2
-    Fme(m,e)=Fme(m,e)+ts(n,f)*spin_int(m,n,e,f,ERImol)
-   enddo
-  enddo
- enddo
-enddo
-! Wmnij
-Wmnij=zero
-do m=1,Nocc
- do n=1,Nocc
-  do i=1,Nocc
    do j=1,Nocc
     Wmnij(m,n,i,j)=spin_int(m,n,i,j,ERImol)
     do e=Nocc+1,Mbasis2
+     if(j==1) then
+      Fmi(m,i)=Fmi(m,i)+ts(n,e)*spin_int(m,n,i,e,ERImol)
+      if(n==1) then
+       Fmi(m,i)=Fmi(m,i)+half*ts(i,e)*FockM(m,e)
+      endif
+     endif
      Wmnij(m,n,i,j)=Wmnij(m,n,i,j)+ts(j,e)*spin_int(m,n,i,e,ERImol)-ts(i,e)*spin_int(m,n,j,e,ERImol)
      do f=Nocc+1,Mbasis2
       Wmnij(m,n,i,j)=Wmnij(m,n,i,j)+one_fourth*tau(e,f,i,j)*spin_int(m,n,e,f,ERImol)
+      if(j==1) then
+       Fmi(m,i)=Fmi(m,i)+half*taus(e,f,i,n)*spin_int(m,n,e,f,ERImol)
+      endif
      enddo
     enddo
    enddo
   enddo
  enddo
 enddo
-! Wabef
-Wabef=zero
+! Fae and Wabef
+Fae=zero;Wabef=zero
 do a=Nocc+1,Mbasis2
- do b=Nocc+1,Mbasis2
-  do e=Nocc+1,Mbasis2
+ do e=Nocc+1,Mbasis2
+  if(a/=e) then
+   Fae(a,e)=FockM(a,e)
+  end if
+  do b=Nocc+1,Mbasis2
    do f=Nocc+1,Mbasis2
     Wabef(a,b,e,f)=spin_int(a,b,e,f,ERImol)
     do m=1,Nocc
+     if(b==Nocc+1) then
+      if(f==Nocc+1) then
+       Fae(a,e)=Fae(a,e)-half*FockM(m,e)*ts(m,a)
+      endif
+      Fae(a,e)=Fae(a,e)+ts(m,f)*spin_int(m,a,f,e,ERImol)
+     endif
      Wabef(a,b,e,f)=Wabef(a,b,e,f)-ts(m,b)*spin_int(a,m,e,f,ERImol)+ts(m,a)*spin_int(b,m,e,f,ERImol)
      do n=1,Nocc
       Wabef(a,b,e,f)=Wabef(a,b,e,f)+one_fourth*tau(a,b,m,n)*spin_int(m,n,e,f,ERImol)
+      if(b==Nocc+1) then
+       Fae(a,e)=Fae(a,e)-half*taus(a,f,m,n)*spin_int(m,n,e,f,ERImol)
+      endif
      enddo
     enddo
    enddo
   enddo
  enddo
 enddo
-! Wmbej
-Wmbej=zero
+! Fme and Wmbej
+Fme=zero;Wmbej=zero
 do m=1,Nocc
- do b=Nocc+1,Mbasis2
-  do e=Nocc+1,Mbasis2
+ do e=Nocc+1,Mbasis2
+  Fme(m,e)=FockM(m,e)
+  do b=Nocc+1,Mbasis2
    do j=1,Nocc
+    Fme(m,e)=Fme(m,e)+ts(j,b)*spin_int(m,j,e,b,ERImol)
     Wmbej(m,b,e,j)=spin_int(m,b,e,j,ERImol)
     do f=Nocc+1,Mbasis2
      Wmbej(m,b,e,j)=Wmbej(m,b,e,j)+ts(j,f)*spin_int(m,b,e,f,ERImol)
@@ -324,91 +411,154 @@ do m=1,Nocc
 enddo
 end subroutine ccsd_update_interm
 
-subroutine ccsd_update_t1(ERImol)
-implicit none
-! Arguments
-double precision,dimension(:,:,:,:),intent(in)::ERImol
-! Local variables
-integer::i,m,n,a,e,f
-! Procedures
-tsnew=zero
-do a=Nocc+1,Mbasis2
- do i=1,Nocc
-  tsnew(i,a)=FockM(i,a)
-  do e=Nocc+1,Mbasis2
-   tsnew(i,a)=tsnew(i,a)+ts(i,e)*Fae(a,e)
-  enddo
-  do m=1,Nocc
-   tsnew(i,a)=tsnew(i,a)-ts(m,a)*Fmi(m,i)
-   do e=Nocc+1,Mbasis2
-    tsnew(i,a)=tsnew(i,a)+td(i,m,a,e)*Fme(m,e)
-    do f=Nocc+1,Mbasis2
-     tsnew(i,a)=tsnew(i,a)-half*td(i,m,e,f)*spin_int(m,a,e,f,ERImol)
-    enddo
-    do n=1,Nocc
-     tsnew(i,a)=tsnew(i,a)-half*td(m,n,a,e)*spin_int(n,m,e,i,ERImol)
-    enddo
-   enddo
-  enddo
-  do n=1,Nocc
-   do f=Nocc+1,Mbasis2
-    tsnew(i,a)=tsnew(i,a)-ts(n,f)*spin_int(n,a,i,f,ERImol)
-   enddo
-  enddo
-  tsnew(i,a)=tsnew(i,a)/Dai(a,i)
- enddo
-enddo
-end subroutine ccsd_update_t1
+!subroutine ccsd_update_t1(ERImol)
+!implicit none
+!! Arguments
+!double precision,dimension(:,:,:,:),intent(in)::ERImol
+!! Local variables
+!integer::i,m,n,a,e,f
+!! Procedures
+!tsnew=zero
+!do a=Nocc+1,Mbasis2
+! do i=1,Nocc
+!  tsnew(i,a)=FockM(i,a)
+!  do e=Nocc+1,Mbasis2
+!   tsnew(i,a)=tsnew(i,a)+ts(i,e)*Fae(a,e)
+!  enddo
+!  do m=1,Nocc
+!   tsnew(i,a)=tsnew(i,a)-ts(m,a)*Fmi(m,i)
+!   do e=Nocc+1,Mbasis2
+!    tsnew(i,a)=tsnew(i,a)+td(i,m,a,e)*Fme(m,e)
+!    do f=Nocc+1,Mbasis2
+!     tsnew(i,a)=tsnew(i,a)-half*td(i,m,e,f)*spin_int(m,a,e,f,ERImol)
+!    enddo
+!    do n=1,Nocc
+!     tsnew(i,a)=tsnew(i,a)-half*td(m,n,a,e)*spin_int(n,m,e,i,ERImol)
+!    enddo
+!   enddo
+!  enddo
+!  do n=1,Nocc
+!   do f=Nocc+1,Mbasis2
+!    tsnew(i,a)=tsnew(i,a)-ts(n,f)*spin_int(n,a,i,f,ERImol)
+!   enddo
+!  enddo
+!  tsnew(i,a)=tsnew(i,a)/(FockM(i,i)-FockM(a,a)+tol8)
+! enddo
+!enddo
+!end subroutine ccsd_update_t1
 
-subroutine ccsd_update_t2(ERImol)
+!subroutine ccsd_update_t2(ERImol)
+!implicit none
+!! Arguments
+!double precision,dimension(:,:,:,:),intent(in)::ERImol
+!! Local variables
+!integer::i,j,m,n,a,b,e,f
+!! Procedures
+!tdnew=zero
+!do a=Nocc+1,Mbasis2
+! do b=Nocc+1,Mbasis2
+!  do i=1,Nocc
+!   do j=1,Nocc
+!    tdnew(i,j,a,b)=spin_int(i,j,a,b,ERImol)
+!    do e=Nocc+1,Mbasis2
+!     tdnew(i,j,a,b)=tdnew(i,j,a,b)+td(i,j,a,e)*Fae(b,e)-td(i,j,b,e)*Fae(a,e)
+!     do m=1,Nocc
+!      tdnew(i,j,a,b)=tdnew(i,j,a,b)-half*td(i,j,a,e)*ts(m,b)*Fme(m,e)+half*td(i,j,b,e)*ts(m,a)*Fme(m,e)
+!     enddo
+!    enddo
+!    do m=1,Nocc
+!     tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(i,m,a,b)*Fmi(m,j)+ td(j,m,a,b)*Fmi(m,i)
+!     do e=Nocc+1,Mbasis2
+!      tdnew(i,j,a,b)=tdnew(i,j,a,b)-half*td(i,m,a,b)*ts(j,e)*Fme(m,e)+half*td(j,m,a,b)*ts(i,e)*Fme(m,e)
+!     enddo
+!    enddo
+!    do e=Nocc+1,Mbasis2
+!     tdnew(i,j,a,b)=tdnew(i,j,a,b)+ts(i,e)*spin_int(a,b,e,j,ERImol)-ts(j,e)*spin_int(a,b,e,i,ERImol)
+!     do f=Nocc+1,Mbasis2
+!      tdnew(i,j,a,b)=tdnew(i,j,a,b)+half*tau(e,f,i,j)*Wabef(a,b,e,f)
+!     enddo
+!    enddo 
+!    do m=1,Nocc
+!     tdnew(i,j,a,b)=tdnew(i,j,a,b)-ts(m,a)*spin_int(m,b,i,j,ERImol)+ts(m,b)*spin_int(m,a,i,j,ERImol)
+!     do e=Nocc+1,Mbasis2
+!      tdnew(i,j,a,b)=tdnew(i,j,a,b)+td(i,m,a,e)*Wmbej(m,b,e,j)-ts(i,e)*ts(m,a)*spin_int(m,b,e,j,ERImol)
+!      tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(j,m,a,e)*Wmbej(m,b,e,i)+ts(j,e)*ts(m,a)*spin_int(m,b,e,i,ERImol)
+!      tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(i,m,b,e)*Wmbej(m,a,e,j)+ts(i,e)*ts(m,b)*spin_int(m,a,e,j,ERImol)
+!      tdnew(i,j,a,b)=tdnew(i,j,a,b)+td(j,m,b,e)*Wmbej(m,a,e,i)-ts(j,e)*ts(m,b)*spin_int(m,a,e,i,ERIMol)
+!     enddo
+!     do n=1,Nocc
+!      tdnew(i,j,a,b)=tdnew(i,j,a,b)+half*tau(a,b,m,n)*Wmnij(m,n,i,j)
+!     enddo
+!    enddo
+!    tdnew(i,j,a,b)=tdnew(i,j,a,b)/(FockM(i,i)+FockM(j,j)-FockM(a,a)-FockM(b,b)+tol8)
+!   enddo 
+!  enddo 
+! enddo
+!enddo
+!end subroutine ccsd_update_t2
+
+subroutine ccsd_update_t1_t2(ERImol)
 implicit none
 ! Arguments
 double precision,dimension(:,:,:,:),intent(in)::ERImol
 ! Local variables
 integer::i,j,m,n,a,b,e,f
 ! Procedures
+tsnew=zero
 tdnew=zero
 do a=Nocc+1,Mbasis2
  do b=Nocc+1,Mbasis2
   do i=1,Nocc
+   if(b==Nocc+1) then
+    tsnew(i,a)=FockM(i,a)
+    do m=1,Nocc
+     tsnew(i,a)=tsnew(i,a)-ts(m,a)*Fmi(m,i)
+     do e=Nocc+1,Mbasis2
+      tsnew(i,a)=tsnew(i,a)+td(i,m,a,e)*Fme(m,e)
+      tsnew(i,a)=tsnew(i,a)-ts(m,e)*spin_int(m,a,i,e,ERImol)
+      if(m==1) then                                         
+       tsnew(i,a)=tsnew(i,a)+ts(i,e)*Fae(a,e)               
+      endif                                                 
+      do f=Nocc+1,Mbasis2
+       tsnew(i,a)=tsnew(i,a)-half*td(i,m,e,f)*spin_int(m,a,e,f,ERImol)
+      enddo
+      do n=1,Nocc
+       tsnew(i,a)=tsnew(i,a)-half*td(m,n,a,e)*spin_int(n,m,e,i,ERImol)
+      enddo
+     enddo
+    enddo
+    tsnew(i,a)=tsnew(i,a)/(FockM(i,i)-FockM(a,a)+tol8)
+   endif
    do j=1,Nocc
     tdnew(i,j,a,b)=spin_int(i,j,a,b,ERImol)
     do e=Nocc+1,Mbasis2
      tdnew(i,j,a,b)=tdnew(i,j,a,b)+td(i,j,a,e)*Fae(b,e)-td(i,j,b,e)*Fae(a,e)
      do m=1,Nocc
       tdnew(i,j,a,b)=tdnew(i,j,a,b)-half*td(i,j,a,e)*ts(m,b)*Fme(m,e)+half*td(i,j,b,e)*ts(m,a)*Fme(m,e)
+      if(e==Nocc+1) then                                                        
+       tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(i,m,a,b)*Fmi(m,j)+ td(j,m,a,b)*Fmi(m,i) 
+       tdnew(i,j,a,b)=tdnew(i,j,a,b)-ts(m,a)*spin_int(m,b,i,j,ERImol)+ts(m,b)*spin_int(m,a,i,j,ERImol) 
+       do n=1,Nocc                                                              
+        tdnew(i,j,a,b)=tdnew(i,j,a,b)+half*tau(a,b,m,n)*Wmnij(m,n,i,j)          
+       enddo                                                                    
+      end if                                                                    
+      tdnew(i,j,a,b)=tdnew(i,j,a,b)-half*td(i,m,a,b)*ts(j,e)*Fme(m,e)+half*td(j,m,a,b)*ts(i,e)*Fme(m,e) 
+      tdnew(i,j,a,b)=tdnew(i,j,a,b)+td(i,m,a,e)*Wmbej(m,b,e,j)-ts(i,e)*ts(m,a)*spin_int(m,b,e,j,ERImol) 
+      tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(j,m,a,e)*Wmbej(m,b,e,i)+ts(j,e)*ts(m,a)*spin_int(m,b,e,i,ERImol) 
+      tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(i,m,b,e)*Wmbej(m,a,e,j)+ts(i,e)*ts(m,b)*spin_int(m,a,e,j,ERImol) 
+      tdnew(i,j,a,b)=tdnew(i,j,a,b)+td(j,m,b,e)*Wmbej(m,a,e,i)-ts(j,e)*ts(m,b)*spin_int(m,a,e,i,ERIMol) 
      enddo
+     tdnew(i,j,a,b)=tdnew(i,j,a,b)+ts(i,e)*spin_int(a,b,e,j,ERImol)-ts(j,e)*spin_int(a,b,e,i,ERImol)    
+     do f=Nocc+1,Mbasis2                                                        
+      tdnew(i,j,a,b)=tdnew(i,j,a,b)+half*tau(e,f,i,j)*Wabef(a,b,e,f)            
+     enddo                                                                      
     enddo
-    do m=1,Nocc
-     tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(i,m,a,b)*Fmi(m,j)+ td(j,m,a,b)*Fmi(m,i)
-     do e=Nocc+1,Mbasis2
-      tdnew(i,j,a,b)=tdnew(i,j,a,b)-half*td(i,m,a,b)*ts(j,e)*Fme(m,e)+half*td(j,m,a,b)*ts(i,e)*Fme(m,e)
-     enddo
-    enddo
-    do e=Nocc+1,Mbasis2
-     tdnew(i,j,a,b)=tdnew(i,j,a,b)+ts(i,e)*spin_int(a,b,e,j,ERImol)-ts(j,e)*spin_int(a,b,e,i,ERImol)
-     do f=Nocc+1,Mbasis2
-      tdnew(i,j,a,b)=tdnew(i,j,a,b)+half*tau(e,f,i,j)*Wabef(a,b,e,f)
-     enddo
-    enddo 
-    do m=1,Nocc
-     tdnew(i,j,a,b)=tdnew(i,j,a,b)-ts(m,a)*spin_int(m,b,i,j,ERImol)+ts(m,b)*spin_int(m,a,i,j,ERImol)
-     do e=Nocc+1,Mbasis2
-      tdnew(i,j,a,b)=tdnew(i,j,a,b)+td(i,m,a,e)*Wmbej(m,b,e,j)-ts(i,e)*ts(m,a)*spin_int(m,b,e,j,ERImol)
-      tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(j,m,a,e)*Wmbej(m,b,e,i)+ts(j,e)*ts(m,a)*spin_int(m,b,e,i,ERImol)
-      tdnew(i,j,a,b)=tdnew(i,j,a,b)-td(i,m,b,e)*Wmbej(m,a,e,j)+ts(i,e)*ts(m,b)*spin_int(m,a,e,j,ERImol)
-      tdnew(i,j,a,b)=tdnew(i,j,a,b)+td(j,m,b,e)*Wmbej(m,a,e,i)-ts(j,e)*ts(m,b)*spin_int(m,a,e,i,ERIMol)
-     enddo
-     do n=1,Nocc
-      tdnew(i,j,a,b)=tdnew(i,j,a,b)+half*tau(a,b,m,n)*Wmnij(m,n,i,j)
-     enddo
-    enddo
-    tdnew(i,j,a,b)=tdnew(i,j,a,b)/Dabij(a,b,i,j)
+    tdnew(i,j,a,b)=tdnew(i,j,a,b)/(FockM(i,i)+FockM(j,j)-FockM(a,a)-FockM(b,b)+tol8)
    enddo 
   enddo 
  enddo
 enddo
-end subroutine ccsd_update_t2
+end subroutine ccsd_update_t1_t2
 
 function spin_int(p,q,r,s,ERImol)
 implicit none
@@ -431,26 +581,6 @@ else
 end if
 spin_int=value1-value2
 end function spin_int
-
-function Dai(a,i)
-implicit none
-! Arguments
-integer,intent(in)::a,i
-! Local variables
-double precision::Dai
-! Procedures
-Dai=FockM(i,i)-FockM(a,a)+tol8
-end function Dai
-
-function Dabij(a,b,i,j)
-implicit none
-! Arguments
-integer,intent(in)::a,b,i,j
-! Local variables
-double precision::Dabij
-! Procedures
-Dabij=FockM(i,i)+FockM(j,j)-FockM(a,a)-FockM(b,b)+tol8
-end function Dabij
 
 function taus(a,b,i,j)
 implicit none
