@@ -16,6 +16,8 @@ if (-f fort.14) mv -f fort.14 $1.1dm
 
 if (-f 2DM) mv -f 2DM $1.2dm
 
+if (-f t_amps) mv -f t_amps $1.tamps
+
 if (-f fort.15) mv -f fort.15 $1.2dm
 
 if (-f N2DM) mv -f N2DM $1.n2dm

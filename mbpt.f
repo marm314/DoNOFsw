@@ -1016,19 +1016,21 @@ C  RPA + SOSEX integrated
       double precision,dimension(NBF,NBF,NBF,NBF),intent(inout)::ERImol2
       double precision,allocatable,dimension(:,:)::FockM
       double precision,allocatable,dimension(:,:,:,:)::ERItmp
-      integer::i,j,a,b,Nocc,verbose=0,iter=0,NCO2,NA2,maxiter=1000000
-      double precision::error=1.0d0,Eccsd,Eccsd_new,tol7
+      integer::p,q,r,s,Nocc,verbose=0,iter=0,NCO2,NA2,maxiter=1000000
+      double precision::error=1.0d0,Eccsd,Eccsd_new,tol7=1.0d-7
       allocate(FockM(NBF,NBF),ERItmp(NBF,NBF,NBF,NBF))
       FockM=0.0d0
-      do i=1,NBF
-       FockM(i,i)=EIG(i)     
+      do p=1,NBF
+       FockM(p,p)=EIG(p)     
       enddo
       ERItmp=0.0d0
-      do i=1,NBF
-       do j=1,NBF
-        do a=1,NBF
-         do b=1,NBF
-          ERItmp(i,j,a,b)=ERImol(i,j,b,a)
+      do p=1,NBF
+       do q=1,NBF
+        do r=1,NBF
+         do s=1,NBF
+          if(abs(ERImol(p,q,s,r))>tol7) then
+           ERItmp(p,q,r,s)=ERImol(p,q,s,r)
+          endif
          enddo
         enddo
        enddo
@@ -1037,11 +1039,13 @@ C  RPA + SOSEX integrated
       ERImol=ERItmp
       IF(TUNEMBPT) then
        ERItmp=0.0d0
-       do i=1,NBF
-        do j=1,NBF
-         do a=1,NBF
-          do b=1,NBF
-           ERItmp(i,j,a,b)=ERImol2(i,j,b,a)
+       do p=1,NBF
+        do q=1,NBF
+         do r=1,NBF
+          do s=1,NBF
+           if(abs(ERImol2(p,q,s,r))>tol7) then
+            ERItmp(p,q,r,s)=ERImol2(p,q,s,r)
+           endif
           enddo
          enddo
         enddo
@@ -1050,7 +1054,6 @@ C  RPA + SOSEX integrated
        ERImol2=ERItmp
       ENDIF
       deallocate(ERItmp)
-      tol7=1.0e-7
       if(NA-NCO==0) then
        Nocc=NCO
        NCO2=NCO*2
@@ -1060,41 +1063,27 @@ C  RPA + SOSEX integrated
        NCO2=NCO*2
        NA2=NA*2
       endif
-      ! Option A
-      !IF(TUNEMBPT) then
-      ! call ccsd_init(NBF,Nocc,verbose,FockM,ERImol2) 
-      !ELSE
-      ! call ccsd_init(NBF,Nocc,verbose,FockM,ERImol) 
-      !ENDIF
-      ! Option B
       call ccsd_init(NBF,Nocc,verbose,FockM,ERImol) 
       if(CCSD_READ) then
        call ccsd_read_guess() 
+       write(*,*) ' '
+       write(*,*) ' Read the T amplitudes file'
+       write(*,*) ' '
       endif
       deallocate(FockM)
       write(*,*) ' '
       do
        if(error>tol7 .and. iter<maxiter) then
-        ! Option A
-        !IF(TUNEMBPT) then
-        ! call ccsd_update_t1t2(ERImol2)
-        !ELSE
-        ! call ccsd_update_t1t2(ERImol)
-        !ENDIF
-        ! Option B
-        call ccsd_update_t1t2(ERImol)
-        ! Option A
-        !Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
-        ! Option B
+        call ccsd_update_ts(ERImol)
         IF(TUNEMBPT) then
-         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
+         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2)
         ELSE
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
         ENDIF
         error=abs(Eccsd-Eccsd_new)
         Eccsd=Eccsd_new
         iter=iter+1
-        if(mod(iter,5)==0) then
+        if(mod(iter,2)==0) then
          write(*,'(a,F15.10,a,i5)') ' CCSD energy ',Eccsd,' iter. ',iter
         endif
        else

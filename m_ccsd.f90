@@ -14,7 +14,7 @@ double precision,dimension(:,:,:,:),allocatable::td,tdnew,Wmnij,Wabef,Wmbej
 
 private::Nocc,Mbasis2,zero,half,one_fourth,ts,tsnew,Fae,Fmi,Fme,td,tdnew,Wmnij,Wabef,Wmbej,FockM,tol8
 private::ccsd_update_interm,ccsd_update_t1_t2,spin_int,taus,tau,slbasis,verbose,iter_local
-public::ccsd_init,ccsd_read_guess,ccsd_write_last,ccsd_update_t1t2,ccsd_energy,ccsd_clean,ccsd_en_nof
+public::ccsd_init,ccsd_read_guess,ccsd_write_last,ccsd_update_ts,ccsd_energy,ccsd_clean,ccsd_en_nof
 
 contains
 
@@ -112,7 +112,7 @@ write(iunit) 0,0,0,0,zero
 close(iunit)
 end subroutine ccsd_write_last
 
-subroutine ccsd_update_t1t2(ERImol)
+subroutine ccsd_update_ts(ERImol)
 implicit none
 ! Arguments
 double precision,dimension(:,:,:,:),intent(in)::ERImol
@@ -144,7 +144,7 @@ if(verbose>0) then
 end if
 ts=tsnew
 td=tdnew
-end subroutine ccsd_update_t1t2
+end subroutine ccsd_update_ts
 
 function ccsd_energy(ERImol)
 implicit none
