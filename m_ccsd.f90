@@ -7,13 +7,13 @@ double precision,parameter::zero=0.0d0
 double precision,parameter::half=5.0d-1
 double precision,parameter::one_fourth=2.5d-1
 integer,parameter::iunit=2341
-integer::Nocc,Mbasis2,iter_local=0,verbose
+integer::Nocc,Mbasis2,iter_local=0
 double precision::tol8=1.0d-8
 double precision,dimension(:,:),allocatable::ts,tsnew,Fae,Fmi,Fme,FockM
 double precision,dimension(:,:,:,:),allocatable::td,tdnew,Wmnij,Wabef,Wmbej
 
 private::Nocc,Mbasis2,zero,half,one_fourth,ts,tsnew,Fae,Fmi,Fme,td,tdnew,Wmnij,Wabef,Wmbej,FockM,tol8
-private::ccsd_update_interm,ccsd_update_t1_t2,spin_int,taus,tau,slbasis,verbose,iter_local
+private::ccsd_update_interm,ccsd_update_t1_t2,spin_int,taus,tau,slbasis,iter_local
 public::ccsd_init,ccsd_read_guess,ccsd_write_last,ccsd_update_ts,ccsd_energy,ccsd_clean,ccsd_en_nof
 
 contains
@@ -21,16 +21,15 @@ contains
 !!-----------------------------------------------------------
 !! Public
 !!-----------------------------------------------------------
-subroutine ccsd_init(Mbasis,Nocc_in,verbose_in,FockM_in,ERImol)
+subroutine ccsd_init(Mbasis,Nocc_in,FockM_in,ERImol)
 implicit none
 ! Arguments
-integer,intent(in)::Mbasis,Nocc_in,verbose_in
+integer,intent(in)::Mbasis,Nocc_in
 double precision,dimension(:,:),intent(in)::FockM_in
 double precision,dimension(:,:,:,:),intent(in)::ERImol
 ! Local variables
 integer::i,j,a,b
 ! Procedures
-verbose=verbose_in
 Mbasis2=Mbasis*2 ! Spin-less (size of the basis set) -> spin-with
 Nocc=Nocc_in*2   ! Spin-less -> spin-with 
 allocate(ts(Nocc,Nocc+1:Mbasis2),tsnew(Nocc,Nocc+1:Mbasis2),FockM(Mbasis2,Mbasis2))
@@ -139,9 +138,6 @@ do i=1,Nocc
   enddo
  enddo
 enddo
-if(verbose>0) then
- write(*,*) 'Updated T1 and T2 for CCSD calc. on iter.',iter_local
-end if
 ts=tsnew
 td=tdnew
 end subroutine ccsd_update_ts

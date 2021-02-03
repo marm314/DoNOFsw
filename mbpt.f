@@ -130,7 +130,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       IF(TUNEMBPT) ERImol2=ERImol
       DEALLOCATE(TEMPM)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Print 2e- integrals in MO basis
+C  Print 2e- integrals in NO basis
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C     call print2eint(NBF,ERImol)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -287,14 +287,16 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Ec CCSD 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      if(TUNEMBPT) then
-       write(*,*) 'Computing CCSD correction for NOFc-CCSD'
-      else
-       write(*,*)'Computing CCSD standard correction'
-      endif
-      EcCCSD=0.0d0
-      call ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
+      EcCCSD=ZERO
+      if(CCSD) then
+       if(TUNEMBPT) then
+        write(*,*) 'Computing CCSD correction for NOFc-CCSD'
+       else
+        write(*,*)'Computing CCSD standard correction'
+       endif
+       call ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
      &  CCSD_READ)
+      endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Write  Ec energies and final results
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1016,7 +1018,7 @@ C  RPA + SOSEX integrated
       double precision,dimension(NBF,NBF,NBF,NBF),intent(inout)::ERImol2
       double precision,allocatable,dimension(:,:)::FockM
       double precision,allocatable,dimension(:,:,:,:)::ERItmp
-      integer::p,q,r,s,Nocc,verbose=0,iter=0,NCO2,NA2,maxiter=1000000
+      integer::p,q,r,s,Nocc,verbose=1,iter=0,NCO2,NA2,maxiter=1000000
       double precision::error=1.0d0,Eccsd,Eccsd_new,tol7=1.0d-7
       allocate(FockM(NBF,NBF),ERItmp(NBF,NBF,NBF,NBF))
       FockM=0.0d0
@@ -1063,7 +1065,7 @@ C  RPA + SOSEX integrated
        NCO2=NCO*2
        NA2=NA*2
       endif
-      call ccsd_init(NBF,Nocc,verbose,FockM,ERImol) 
+      call ccsd_init(NBF,Nocc,FockM,ERImol) 
       if(CCSD_READ) then
        call ccsd_read_guess() 
        write(*,*) ' '
@@ -1083,7 +1085,7 @@ C  RPA + SOSEX integrated
         error=abs(Eccsd-Eccsd_new)
         Eccsd=Eccsd_new
         iter=iter+1
-        if(mod(iter,2)==0) then
+        if(mod(iter,2)==0 .and. verbose==1) then
          write(*,'(a,F15.10,a,i5)') ' CCSD energy ',Eccsd,' iter. ',iter
         endif
        else
