@@ -295,7 +295,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         write(*,*)'Computing CCSD standard correction'
        endif
        call ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
-     &  CCSD_READ)
+     &  CCSD_READ,QNCCSD)
       endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Write  Ec energies and final results
@@ -1007,10 +1007,10 @@ C  RPA + SOSEX integrated
       end subroutine rpa_sosex_eq
       
       subroutine ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
-     & CCSD_READ)
+     & CCSD_READ,QNCCSD)
       USE m_ccsd
       implicit none
-      logical,intent(in)::TUNEMBPT,CCSD_READ
+      logical,intent(in)::TUNEMBPT,QNCCSD,CCSD_READ
       integer,intent(in)::NCO,NBF,NA
       double precision,intent(inout)::EcCCSD
       double precision,dimension(NBF),intent(in)::EIG
@@ -1065,12 +1065,10 @@ C  RPA + SOSEX integrated
        NCO2=NCO*2
        NA2=NA*2
       endif
-      call ccsd_init(NBF,Nocc,FockM,ERImol) 
+      call ccsd_init(NBF,Nocc,QNCCSD,FockM,ERImol) 
       if(CCSD_READ) then
+       write(*,'(a)') ' Reading the T amplitudes file'
        call ccsd_read_guess() 
-       write(*,*) ' '
-       write(*,*) ' Read the T amplitudes file'
-       write(*,*) ' '
       endif
       deallocate(FockM)
       write(*,*) ' '
@@ -1086,15 +1084,15 @@ C  RPA + SOSEX integrated
         Eccsd=Eccsd_new
         iter=iter+1
         if(mod(iter,2)==0 .and. verbose==1) then
-         write(*,'(a,F15.10,a,i5)') ' CCSD energy ',Eccsd,' iter. ',iter
+         write(*,'(a,F15.10,a,i5)') ' CCSD corr. energy ',Eccsd,
+     &   ' iter. ',iter
         endif
        else
         exit
        endif
       enddo
-      write(*,*) ' '
-      write(*,*) 'CCSD iterative procedure finished after ',iter,
-     & ' iterations'
+      write(*,'(a,i5,a)') ' CCSD iterative procedure finished after ',
+     & iter,' iterations'
       write(*,*) ' '
       EcCCSD=Eccsd_new
       call ccsd_write_last()

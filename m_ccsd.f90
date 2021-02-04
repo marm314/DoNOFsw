@@ -7,13 +7,14 @@ double precision,parameter::zero=0.0d0
 double precision,parameter::half=5.0d-1
 double precision,parameter::one_fourth=2.5d-1
 integer,parameter::iunit=2341
-integer::Nocc,Mbasis2,iter_local=0
+logical::qnewton
+integer::Nocc,Mbasis2,iter=0
 double precision::tol8=1.0d-8
 double precision,dimension(:,:),allocatable::ts,tsnew,Fae,Fmi,Fme,FockM
 double precision,dimension(:,:,:,:),allocatable::td,tdnew,Wmnij,Wabef,Wmbej
 
 private::Nocc,Mbasis2,zero,half,one_fourth,ts,tsnew,Fae,Fmi,Fme,td,tdnew,Wmnij,Wabef,Wmbej,FockM,tol8
-private::ccsd_update_interm,ccsd_update_t1_t2,spin_int,taus,tau,slbasis,iter_local
+private::ccsd_update_interm,ccsd_update_t1_t2,spin_int,taus,tau,slbasis,iter,qnewton
 public::ccsd_init,ccsd_read_guess,ccsd_write_last,ccsd_update_ts,ccsd_energy,ccsd_clean,ccsd_en_nof
 
 contains
@@ -21,15 +22,17 @@ contains
 !!-----------------------------------------------------------
 !! Public
 !!-----------------------------------------------------------
-subroutine ccsd_init(Mbasis,Nocc_in,FockM_in,ERImol)
+subroutine ccsd_init(Mbasis,Nocc_in,qnewton_in,FockM_in,ERImol)
 implicit none
 ! Arguments
+logical,intent(in)::qnewton_in
 integer,intent(in)::Mbasis,Nocc_in
 double precision,dimension(:,:),intent(in)::FockM_in
 double precision,dimension(:,:,:,:),intent(in)::ERImol
 ! Local variables
 integer::i,j,a,b
 ! Procedures
+qnewton=qnewton_in
 Mbasis2=Mbasis*2 ! Spin-less (size of the basis set) -> spin-with
 Nocc=Nocc_in*2   ! Spin-less -> spin-with 
 allocate(ts(Nocc,Nocc+1:Mbasis2),tsnew(Nocc,Nocc+1:Mbasis2),FockM(Mbasis2,Mbasis2))
@@ -41,7 +44,11 @@ ts=zero;tsnew=zero;td=zero;tdnew=zero;Fae=zero;Fmi=zero;Fme=zero;
 Wmnij=zero;Wabef=zero;Wmbej=zero;FockM=zero;
 ! Initialize FockM
 do i=1,Mbasis2
- FockM(i,i)=FockM_in(slbasis(i),slbasis(i))
+ do j=1,Mbasis2
+  if(mod(i,2)==mod(j,2)) then
+   FockM(j,i)=FockM_in(slbasis(j),slbasis(i))
+  endif
+ enddo
 enddo
 ! Initialize td
 do i=1,Nocc
@@ -119,7 +126,7 @@ double precision,dimension(:,:,:,:),intent(in)::ERImol
 integer::i,j,a,b
 double precision::tol8=1d-8
 ! Procedures
-iter_local=iter_local+1
+iter=iter+1
 call ccsd_update_interm(ERImol)
 call ccsd_update_t1_t2(ERImol)
 do i=1,Nocc
@@ -176,7 +183,9 @@ ccsd_en_nof=zero
 do a=Nsocc+1,Mbasis2
  do b=Nsocc+1,Mbasis2
   do i=1,Ndocc
-!   if(b==Nsocc+1) ccsd_ene_nof=ccsd_en_nof+FockM(i,a)*ts(i,a) ! This is 0, the FockM is diag.
+   if(b==Nsocc+1) then
+ccsd_en_nof=ccsd_en_nof+FockM(i,a)*ts(i,a) ! This is 0 because the FockM is diagonal.
+    endif
    do j=1,Ndocc
 ccsd_en_nof=ccsd_en_nof+one_fourth*spin_int(i,j,a,b,ERImol)*td(i,j,a,b)+half*spin_int(i,j,a,b,ERImol)*ts(i,a)*ts(j,b)
    enddo
@@ -499,6 +508,7 @@ implicit none
 double precision,dimension(:,:,:,:),intent(in)::ERImol
 ! Local variables
 integer::i,j,m,n,a,b,e,f
+logical::ria,rijab
 ! Procedures
 tsnew=zero
 tdnew=zero
@@ -523,7 +533,14 @@ do a=Nocc+1,Mbasis2
       enddo
      enddo
     enddo
-    tsnew(i,a)=tsnew(i,a)/(FockM(i,i)-FockM(a,a)+tol8)
+    if(qnewton) then
+     ria=tsnew(i,a)-ts(i,a)*(FockM(i,i)-FockM(a,a))
+     if(abs(ria)>tol8) then
+      tsnew(i,a)=ts(i,a)+ria/(FockM(i,i)-FockM(a,a)+tol8)
+     endif
+    else
+     tsnew(i,a)=tsnew(i,a)/(FockM(i,i)-FockM(a,a)+tol8)
+    endif
    endif
    do j=1,Nocc
     tdnew(i,j,a,b)=spin_int(i,j,a,b,ERImol)
