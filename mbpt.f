@@ -92,16 +92,52 @@ C  One orbital energies (EIG) and FOCK matrix (FOCKm) with COEF/=CHF
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       ALLOCATE(EIG(NBF),FOCKm(NBF,NBF))
       CALL FOCKMOL(NBF,COEF,TEMPM,ELAG,EIG,FOCKm,AHCORE,IERI,ERI,ESD)
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C  Allocate 2e_integrals array(s) and form ERI in MO basis (see mp2.f)
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      ALLOCATE(ERImol(NBF,NBF,NBF,NBF))
+      IF(TUNEMBPT) THEN
+       ALLOCATE(ERImol2(NBF,NBF,NBF,NBF))
+      ENDIF
+      CALL ERIC1c(ERImol,IERI,ERI,TEMPM,NBF)
+      CALL ERIC23c(ERImol,TEMPM,NBF)
+      CALL ERIC4c(ERImol,TEMPM,NBF)
+      IF(TUNEMBPT) THEN 
+       ERImol2=ERImol
+      ENDIF
+      DEALLOCATE(TEMPM)
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C  Print 2e- integrals in NO basis
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C     call print2eint(NBF,ERImol)
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C  Tune Fock(i,a) and ERImol elements before computing W, wmn, etc. 
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       diagFOCK=.true.
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Tune Fock(i,a) elements and calc. 
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       if(TUNEMBPT) then
        ALLOCATE(TEMPM2(NBF,NBF))
-       call tunefock(CINTRA,CINTER,FOCKm,NBF,NCO,NVIR,NCWO,NO1PT2,EIG,
-     &  TEMPM2,diagFOCK,NA)
+       call tunefock(CINTRA,CINTER,FOCKm,NBF,NCO,NVIR,NCWO,NO1PT2,NA)
+       call tuneerimol(CINTER,CINTRA,NBF,NCO,NVIR,NCWO,NO1PT2,ERImol,
+     &  TDHF,NA)
       endif
-      DEALLOCATE(FOCKm)
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C  Transform FOCKm and ERIs from NO basis to "DIAG(FOCK)" basis (TEMPM2)
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      if(TUNEMBPT) then   
+       call diafock(FOCKm,NBF,EIG,TEMPM2,diagFOCK)
+       DEALLOCATE(CINTER,CINTRA,FOCKm)
+       if(diagFOCK.eqv..false.) then
+        if(mbptmem) then
+         call transform2mem(NBF,TEMPM2,ERImol)
+         call transform2mem(NBF,TEMPM2,ERImol2)
+        else
+         call transform2(NBF,TEMPM2,ERImol,ERImol2)
+        endif
+       endif
+       DEALLOCATE(TEMPM2)
+      else
+       DEALLOCATE(FOCKm)
+      endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Print orb. energies and occ numbers.
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -119,38 +155,6 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      & energies',mu
       write(*,*) '          '
       DEALLOCATE(OCC) ! We do not need the OCCs anymore
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Allocate 2e_integrals array(s) and form ERI in MO basis (see mp2.f)
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      ALLOCATE(ERImol(NBF,NBF,NBF,NBF))
-      IF(TUNEMBPT) ALLOCATE(ERImol2(NBF,NBF,NBF,NBF))
-      CALL ERIC1c(ERImol,IERI,ERI,TEMPM,NBF)
-      CALL ERIC23c(ERImol,TEMPM,NBF)
-      CALL ERIC4c(ERImol,TEMPM,NBF)
-      IF(TUNEMBPT) ERImol2=ERImol
-      DEALLOCATE(TEMPM)
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Print 2e- integrals in NO basis
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C     call print2eint(NBF,ERImol)
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Modify ERImol with CINTER and CINTRA before computing W, wmn, etc.
-C  Also transform ERIs from NO basis to "DIAG(FOCK)" basis (TEMPM2)
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      if(TUNEMBPT) then   
-       call tuneerimol(CINTER,CINTRA,NBF,NCO,NVIR,NCWO,NO1PT2,ERImol,
-     &  TDHF,NA)
-       DEALLOCATE(CINTER,CINTRA)
-       if(diagFOCK.eqv..false.) then
-        if(mbptmem) then
-         call transform2mem(NBF,TEMPM2,ERImol)
-         call transform2mem(NBF,TEMPM2,ERImol2)
-        else
-         call transform2(NBF,TEMPM2,ERImol,ERImol2)
-        endif
-       endif
-       DEALLOCATE(TEMPM2)
-      endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Build A+B and A-B matrices for CASIDA EQN and 1st contribution to EcRPA.
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -474,19 +478,65 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       write(*,*) ' '
       end subroutine tune_coefs
 
-      subroutine tunefock(CINTRA,CINTER,FOCKm,NBF,NCO,NVIR,NCWO,NFR,EIG,
-     & EIGENVE,diagF,NA)
+      subroutine tunefock(CINTRA,CINTER,FOCKm,NBF,NCO,NVIR,NCWO,NFR,NA)
       implicit none
-      logical,intent(inout)::diagF
       integer,intent(in)::NBF,NCO,NVIR,NCWO,NFR,NA
-      double precision,dimension(NBF),intent(inout)::CINTER,CINTRA,EIG
-      double precision,dimension(NBF,NBF),intent(inout)::FOCKm,EIGENVE
+      double precision,dimension(NBF),intent(inout)::CINTER,CINTRA
+      double precision,dimension(NBF,NBF),intent(inout)::FOCKm
       integer,allocatable,dimension(:)::coup
-      double precision,allocatable,dimension(:)::TEMPV
-      double precision::tol6
       integer::i,k,in,kn,lmin_i,lmax_i,last_coup
       allocate(coup(NVIR))
       coup=0
+      last_coup=NA+ncwo*(nco-nfr)
+      do i=1,nco
+       lmin_i = NA+ncwo*(nco-i)+1
+       lmax_i = NA+ncwo*(nco-i)+ncwo
+       do k=1,nvir
+        kn=k+NA
+        FOCKm(i,kn)=0.0d0 
+        FOCKm(kn,i)=0.0d0 
+        if((lmin_i<=kn.and.kn<=lmax_i).and.(lmax_i<=last_coup)) then
+         coup(k)=i 
+        endif
+       enddo
+      enddo
+      do i=nco+1,NA
+       do k=1,nvir
+        kn=k+NA
+        FOCKm(i,kn)=0.0d0
+        FOCKm(kn,i)=0.0d0
+       enddo
+      enddo
+      do i=1,NA
+       do k=i+1,NA
+        FOCKm(i,k)=FOCKm(i,k)*CINTER(i)*CINTER(k)
+        FOCKm(k,i)=FOCKm(i,k)
+       enddo
+      enddo
+      do i=1,nvir
+       in=i+NA
+       do k=i+1,nvir
+        kn=k+NA
+        if(coup(i)==coup(k)) then
+         FOCKm(in,kn)=FOCKm(in,kn)*CINTRA(in)*CINTRA(kn)
+        else
+         FOCKm(in,kn)=FOCKm(in,kn)*CINTER(in)*CINTER(kn)
+        endif
+        FOCKm(kn,in)=FOCKm(in,kn)
+       enddo
+      enddo 
+      deallocate(coup)
+      end subroutine tunefock
+
+      subroutine diafock(FOCKm,NBF,EIG,EIGENVE,diagF)
+      implicit none
+      logical,intent(inout)::diagF
+      integer,intent(in)::NBF
+      double precision,dimension(NBF),intent(inout)::EIG
+      double precision,dimension(NBF,NBF),intent(inout)::FOCKm,EIGENVE
+      double precision,allocatable,dimension(:)::TEMPV
+      double precision::tol6
+      integer::i,k
       tol6=1.0D-6
       do i=1,NBF-1
        do k=i+1,NBF
@@ -498,46 +548,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       enddo
   687 continue
       if(diagF.eqv..false.) then
-       last_coup=NA+ncwo*(nco-nfr)
        allocate(TEMPV(NBF))
-       do i=1,nco
-        lmin_i = NA+ncwo*(nco-i)+1
-        lmax_i = NA+ncwo*(nco-i)+ncwo
-        do k=1,nvir
-         kn=k+NA
-         FOCKm(i,kn)=0.0d0 
-         FOCKm(kn,i)=0.0d0 
-         if((lmin_i<=kn.and.kn<=lmax_i).and.(lmax_i<=last_coup)) then
-          coup(k)=i !coup(kn)=i
-         endif
-        enddo
-       enddo
-       do i=nco+1,NA
-        do k=1,nvir
-         kn=k+NA
-         FOCKm(i,kn)=0.0d0
-         FOCKm(kn,i)=0.0d0
-        enddo
-       enddo
-       do i=1,NA
-        do k=i+1,NA
-         FOCKm(i,k)=FOCKm(i,k)*CINTER(i)*CINTER(k)
-         FOCKm(k,i)=FOCKm(i,k)
-        enddo
-       enddo
-       do i=1,nvir
-        in=i+NA
-        do k=i+1,nvir
-         kn=k+NA
-         if(coup(i)==coup(k)) then
-          FOCKm(in,kn)=FOCKm(in,kn)*CINTRA(in)*CINTRA(kn)
-         else
-          FOCKm(in,kn)=FOCKm(in,kn)*CINTER(in)*CINTER(kn)
-         endif
-         FOCKm(kn,in)=FOCKm(in,kn)
-        enddo
-       enddo 
-       write(*,*) ' '
        CALL DIAG(NBF,FOCKm,EIGENVE,EIG,TEMPV) 
        deallocate(TEMPV)
       else
@@ -546,8 +557,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         EIGENVE(i,i)=1.0d0
        enddo
       endif
-      deallocate(coup)
-      end subroutine tunefock
+      end subroutine diafock
      
       subroutine tuneerimol(CINTER,CINTRA,nbf,nco,nvir,ncwo,nfr,ERImol,
      &  TDHF,NA)
@@ -556,67 +566,67 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       integer,intent(in)::NBF,NCO,NVIR,NCWO,NFR,NA
       double precision,dimension(NBF),intent(in)::CINTER,CINTRA
       double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
-      integer::i,j,k,l,kn,ln,lmin_i,lmax_i,last_coup
-      double precision::Ciikl,Cijkl
+      integer::i,j,a,b,an,bn,bmin_i,bmax_i,last_coup
+      double precision::Ciiab,Cijab
       last_coup=NA+ncwo*(nco-nfr)
       do i=1,NA
-       lmin_i = NA+ncwo*(nco-i)+1
-       lmax_i = NA+ncwo*(nco-i)+ncwo
+       bmin_i = NA+ncwo*(nco-i)+1
+       bmax_i = NA+ncwo*(nco-i)+ncwo
        do j=1,NA
         ! Subspace 'i' occ, still could be inter or intra
         if(j==i.and.j<=nco.and.i<=nco) then
-         do k=1,nvir
-          kn = k + NA
-          do l=1,nvir
-           ln = l + NA
+         do a=1,nvir
+          an = a + NA
+          do b=1,nvir
+           bn = b + NA
            if(i>NCO .or. j>NCO)then
-            Ciikl = CINTER(kn)*CINTER(ln)*CINTER(i)*CINTER(i)
-           elseif((     (lmin_i<=kn.and.kn<=lmax_i)
-     &        .and. (lmin_i<=ln.and.ln<=lmax_i)) 
-     &        .and. (lmax_i<=last_coup)        )then
-            Ciikl = CINTRA(kn)*CINTRA(ln)*CINTRA(i)*CINTRA(i)
+            Ciiab = CINTER(an)*CINTER(bn)*CINTER(i)*CINTER(i)
+           elseif((     (bmin_i<=an.and.an<=bmax_i)
+     &        .and. (bmin_i<=bn.and.bn<=bmax_i)) 
+     &        .and. (bmax_i<=last_coup)        )then
+            Ciiab = CINTRA(an)*CINTRA(bn)*CINTRA(i)*CINTRA(i)
            else
-            Ciikl = CINTER(kn)*CINTER(ln)*CINTER(i)*CINTER(i)
+            Ciiab = CINTER(an)*CINTER(bn)*CINTER(i)*CINTER(i)
            endif
-           ERImol(i,i,ln,kn) = Ciikl*ERImol(i,i,ln,kn)
-           ERImol(kn,i,ln,i) = ERImol(i,i,ln,kn)
-           ERImol(kn,ln,i,i) = ERImol(i,i,ln,kn)
-           ERImol(i,ln,i,kn) = ERImol(i,i,ln,kn)
-           ERImol(i,i,kn,ln) = ERImol(i,i,ln,kn)
-           ERImol(ln,i,kn,i) = ERImol(i,i,ln,kn)
-           ERImol(ln,kn,i,i) = ERImol(i,i,ln,kn)
-           ERImol(i,kn,i,ln) = ERImol(i,i,ln,kn)
+           ERImol(i,i,bn,an) = Ciiab*ERImol(i,i,bn,an)
+           ERImol(an,i,bn,i) = ERImol(i,i,bn,an)
+           ERImol(an,bn,i,i) = ERImol(i,i,bn,an)
+           ERImol(i,bn,i,an) = ERImol(i,i,bn,an)
+           ERImol(i,i,an,bn) = ERImol(i,i,bn,an)
+           ERImol(bn,i,an,i) = ERImol(i,i,bn,an)
+           ERImol(bn,an,i,i) = ERImol(i,i,bn,an)
+           ERImol(i,an,i,bn) = ERImol(i,i,bn,an)
            if(TDHF) then
-            ERImol(i,kn,ln,i) = Ciikl*ERImol(i,kn,ln,i)
-            ERImol(i,ln,kn,i) = ERImol(i,kn,ln,i)
-            ERImol(ln,i,i,kn) = ERImol(i,kn,ln,i)
-            ERImol(kn,i,i,ln) = ERImol(i,kn,ln,i)
+            ERImol(i,an,bn,i) = Ciiab*ERImol(i,an,bn,i)
+            ERImol(i,bn,an,i) = ERImol(i,an,bn,i)
+            ERImol(bn,i,i,an) = ERImol(i,an,bn,i)
+            ERImol(an,i,i,bn) = ERImol(i,an,bn,i)
            endif
           enddo
          enddo
         else          ! Purely interspace
-         do k=1,nvir
-          kn = k + NA
-          do l=1,nvir
-           ln = l + NA
-           Cijkl = CINTER(kn)*CINTER(ln)*CINTER(i)*CINTER(j)
-           ERImol(i,j,ln,kn) = Cijkl*ERImol(i,j,ln,kn)
-           ERImol(i,ln,j,kn) = ERImol(i,j,ln,kn)
-           ERImol(kn,ln,j,i) = ERImol(i,j,ln,kn)
-           ERImol(kn,j,ln,i) = ERImol(i,j,ln,kn)
-           ERImol(j,i,kn,ln) = ERImol(i,j,ln,kn)
-           ERImol(j,kn,i,ln) = ERImol(i,j,ln,kn)
-           ERImol(ln,kn,i,j) = ERImol(i,j,ln,kn)
-           ERImol(ln,i,kn,j) = ERImol(i,j,ln,kn)
+         do a=1,nvir
+          an = a + NA
+          do b=1,nvir
+           bn = b + NA
+           Cijab = CINTER(an)*CINTER(bn)*CINTER(i)*CINTER(j)
+           ERImol(i,j,bn,an) = Cijab*ERImol(i,j,bn,an)
+           ERImol(i,bn,j,an) = ERImol(i,j,bn,an)
+           ERImol(an,bn,j,i) = ERImol(i,j,bn,an)
+           ERImol(an,j,bn,i) = ERImol(i,j,bn,an)
+           ERImol(j,i,an,bn) = ERImol(i,j,bn,an)
+           ERImol(j,an,i,bn) = ERImol(i,j,bn,an)
+           ERImol(bn,an,i,j) = ERImol(i,j,bn,an)
+           ERImol(bn,i,an,j) = ERImol(i,j,bn,an)
            if(TDHF) then
-            ERImol(i,kn,ln,j) = Cijkl*ERImol(i,kn,ln,j)
-            ERImol(i,ln,kn,j) = ERImol(i,kn,ln,j)
-            ERImol(j,ln,kn,i) = ERImol(i,kn,ln,j)
-            ERImol(j,kn,ln,i) = ERImol(i,kn,ln,j)
-            ERImol(kn,j,i,ln) = ERImol(i,kn,ln,j)
-            ERImol(kn,i,j,ln) = ERImol(i,kn,ln,j)
-            ERImol(ln,i,j,kn) = ERImol(i,kn,ln,j)
-            ERImol(ln,j,i,kn) = ERImol(i,kn,ln,j)
+            ERImol(i,an,bn,j) = Cijab*ERImol(i,an,bn,j)
+            ERImol(i,bn,an,j) = ERImol(i,an,bn,j)
+            ERImol(j,bn,an,i) = ERImol(i,an,bn,j)
+            ERImol(j,an,bn,i) = ERImol(i,an,bn,j)
+            ERImol(an,j,i,bn) = ERImol(i,an,bn,j)
+            ERImol(an,i,j,bn) = ERImol(i,an,bn,j)
+            ERImol(bn,i,j,an) = ERImol(i,an,bn,j)
+            ERImol(bn,j,i,an) = ERImol(i,an,bn,j)
            endif
           enddo
          enddo
@@ -1074,9 +1084,9 @@ C  RPA + SOSEX integrated
       write(*,*) ' '
       do
        if(error>tol7 .and. iter<maxiter) then
-        call ccsd_update_ts(ERImol)
+        call ccsd_update_ts(ERImol) 
         IF(TUNEMBPT) then
-         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2)
+         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2) 
         ELSE
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
         ENDIF
