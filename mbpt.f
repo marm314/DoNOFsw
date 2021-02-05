@@ -117,8 +117,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       if(TUNEMBPT) then
        ALLOCATE(TEMPM2(NBF,NBF))
        call tunefock(CINTRA,CINTER,FOCKm,NBF,NCO,NVIR,NCWO,NO1PT2,NA)
-       call tuneerimol(CINTER,CINTRA,NBF,NCO,NVIR,NCWO,NO1PT2,ERImol,
-     &  TDHF,NA)
+       call tuneerimol(CINTER,CINTRA,NBF,NCO,NVIR,NCWO,NO1PT2,ERImol,NA)
       endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Transform FOCKm and ERIs from NO basis to "DIAG(FOCK)" basis (TEMPM2)
@@ -560,79 +559,183 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       end subroutine diafock
      
       subroutine tuneerimol(CINTER,CINTRA,nbf,nco,nvir,ncwo,nfr,ERImol,
-     &  TDHF,NA)
+     & NA)
       implicit none
-      logical,intent(in)::TDHF
       integer,intent(in)::NBF,NCO,NVIR,NCWO,NFR,NA
       double precision,dimension(NBF),intent(in)::CINTER,CINTRA
       double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
-      integer::i,j,a,b,an,bn,bmin_i,bmax_i,last_coup
-      double precision::Ciiab,Cijab
+      integer,dimension(:),allocatable::coup
+      double precision,dimension(:,:,:,:),allocatable::ERImolTMP
+      integer::i,j,k,l
+      integer::a,b,c,d,an,bn,cn,dn,bmin_i,bmax_i,last_coup
+      double precision::value1,Ciiab,Cijab,Cijkl,Cijka,Ciiia,Cabci,Cabcd
+      allocate(ERImolTMP(NBF,NBF,NBF,NBF),coup(NA+1:NVIR+NA))
+      ERImolTMP=0.0d0;coup=0
       last_coup=NA+ncwo*(nco-nfr)
       do i=1,NA
-       bmin_i = NA+ncwo*(nco-i)+1
-       bmax_i = NA+ncwo*(nco-i)+ncwo
+       bmin_i=NA+ncwo*(nco-i)+1
+       bmax_i=NA+ncwo*(nco-i)+ncwo
+       do a=1,nvir
+        an=a+NA
+        if(      (bmin_i<=an.and.an<=bmax_i)
+     &       .and. (bmax_i<=last_coup)        )then
+         coup(an)=i
+        endif
+       enddo 
+       ! <ov|v'v''>
+       do a=1,nvir
+        an=a+NA
+        do b=1,nvir
+         bn=b+NA
+         do c=1,nvir
+          cn=c+NA
+          if( i<=nco .and. (bmin_i<=an.and.an<=bmax_i)
+     &       .and.         (bmin_i<=bn.and.bn<=bmax_i) 
+     &       .and.         (bmin_i<=cn.and.cn<=bmax_i) 
+     &       .and. (bmax_i<=last_coup)        )then
+            Cabci=CINTRA(an)*CINTRA(bn)*CINTRA(cn)*CINTRA(i)
+           else
+            Cabci=CINTER(an)*CINTER(bn)*CINTER(cn)*CINTER(i)
+           endif
+           value1=Cabci*ERImol(i,cn,bn,an)
+           ERImolTMP(i,cn,bn,an)=value1
+           ERImolTMP(i,bn,cn,an)=value1
+           ERImolTMP(an,bn,cn,i)=value1
+           ERImolTMP(an,cn,bn,i)=value1
+           ERImolTMP(cn,an,i,bn)=value1
+           ERImolTMP(cn,i,an,bn)=value1
+           ERImolTMP(bn,i,an,cn)=value1
+           ERImolTMP(bn,an,i,cn)=value1
+         enddo
+        enddo
+       enddo
+       ! <ov|o'v'> and <oo'|vv'> and equivalent terms
        do j=1,NA
-        ! Subspace 'i' occ, still could be inter or intra
-        if(j==i.and.j<=nco.and.i<=nco) then
+        if(i==j .and. i<=nco) then ! Subspace 'i' occ, still could be inter or intra    
          do a=1,nvir
-          an = a + NA
+          an=a+NA
           do b=1,nvir
-           bn = b + NA
-           if(i>NCO .or. j>NCO)then
-            Ciiab = CINTER(an)*CINTER(bn)*CINTER(i)*CINTER(i)
-           elseif((     (bmin_i<=an.and.an<=bmax_i)
+           bn=b+NA
+           if((     (bmin_i<=an.and.an<=bmax_i)
      &        .and. (bmin_i<=bn.and.bn<=bmax_i)) 
      &        .and. (bmax_i<=last_coup)        )then
-            Ciiab = CINTRA(an)*CINTRA(bn)*CINTRA(i)*CINTRA(i)
+            Ciiab=CINTRA(an)*CINTRA(bn)*CINTRA(i)*CINTRA(i)
            else
-            Ciiab = CINTER(an)*CINTER(bn)*CINTER(i)*CINTER(i)
+            Ciiab=CINTER(an)*CINTER(bn)*CINTER(i)*CINTER(i)
            endif
-           ERImol(i,i,bn,an) = Ciiab*ERImol(i,i,bn,an)
-           ERImol(an,i,bn,i) = ERImol(i,i,bn,an)
-           ERImol(an,bn,i,i) = ERImol(i,i,bn,an)
-           ERImol(i,bn,i,an) = ERImol(i,i,bn,an)
-           ERImol(i,i,an,bn) = ERImol(i,i,bn,an)
-           ERImol(bn,i,an,i) = ERImol(i,i,bn,an)
-           ERImol(bn,an,i,i) = ERImol(i,i,bn,an)
-           ERImol(i,an,i,bn) = ERImol(i,i,bn,an)
-           if(TDHF) then
-            ERImol(i,an,bn,i) = Ciiab*ERImol(i,an,bn,i)
-            ERImol(i,bn,an,i) = ERImol(i,an,bn,i)
-            ERImol(bn,i,i,an) = ERImol(i,an,bn,i)
-            ERImol(an,i,i,bn) = ERImol(i,an,bn,i)
-           endif
+           value1=Ciiab*ERImol(i,i,bn,an)
+           ERImolTMP(i,i,bn,an)=value1
+           ERImolTMP(an,i,bn,i)=value1
+           ERImolTMP(an,bn,i,i)=value1
+           ERImolTMP(i,bn,i,an)=value1
+           ERImolTMP(i,i,an,bn)=value1
+           ERImolTMP(bn,i,an,i)=value1
+           ERImolTMP(bn,an,i,i)=value1
+           ERImolTMP(i,an,i,bn)=value1
+           value1=Ciiab*ERImol(i,an,bn,i)
+           ERImolTMP(i,an,bn,i)=value1
+           ERImolTMP(i,bn,an,i)=value1
+           ERImolTMP(bn,i,i,an)=value1
+           ERImolTMP(an,i,i,bn)=value1
           enddo
          enddo
-        else          ! Purely interspace
+        else         ! Purely interspace  
          do a=1,nvir
-          an = a + NA
+          an=a+NA
           do b=1,nvir
-           bn = b + NA
-           Cijab = CINTER(an)*CINTER(bn)*CINTER(i)*CINTER(j)
-           ERImol(i,j,bn,an) = Cijab*ERImol(i,j,bn,an)
-           ERImol(i,bn,j,an) = ERImol(i,j,bn,an)
-           ERImol(an,bn,j,i) = ERImol(i,j,bn,an)
-           ERImol(an,j,bn,i) = ERImol(i,j,bn,an)
-           ERImol(j,i,an,bn) = ERImol(i,j,bn,an)
-           ERImol(j,an,i,bn) = ERImol(i,j,bn,an)
-           ERImol(bn,an,i,j) = ERImol(i,j,bn,an)
-           ERImol(bn,i,an,j) = ERImol(i,j,bn,an)
-           if(TDHF) then
-            ERImol(i,an,bn,j) = Cijab*ERImol(i,an,bn,j)
-            ERImol(i,bn,an,j) = ERImol(i,an,bn,j)
-            ERImol(j,bn,an,i) = ERImol(i,an,bn,j)
-            ERImol(j,an,bn,i) = ERImol(i,an,bn,j)
-            ERImol(an,j,i,bn) = ERImol(i,an,bn,j)
-            ERImol(an,i,j,bn) = ERImol(i,an,bn,j)
-            ERImol(bn,i,j,an) = ERImol(i,an,bn,j)
-            ERImol(bn,j,i,an) = ERImol(i,an,bn,j)
-           endif
+           bn=b+NA
+           Cijab=CINTER(an)*CINTER(bn)*CINTER(i)*CINTER(j)
+           value1=Cijab*ERImol(i,j,bn,an)
+           ERImolTMP(i,j,bn,an)=value1
+           ERImolTMP(i,bn,j,an)=value1
+           ERImolTMP(an,bn,j,i)=value1
+           ERImolTMP(an,j,bn,i)=value1
+           ERImolTMP(j,i,an,bn)=value1
+           ERImolTMP(j,an,i,bn)=value1
+           ERImolTMP(bn,an,i,j)=value1
+           ERImolTMP(bn,i,an,j)=value1
+           value1=Cijab*ERImol(i,an,bn,j)
+           ERImolTMP(i,an,bn,j)=value1
+           ERImolTMP(i,bn,an,j)=value1
+           ERImolTMP(j,bn,an,i)=value1
+           ERImolTMP(j,an,bn,i)=value1
+           ERImolTMP(an,j,i,bn)=value1
+           ERImolTMP(an,i,j,bn)=value1
+           ERImolTMP(bn,i,j,an)=value1
+           ERImolTMP(bn,j,i,an)=value1
           enddo
          enddo
         endif
+       ! <oo'|o''v'> and equivalent terms
+        do k=1,NA
+         if(i==j .and. i==k .and. i<=nco) then ! Subspace 'i' occ, still could be inter or intra    
+          do a=1,nvir
+           an=a+NA
+           if(      (bmin_i<=an.and.an<=bmax_i)
+     &        .and. (bmax_i<=last_coup)        )then
+            Ciiia=CINTRA(an)*CINTRA(i)*CINTRA(i)*CINTRA(i)
+           else
+            Ciiia=CINTER(an)*CINTER(i)*CINTER(i)*CINTER(i)
+           endif
+           value1=Ciiia*ERImol(i,i,i,an)
+           ERImolTMP(i,i,i,an)=value1
+           ERImolTMP(i,i,an,i)=value1
+           ERImolTMP(i,an,i,i)=value1
+           ERImolTMP(an,i,i,i)=value1
+          enddo
+         else           ! Purely interspace  
+          do a=1,nvir
+           an=a+NA
+           Cijka=CINTER(an)*CINTER(i)*CINTER(j)*CINTER(k)
+           value1=Cijka*ERImol(i,j,k,an)
+           ERImolTMP(i,j,k,an)=value1
+           ERImolTMP(i,k,j,an)=value1
+           ERImolTMP(an,k,j,i)=value1
+           ERImolTMP(an,j,k,i)=value1
+           ERImolTMP(j,an,i,k)=value1
+           ERImolTMP(j,i,an,k)=value1
+           ERImolTMP(k,i,an,j)=value1
+           ERImolTMP(k,an,i,j)=value1
+          enddo
+         endif
+        enddo
+       ! <oo'|o''o'''> and equivalent terms
+        do k=1,NA
+         do l=1,NA
+          if(i==j .and. i==k .and. i==l) then
+           Cijkl=CINTRA(i)*CINTRA(i)*CINTRA(i)*CINTRA(i)
+          else
+           Cijkl=CINTER(i)*CINTER(j)*CINTER(k)*CINTER(l)
+          endif
+          ERImolTMP(i,j,k,l)=Cijkl*ERImol(i,j,k,l)
+         enddo
+        enddo
        enddo
       enddo
+       ! <vv'|v''v'''> and equivalent terms
+      do a=1,nvir
+       an=a+NA
+       do b=1,nvir
+        bn=b+NA
+        do c=1,nvir
+         cn=c+NA
+         do d=1,nvir
+          dn=d+NA
+          if(coup(an)/=0 .and. 
+     &       coup(an)==coup(bn) .and. 
+     &       coup(an)==coup(cn) .and. 
+     &       coup(an)==coup(bn)) then
+           Cabcd=CINTRA(an)*CINTRA(bn)*CINTRA(cn)*CINTRA(dn)
+          else
+           Cabcd=CINTER(an)*CINTER(bn)*CINTER(cn)*CINTER(dn)
+          endif
+          ERImolTMP(an,bn,cn,dn)=Cabcd*ERImol(an,bn,cn,dn)
+         enddo
+        enddo
+       enddo
+      enddo
+      ERImol=ERImolTMP
+      deallocate(ERImolTMP,coup)
       end subroutine tuneerimol      
 
       subroutine td_polarizability(NBF,NCO,Nab,NA,COEF,XpY,
