@@ -1134,6 +1134,8 @@ C  RPA + SOSEX integrated
       integer::p,q,r,s,Nocc,iter=0,NCO2,NA2,maxiter=1000000
       double precision::deltaE=1.0d0,Eccsd,Eccsd_new,tol7=1.0d-7,tolcc
       tolcc=10.0**(-NTHRESHCC)
+      write(*,'(a,F15.8,A)') ' Threshold set to ',
+     &    tolcc, ' for deltaE in CCSD'
       allocate(FockM(NBF,NBF),ERItmp(NBF,NBF,NBF,NBF))
       FockM=0.0d0
       do p=1,NBF
@@ -1205,8 +1207,8 @@ C  RPA + SOSEX integrated
         exit
        endif
       enddo
-      write(*,'(a,i5,a)') ' CCSD iterative procedure finished after ',
-     & iter,' iterations'
+      write(*,'(a,i5,a,F15.10)') ' CCSD procedure finished after ',
+     & iter,' iter. with deltaE ',deltaE
       write(*,*) ' '
       EcCCSD=Eccsd_new
       call ccsd_write_last()

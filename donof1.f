@@ -4246,7 +4246,7 @@ C.......... QNCCSD              Do Quasi-Newton CCSD to update T1.
 C                     = F       (DEFAULT)
 C
 C.......... NTHRESHCC           Threshold to stop T1 and T2 updates (based on Ecorr).
-C                     = 5       (DEFAULT)
+C                     = 6       (DEFAULT)
 C
 C.......... NO1PT2              Frozen MOs in perturbative calculations
 C                               Maximum index of NOs with Occupation = 1
@@ -4462,7 +4462,7 @@ C     Options for pertubative calculations
       MBPTMEM=.TRUE.
       TDHF=.FALSE.
       CCSD=.FALSE.
-      NTHRESHCC=5
+      NTHRESHCC=6
       QNCCSD=.FALSE.
       CCSD_READ=.FALSE.
 
