@@ -1143,7 +1143,7 @@ C  RPA + SOSEX integrated
        do q=1,NBF
         do r=1,NBF
          do s=1,NBF
-          if(abs(ERImol(p,q,s,r))>tol7) then
+          if(dabs(ERImol(p,q,s,r))>tol7) then
            ERItmp(p,q,r,s)=ERImol(p,q,s,r)
           endif
          enddo
@@ -1158,7 +1158,7 @@ C  RPA + SOSEX integrated
         do q=1,NBF
          do r=1,NBF
           do s=1,NBF
-           if(abs(ERImol2(p,q,s,r))>tol7) then
+           if(dabs(ERImol2(p,q,s,r))>tol7) then
             ERItmp(p,q,r,s)=ERImol2(p,q,s,r)
            endif
           enddo
@@ -1179,11 +1179,11 @@ C  RPA + SOSEX integrated
        NA2=NA*2
       endif
       call ccsd_init(NBF,Nocc,QNCCSD,FockM,ERImol) 
+      deallocate(FockM)
       if(CCSD_READ) then
        write(*,'(a)') ' Reading the T amplitudes file'
        call ccsd_read_guess() 
       endif
-      deallocate(FockM)
       write(*,*) ' '
       do
        if(error>tol7 .and. iter<maxiter) then
@@ -1193,7 +1193,7 @@ C  RPA + SOSEX integrated
         ELSE
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
         ENDIF
-        error=abs(Eccsd-Eccsd_new)
+        error=dabs(Eccsd-Eccsd_new)
         Eccsd=Eccsd_new
         iter=iter+1
         if(mod(iter,2)==0 .and. verbose==1) then
