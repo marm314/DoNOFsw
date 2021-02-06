@@ -1131,8 +1131,8 @@ C  RPA + SOSEX integrated
       double precision,dimension(NBF,NBF,NBF,NBF),intent(inout)::ERImol2
       double precision,allocatable,dimension(:,:)::FockM
       double precision,allocatable,dimension(:,:,:,:)::ERItmp
-      integer::p,q,r,s,Nocc,verbose=1,iter=0,NCO2,NA2,maxiter=1000000
-      double precision::error=1.0d0,Eccsd,Eccsd_new,tol7=1.0d-7
+      integer::p,q,r,s,Nocc,iter=0,NCO2,NA2,maxiter=1000000
+      double precision::deltaE=1.0d0,Eccsd,Eccsd_new,tol7=1.0d-7
       allocate(FockM(NBF,NBF),ERItmp(NBF,NBF,NBF,NBF))
       FockM=0.0d0
       do p=1,NBF
@@ -1143,7 +1143,7 @@ C  RPA + SOSEX integrated
        do q=1,NBF
         do r=1,NBF
          do s=1,NBF
-          if(dabs(ERImol(p,q,s,r))>tol7) then
+          if(abs(ERImol(p,q,s,r))>tol7) then
            ERItmp(p,q,r,s)=ERImol(p,q,s,r)
           endif
          enddo
@@ -1158,7 +1158,7 @@ C  RPA + SOSEX integrated
         do q=1,NBF
          do r=1,NBF
           do s=1,NBF
-           if(dabs(ERImol2(p,q,s,r))>tol7) then
+           if(abs(ERImol2(p,q,s,r))>tol7) then
             ERItmp(p,q,r,s)=ERImol2(p,q,s,r)
            endif
           enddo
@@ -1186,19 +1186,19 @@ C  RPA + SOSEX integrated
       endif
       write(*,*) ' '
       do
-       if(error>tol7 .and. iter<maxiter) then
+       if(deltaE>tol7 .and. iter<maxiter) then
         call ccsd_update_ts(ERImol) 
         IF(TUNEMBPT) then
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2) 
         ELSE
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
         ENDIF
-        error=dabs(Eccsd-Eccsd_new)
+        deltaE=dabs(Eccsd-Eccsd_new)
         Eccsd=Eccsd_new
         iter=iter+1
-        if(mod(iter,2)==0 .and. verbose==1) then
-         write(*,'(a,F15.10,a,i5)') ' CCSD corr. energy ',Eccsd,
-     &   ' iter. ',iter
+        if(mod(iter,2)==0) then
+         write(*,'(a,F15.10,a,i5,a,F15.8)') ' CCSD corr. energy ',
+     &   Eccsd,' iter. ',iter, ' deltaE ',deltaE
         endif
        else
         exit

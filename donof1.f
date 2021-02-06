@@ -4240,6 +4240,7 @@ C.......... CCSD                Do NOFc-CCSD calc.
 C                     = F       (DEFAULT)
 C
 C.......... CCSD_READ           NOFc-CCSD read T1 and T2 amplitudes
+C                     = F       (DEFAULT)
 C
 C.......... QNCCSD              Do Quasi-Newton CCSD to update T1.
 C                     = F       (DEFAULT)
