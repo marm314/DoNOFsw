@@ -265,7 +265,7 @@ C-----------------------------------------------------------------------
        COMMON/INPNOF_OIMP2/OIMP2
        LOGICAL MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD,CCSD_READ,QNCCSD
        COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD_READ,CCSD
-       COMMON/INPNOF_MBPT2/QNCCSD
+       COMMON/INPNOF_MBPT2/QNCCSD,NTHRESHCC
        COMMON/INPNOF_CGM/ICGMETHOD
        LOGICAL CHKORTHO,ORTHO
        COMMON/INPNOF_ORTHOGONALITY/CHKORTHO,ORTHO
@@ -4245,6 +4245,9 @@ C
 C.......... QNCCSD              Do Quasi-Newton CCSD to update T1.
 C                     = F       (DEFAULT)
 C
+C.......... NTHRESHCC           Threshold to stop T1 and T2 updates (based on Ecorr).
+C                     = 5       (DEFAULT)
+C
 C.......... NO1PT2              Frozen MOs in perturbative calculations
 C                               Maximum index of NOs with Occupation = 1
 C                      = -1     = NO1 (DEFAULT)
@@ -4406,7 +4409,8 @@ C-----------------------------------------------------------------------
      &                DIAGLAG,IAIMPAC,IEKT,NOUTRDM,NTHRESHDM,NSQT,
      &                NOUTCJK,NTHRESHCJK,NOUTTijab,NTHRESHTijab,
      &                ORTHO,CHKORTHO,FROZEN,IFROZEN,ICGMETHOD,
-     &                MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD,CCSD_READ,QNCCSD
+     &                MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD,CCSD_READ,QNCCSD,
+     &                NTHRESHCC
 C-----------------------------------------------------------------------
 C     Preset values to namelist variables
 C-----------------------------------------------------------------------
@@ -4458,6 +4462,7 @@ C     Options for pertubative calculations
       MBPTMEM=.TRUE.
       TDHF=.FALSE.
       CCSD=.FALSE.
+      NTHRESHCC=5
       QNCCSD=.FALSE.
       CCSD_READ=.FALSE.
 

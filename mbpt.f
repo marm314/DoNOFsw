@@ -298,7 +298,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         write(*,*)'Computing CCSD standard correction'
        endif
        call ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
-     &  CCSD_READ,QNCCSD)
+     &  CCSD_READ,QNCCSD,NTHRESHCC)
       endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Write  Ec energies and final results
@@ -1120,11 +1120,11 @@ C  RPA + SOSEX integrated
       end subroutine rpa_sosex_eq
       
       subroutine ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
-     & CCSD_READ,QNCCSD)
+     & CCSD_READ,QNCCSD,NTHRESHCC)
       USE m_ccsd
       implicit none
       logical,intent(in)::TUNEMBPT,QNCCSD,CCSD_READ
-      integer,intent(in)::NCO,NBF,NA
+      integer,intent(in)::NCO,NBF,NA,NTHRESHCC
       double precision,intent(inout)::EcCCSD
       double precision,dimension(NBF),intent(in)::EIG
       double precision,dimension(NBF,NBF,NBF,NBF),intent(inout)::ERImol
@@ -1132,7 +1132,8 @@ C  RPA + SOSEX integrated
       double precision,allocatable,dimension(:,:)::FockM
       double precision,allocatable,dimension(:,:,:,:)::ERItmp
       integer::p,q,r,s,Nocc,iter=0,NCO2,NA2,maxiter=1000000
-      double precision::deltaE=1.0d0,Eccsd,Eccsd_new,tol7=1.0d-7
+      double precision::deltaE=1.0d0,Eccsd,Eccsd_new,tol7=1.0d-7,tolcc
+      tolcc=10.0**(-NTHRESHCC)
       allocate(FockM(NBF,NBF),ERItmp(NBF,NBF,NBF,NBF))
       FockM=0.0d0
       do p=1,NBF
@@ -1186,7 +1187,7 @@ C  RPA + SOSEX integrated
       endif
       write(*,*) ' '
       do
-       if(deltaE>tol7 .and. iter<maxiter) then
+       if(deltaE>tolcc .and. iter<maxiter) then
         call ccsd_update_ts(ERImol) 
         IF(TUNEMBPT) then
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2) 
