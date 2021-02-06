@@ -1207,7 +1207,8 @@ C  RPA + SOSEX integrated
         exit
        endif
       enddo
-      write(*,'(a,i5,a,F15.10)') ' CCSD procedure finished after ',
+      write(*,*) ' '
+      write(*,'(a,i5,a,F15.8)') ' CCSD procedure finished after ',
      & iter,' iter. with deltaE ',deltaE
       write(*,*) ' '
       EcCCSD=Eccsd_new
