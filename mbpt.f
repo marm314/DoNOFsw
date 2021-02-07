@@ -298,7 +298,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         write(*,*)'Computing CCSD standard correction'
        endif
        call ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
-     &  CCSD_READ,QNCCSD,NTHRESHCC)
+     &  CCSD_READ,DIISCC,QNCCSD,NTHRESHCC)
       endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Write  Ec energies and final results
@@ -1120,15 +1120,16 @@ C  RPA + SOSEX integrated
       end subroutine rpa_sosex_eq
       
       subroutine ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
-     & CCSD_READ,QNCCSD,NTHRESHCC)
+     & CCSD_READ,DIISCC,QNCCSD,NTHRESHCC)
       USE m_ccsd
       implicit none
-      logical,intent(in)::TUNEMBPT,QNCCSD,CCSD_READ
+      logical,intent(in)::TUNEMBPT,QNCCSD,CCSD_READ,DIISCC
       integer,intent(in)::NCO,NBF,NA,NTHRESHCC
       double precision,intent(inout)::EcCCSD
       double precision,dimension(NBF),intent(in)::EIG
       double precision,dimension(NBF,NBF,NBF,NBF),intent(inout)::ERImol
       double precision,dimension(NBF,NBF,NBF,NBF),intent(inout)::ERImol2
+      character(len=50)::filep 
       double precision,allocatable,dimension(:,:)::FockM
       double precision,allocatable,dimension(:,:,:,:)::ERItmp
       integer::p,q,r,s,Nocc,iter=0,NCO2,NA2,maxiter=1000000
@@ -1181,7 +1182,7 @@ C  RPA + SOSEX integrated
        NCO2=NCO*2
        NA2=NA*2
       endif
-      call ccsd_init(NBF,Nocc,QNCCSD,FockM,ERImol) 
+      call ccsd_init(NBF,Nocc,QNCCSD,DIISCC,FockM,ERImol) 
       deallocate(FockM)
       if(CCSD_READ) then
        write(*,'(a)') ' Reading the T amplitudes file'
@@ -1190,7 +1191,7 @@ C  RPA + SOSEX integrated
       write(*,*) ' '
       do
        if(deltaE>tolcc .and. iter<maxiter) then
-        call ccsd_update_ts(ERImol) 
+        call ccsd_update_ts(deltaE,ERImol) 
         IF(TUNEMBPT) then
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2) 
         ELSE
@@ -1212,7 +1213,8 @@ C  RPA + SOSEX integrated
      & iter,' iter. with deltaE ',deltaE
       write(*,*) ' '
       EcCCSD=Eccsd_new
-      call ccsd_write_last()
+      write(filep,'(a)') 't_amps'
+      call ccsd_write_ts(filep)
       call ccsd_clean()
       end subroutine ccsd_eq
 

@@ -264,8 +264,9 @@ C-----------------------------------------------------------------------
        LOGICAL OIMP2
        COMMON/INPNOF_OIMP2/OIMP2
        LOGICAL MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD,CCSD_READ,QNCCSD
+       LOGICAL DIISCC
        COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD_READ,CCSD
-       COMMON/INPNOF_MBPT2/QNCCSD,NTHRESHCC
+       COMMON/INPNOF_MBPT2/QNCCSD,DIISCC,NTHRESHCC
        COMMON/INPNOF_CGM/ICGMETHOD
        LOGICAL CHKORTHO,ORTHO
        COMMON/INPNOF_ORTHOGONALITY/CHKORTHO,ORTHO
@@ -4245,6 +4246,9 @@ C
 C.......... QNCCSD              Do Quasi-Newton CCSD to update T1.
 C                     = F       (DEFAULT)
 C
+C.......... DIISCC              Do DIIS on CCSD T1 and T2 updates.
+C                     = F       (DEFAULT)
+C
 C.......... NTHRESHCC           Threshold to stop T1 and T2 updates (based on Ecorr).
 C                     = 6       (DEFAULT)
 C
@@ -4410,7 +4414,7 @@ C-----------------------------------------------------------------------
      &                NOUTCJK,NTHRESHCJK,NOUTTijab,NTHRESHTijab,
      &                ORTHO,CHKORTHO,FROZEN,IFROZEN,ICGMETHOD,
      &                MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD,CCSD_READ,QNCCSD,
-     &                NTHRESHCC
+     &                DIISCC,NTHRESHCC
 C-----------------------------------------------------------------------
 C     Preset values to namelist variables
 C-----------------------------------------------------------------------
@@ -4464,6 +4468,7 @@ C     Options for pertubative calculations
       CCSD=.FALSE.
       NTHRESHCC=6
       QNCCSD=.FALSE.
+      DIISCC=.FALSE.
       CCSD_READ=.FALSE.
 
 C     Input Options for Gamma (Occ), C and Diagonal F
