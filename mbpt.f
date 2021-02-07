@@ -918,7 +918,7 @@ C      enddo
            do s=1,Nab 
             EcGoWo=EcGoWo+wmn(i,a,s)*ERImol(j,i,a,b)*XpY(l,s)*
      &       DSQRT(2.0d0)/(EIG(i)-EIG(a)-BIGOMEGA(s)+tol10)
-            EcGMSOS=EcGMSOS-wmn(i,a,s)*ERImol(j,i,b,a)*XpY(l,s)* ! Sign and ERI changed
+            EcGMSOS=EcGMSOS-wmn(i,a,s)*ERImol(j,i,b,a)*XpY(l,s)*        ! Sign and ERI changed
      &       DSQRT(2.0d0)/(EIG(i)-EIG(a)-BIGOMEGA(s)+tol10)
            enddo
           enddo
@@ -935,7 +935,7 @@ C      enddo
            do s=1,Nab 
             EcGoWo=EcGoWo+0.5d0*wmn(i,a,s)*ERImol(j,i,a,b)*XpY(l,s)*
      &       DSQRT(2.0d0)/(EIG(i)-EIG(a)-BIGOMEGA(s)+tol10)
-            EcGMSOS=EcGMSOS-0.5d0*wmn(i,a,s)*ERImol(j,i,b,a)*XpY(l,s)* ! Signed and ERI changed
+            EcGMSOS=EcGMSOS-0.5d0*wmn(i,a,s)*ERImol(j,i,b,a)*XpY(l,s)*  ! Signed and ERI changed
      &       DSQRT(2.0d0)/(EIG(i)-EIG(a)-BIGOMEGA(s)+tol10)
            enddo
           enddo
@@ -946,7 +946,7 @@ C      enddo
            do s=1,Nab 
             EcGoWo=EcGoWo+0.5d0*wmn(i,a,s)*ERImol(j,i,a,b)*XpY(l,s)*
      &       DSQRT(2.0d0)/(EIG(i)-EIG(a)-BIGOMEGA(s)+tol10)
-            EcGMSOS=EcGMSOS-0.5d0*wmn(i,a,s)*ERImol(j,i,b,a)*XpY(l,s)* ! Signed and ERI changed
+            EcGMSOS=EcGMSOS-0.5d0*wmn(i,a,s)*ERImol(j,i,b,a)*XpY(l,s)*  ! Signed and ERI changed
      &       DSQRT(2.0d0)/(EIG(i)-EIG(a)-BIGOMEGA(s)+tol10)
            enddo
           enddo
@@ -954,9 +954,9 @@ C      enddo
            if(i/=j) then
             l=(j-1)*(NBF-NA)+(b-fst_virt+1)
             do s=1,Nab 
-             EcGoWo=EcGoWo+0.5d0*wmn(i,a,s)*ERImol(j,i,a,b)*XpY(l,s)*
+             EcGoWo=EcGoWo+0.25d0*wmn(i,a,s)*ERImol(j,i,a,b)*XpY(l,s)*
      &        DSQRT(2.0d0)/(EIG(i)-EIG(a)-BIGOMEGA(s)+tol10)
-             EcGMSOS=EcGMSOS-0.5d0*wmn(i,a,s)*ERImol(j,i,b,a)*XpY(l,s)* ! Signed and ERI changed
+             EcGMSOS=EcGMSOS-0.25d0*wmn(i,a,s)*ERImol(j,i,b,a)*XpY(l,s)*! Signed and ERI changed
      &        DSQRT(2.0d0)/(EIG(i)-EIG(a)-BIGOMEGA(s)+tol10)
             enddo
            endif
@@ -995,10 +995,10 @@ C      enddo
           IF(TUNEMBPT) then
            ! Use [2Tij,ab - Tij,ba] as 2-RDM element (the tuned one in Piris PRA).
            EcMP2=EcMP2+ERImol2(a,b,j,i)*(ERImol(a,b,j,i)  
-     &    -0.5D+0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
+     &    -0.5d0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
           ELSE
            EcMP2=EcMP2+ERImol(a,b,j,i)*(ERImol(a,b,j,i)
-     &    -0.5D+0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
+     &    -0.5d0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
           ENDIF
          enddo
         enddo
@@ -1007,21 +1007,23 @@ C      enddo
           IF(TUNEMBPT) then
            ! Use [2Tij,ab - Tij,ba] as 2-RDM element (the tuned one in Piris PRA).
            EcMP2=EcMP2+ERImol2(a,b,j,i)*(ERImol(a,b,j,i)  
-     &    -0.5D+0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
+     &    -0.5d0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
           ELSE
            EcMP2=EcMP2+ERImol(a,b,j,i)*(ERImol(a,b,j,i)
-     &    -0.5D+0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
+     &    -0.5d0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
           ENDIF
          enddo
          do j=NCO+1,NA
-          IF(TUNEMBPT) then
-           ! Use [2Tij,ab - Tij,ba] as 2-RDM element (the tuned one in Piris PRA).
-           if(j/=i)EcMP2=EcMP2+0.5d+0*ERImol2(a,b,j,i)*(ERImol(a,b,j,i)
-     &    -0.5D+0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
-          ELSE
-           if(j/=i)EcMP2=EcMP2+0.5d+0*ERImol(a,b,j,i)*(ERImol(a,b,j,i)
-     &    -0.5D+0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
-          ENDIF
+          if(j/=i) then
+           IF(TUNEMBPT) then
+            ! Use [2Tij,ab - Tij,ba] as 2-RDM element (the tuned one in Piris PRA).
+            EcMP2=EcMP2+0.5d0*ERImol2(a,b,j,i)*(ERImol(a,b,j,i)
+     &      -0.5d0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
+           ELSE
+            EcMP2=EcMP2+0.5d0*ERImol(a,b,j,i)*(ERImol(a,b,j,i)
+     &      -0.5d0*ERImol(a,b,i,j))/(EIG(i)+EIG(j)-EIG(a)-EIG(b)+tol10)
+           ENDIF
+          endif
          enddo
         enddo
        enddo
@@ -1070,10 +1072,10 @@ C  RPA + SOSEX integrated
           integral=integrated_omega(i,j,a,b,order,NBF,Nab,wmn,weights,
      &    freqs,cfreqs,EIG,BIGOMEGA,ERImol(i,j,b,a))
           IF(TUNEMBPT) THEN
-           iEcRPA=iEcRPA-ERImol2(i,j,b,a)*integral      ! Notice the minus, stupid FHI-aims developers.
+           iEcRPA=iEcRPA-ERImol2(i,j,b,a)*integral      ! Notice the minus, 
            iEcSOSEX=iEcSOSEX+ERImol2(i,j,a,b)*integral  ! Opposite sign of RPA and dif. 2e- integral
           ELSE
-           iEcRPA=iEcRPA-ERImol(i,j,b,a)*integral       ! Notice the minus, stupid FHI-aims developers.
+           iEcRPA=iEcRPA-ERImol(i,j,b,a)*integral       ! Notice the minus, 
            iEcSOSEX=iEcSOSEX+ERImol(i,j,a,b)*integral   ! Opposite sign of RPA and dif. 2e- integral
           ENDIF
          enddo
@@ -1081,10 +1083,10 @@ C  RPA + SOSEX integrated
           integral=integrated_omega(i,j,a,b,order,NBF,Nab,wmn,weights,
      &    freqs,cfreqs,EIG,BIGOMEGA,ERImol(i,j,b,a))
           IF(TUNEMBPT) THEN
-           iEcRPA=iEcRPA-0.5d+0*ERImol2(i,j,b,a)*integral      ! Notice the minus, stupid FHI-aims developers.
+           iEcRPA=iEcRPA-0.5d+0*ERImol2(i,j,b,a)*integral      ! Notice the minus, 
            iEcSOSEX=iEcSOSEX+0.5d+0*ERImol2(i,j,a,b)*integral  ! Opposite sign of RPA and dif. 2e- integral
           ELSE
-           iEcRPA=iEcRPA-0.5d+0*ERImol(i,j,b,a)*integral       ! Notice the minus, stupid FHI-aims developers.
+           iEcRPA=iEcRPA-0.5d+0*ERImol(i,j,b,a)*integral       ! Notice the minus, 
            iEcSOSEX=iEcSOSEX+0.5d+0*ERImol(i,j,a,b)*integral   ! Opposite sign of RPA and dif. 2e- integral
           ENDIF
          enddo
@@ -1094,23 +1096,25 @@ C  RPA + SOSEX integrated
           integral=integrated_omega(i,j,a,b,order,NBF,Nab,wmn,weights,
      &    freqs,cfreqs,EIG,BIGOMEGA,ERImol(i,j,b,a))
           IF(TUNEMBPT) THEN
-           iEcRPA=iEcRPA-0.5d+0*ERImol2(i,j,b,a)*integral      ! Notice the minus, stupid FHI-aims developers.
+           iEcRPA=iEcRPA-0.5d+0*ERImol2(i,j,b,a)*integral      ! Notice the minus, 
            iEcSOSEX=iEcSOSEX+0.5d+0*ERImol2(i,j,a,b)*integral  ! Opposite sign of RPA and dif. 2e- integral
           ELSE
-           iEcRPA=iEcRPA-0.5d+0*ERImol(i,j,b,a)*integral       ! Notice the minus, stupid FHI-aims developers.
+           iEcRPA=iEcRPA-0.5d+0*ERImol(i,j,b,a)*integral       ! Notice the minus, 
            iEcSOSEX=iEcSOSEX+0.5d+0*ERImol(i,j,a,b)*integral   ! Opposite sign of RPA and dif. 2e- integral
           ENDIF
          enddo
          do j=NCO+1,NA
-          integral=integrated_omega(i,j,a,b,order,NBF,Nab,wmn,weights,
-     &    freqs,cfreqs,EIG,BIGOMEGA,ERImol(i,j,b,a))
-          IF(TUNEMBPT) THEN
-           if(j/=i)iEcRPA=iEcRPA-0.5d+0*ERImol2(i,j,b,a)*integral      ! Notice the minus, stupid FHI-aims developers.
-           if(j/=i)iEcSOSEX=iEcSOSEX+0.5d+0*ERImol2(i,j,a,b)*integral  ! Opposite sign of RPA and dif. 2e- integral
-          ELSE
-           if(j/=i)iEcRPA=iEcRPA-0.5d+0*ERImol(i,j,b,a)*integral       ! Notice the minus, stupid FHI-aims developers.
-           if(j/=i)iEcSOSEX=iEcSOSEX+0.5d+0*ERImol(i,j,a,b)*integral   ! Opposite sign of RPA and dif. 2e- integral
-          ENDIF
+          if(j/=i) then
+           integral=integrated_omega(i,j,a,b,order,NBF,Nab,wmn,weights,
+     &     freqs,cfreqs,EIG,BIGOMEGA,ERImol(i,j,b,a))
+           IF(TUNEMBPT) THEN
+            iEcRPA=iEcRPA-0.25d+0*ERImol2(i,j,b,a)*integral     ! Notice the minus, 
+            iEcSOSEX=iEcSOSEX+0.25d+0*ERImol2(i,j,a,b)*integral ! Opposite sign of RPA and dif. 2e- integral
+           ELSE
+            iEcRPA=iEcRPA-0.25d+0*ERImol(i,j,b,a)*integral      ! Notice the minus, 
+            iEcSOSEX=iEcSOSEX+0.25d+0*ERImol(i,j,a,b)*integral  ! Opposite sign of RPA and dif. 2e- integral
+           ENDIF
+          endif
          enddo
         enddo
        enddo

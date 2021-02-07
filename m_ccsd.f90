@@ -200,7 +200,7 @@ implicit none
 integer,intent(in)::Ndocc,Nsocc
 double precision,dimension(:,:,:,:),intent(in)::ERImol
 ! Local variables
-integer::i,j,a,b
+integer::i,j,k,a,b
 double precision::ccsd_en_nof
 ! Procedures
 ccsd_en_nof=zero
@@ -225,8 +225,15 @@ do a=Nsocc+1,Mbasis2
     &+half*spin_int(i,j,a,b,ERImol)*ts(i,a)*ts(j,b))
    enddo
    do j=Ndocc+1,Nsocc
-    ccsd_en_nof=ccsd_en_nof+half*(one_fourth*spin_int(i,j,a,b,ERImol)*td(i,j,a,b)&
-    &+half*spin_int(i,j,a,b,ERImol)*ts(i,a)*ts(j,b))
+    if(mod(i,2)==0) then
+     k=i-1
+    else
+     k=i+1
+    endif
+    if(j/=i .and. j/=k) then
+     ccsd_en_nof=ccsd_en_nof+one_fourth*(one_fourth*spin_int(i,j,a,b,ERImol)*td(i,j,a,b)&
+     &+half*spin_int(i,j,a,b,ERImol)*ts(i,a)*ts(j,b))
+    endif
    enddo
   enddo
  enddo
