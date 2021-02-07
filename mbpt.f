@@ -570,8 +570,9 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       integer::a,b,c,d,an,bn,cn,dn,bmin_i,bmax_i,last_coup
       double precision::value1,Ciiab,Cijab,Cijkl,Cijka,Ciiia,Cabci,Cabcd
       allocate(ERImolTMP(NBF,NBF,NBF,NBF),coup(NA+1:NVIR+NA))
-      ERImolTMP=0.0d0;coup=0
+      ERImolTMP=0.0d0;coup(NA+1:NVIR+NA)=0
       last_coup=NA+ncwo*(nco-nfr)
+      ! find the coupling
       do i=1,NA
        bmin_i=NA+ncwo*(nco-i)+1
        bmax_i=NA+ncwo*(nco-i)+ncwo
@@ -590,22 +591,22 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
          do c=1,nvir
           cn=c+NA
           if( i<=nco .and. (bmin_i<=an.and.an<=bmax_i)
-     &       .and.         (bmin_i<=bn.and.bn<=bmax_i) 
-     &       .and.         (bmin_i<=cn.and.cn<=bmax_i) 
-     &       .and. (bmax_i<=last_coup)        )then
-            Cabci=CINTRA(an)*CINTRA(bn)*CINTRA(cn)*CINTRA(i)
-           else
-            Cabci=CINTER(an)*CINTER(bn)*CINTER(cn)*CINTER(i)
-           endif
-           value1=Cabci*ERImol(i,cn,bn,an)
-           ERImolTMP(i,cn,bn,an)=value1
-           ERImolTMP(i,bn,cn,an)=value1
-           ERImolTMP(an,bn,cn,i)=value1
-           ERImolTMP(an,cn,bn,i)=value1
-           ERImolTMP(cn,an,i,bn)=value1
-           ERImolTMP(cn,i,an,bn)=value1
-           ERImolTMP(bn,i,an,cn)=value1
-           ERImolTMP(bn,an,i,cn)=value1
+     &      .and.         (bmin_i<=bn.and.bn<=bmax_i) 
+     &      .and.         (bmin_i<=cn.and.cn<=bmax_i) 
+     &      .and. (bmax_i<=last_coup)        )then
+           Cabci=CINTRA(an)*CINTRA(bn)*CINTRA(cn)*CINTRA(i)
+          else
+           Cabci=CINTER(an)*CINTER(bn)*CINTER(cn)*CINTER(i)
+          endif
+          value1=Cabci*ERImol(i,cn,bn,an)
+          ERImolTMP(i,cn,bn,an)=value1
+          ERImolTMP(i,bn,cn,an)=value1
+          ERImolTMP(an,bn,cn,i)=value1
+          ERImolTMP(an,cn,bn,i)=value1
+          ERImolTMP(cn,an,i,bn)=value1
+          ERImolTMP(cn,i,an,bn)=value1
+          ERImolTMP(bn,i,an,cn)=value1
+          ERImolTMP(bn,an,i,cn)=value1
          enddo
         enddo
        enddo
@@ -724,7 +725,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
           if(coup(an)/=0 .and. 
      &       coup(an)==coup(bn) .and. 
      &       coup(an)==coup(cn) .and. 
-     &       coup(an)==coup(bn)) then
+     &       coup(an)==coup(dn)) then
            Cabcd=CINTRA(an)*CINTRA(bn)*CINTRA(cn)*CINTRA(dn)
           else
            Cabcd=CINTER(an)*CINTER(bn)*CINTER(cn)*CINTER(dn)
@@ -1178,7 +1179,7 @@ C  RPA + SOSEX integrated
        NCO2=NCO*2
        NA2=NCO2
       else
-       Nocc=NCO+NA
+       Nocc=NA
        NCO2=NCO*2
        NA2=NA*2
       endif
