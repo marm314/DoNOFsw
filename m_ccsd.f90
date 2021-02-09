@@ -7,8 +7,8 @@ double precision,parameter::zero=0.0d0
 double precision,parameter::half=5.0d-1
 double precision,parameter::one_fourth=2.5d-1
 integer,parameter::iunit=2341
-logical::qnewton,diis,first_diis
-integer::Nocc,Mbasis2,iter,file_diis
+logical::qnewton
+integer::Nocc,Mbasis2,iter
 double precision::tol8=1.0d-8
 double precision,dimension(:,:),allocatable::ts,tsnew,Fae,Fmi,Fme,FockM
 double precision,dimension(:,:,:,:),allocatable::td,tdnew,Wmnij,Wabef,Wmbej
@@ -22,10 +22,10 @@ contains
 !!-----------------------------------------------------------
 !! Public
 !!-----------------------------------------------------------
-subroutine ccsd_init(Mbasis,Nocc_in,qnewton_in,diis_in,FockM_in,ERImol)
+subroutine ccsd_init(Mbasis,Nocc_in,qnewton_in,FockM_in,ERImol)
 implicit none
 ! Arguments
-logical,intent(in)::qnewton_in,diis_in
+logical,intent(in)::qnewton_in
 integer,intent(in)::Mbasis,Nocc_in
 double precision,dimension(:,:),intent(in)::FockM_in
 double precision,dimension(:,:,:,:),intent(in)::ERImol
@@ -33,12 +33,13 @@ double precision,dimension(:,:,:,:),intent(in)::ERImol
 integer::i,j,a,b
 ! Procedures
 iter=0
-file_diis=1
 qnewton=qnewton_in
-first_diis=.true.
-diis=diis_in
 Mbasis2=Mbasis*2 ! Spin-less (size of the basis set) -> spin-with
-Nocc=Nocc_in*2   ! Spin-less -> spin-with 
+Nocc=Nocc_in*2   ! Spin-less -> spin-with
+write(*,*) ' ' 
+write(*,'(a,i5)') ' Number of spin orbitals ',Mbasis2
+write(*,'(a,i5)') ' Number of spin doubly occ. orbitals ',Nocc
+write(*,*) ' ' 
 allocate(ts(Nocc,Nocc+1:Mbasis2),tsnew(Nocc,Nocc+1:Mbasis2),FockM(Mbasis2,Mbasis2))
 allocate(td(Nocc,Nocc,Nocc+1:Mbasis2,Nocc+1:Mbasis2),tdnew(Nocc,Nocc,Nocc+1:Mbasis2,Nocc+1:Mbasis2))
 allocate(Fae(Nocc+1:Mbasis2,Nocc+1:Mbasis2),Fmi(Nocc,Nocc),Fme(Nocc,Nocc+1:Mbasis2))
@@ -134,18 +135,8 @@ integer::i,j,a,b
 double precision::tol4=1d-4,tol8=1d-8
 ! Procedures
 iter=iter+1
- if(diis .and. iter>5 .and. deltaE<tol4) then
-  if(first_diis) then
-   write(*,*) ' DIIS method switched on for T amplitudes.'
-   first_diis=.false.
-  endif 
-  ! TODO
-  call ccsd_update_interm(ERImol)
-  call ccsd_update_t1_t2(ERImol)
- else
-  call ccsd_update_interm(ERImol)
-  call ccsd_update_t1_t2(ERImol)
- endif
+call ccsd_update_interm(ERImol)
+call ccsd_update_t1_t2(ERImol)
 do i=1,Nocc
  do j=1,Nocc
   do a=Nocc+1,Mbasis2
@@ -164,12 +155,6 @@ do i=1,Nocc
 enddo
 ts=tsnew
 td=tdnew
-if(diis) then
- write(filep,'(a,i1)') 't_amps',file_diis
- call ccsd_write_ts(filep)
- file_diis=file_diis+1
- if(file_diis==6) file_diis=1
-endif
 end subroutine ccsd_update_ts
 
 function ccsd_energy(ERImol)
@@ -249,13 +234,6 @@ character(len=50)::filep
 ! Procedures
 deallocate(ts,tsnew,td,tdnew,Fae,Fmi,Fme,FockM)
 deallocate(Wmnij,Wabef,Wmbej)
-if(diis) then
- do i=1,5
-  write(filep,'(a,i1)') 't_amps',i
-  open(unit=iunit, iostat=istat, file=filep, status='old')
-  if(istat==0) close(iunit, status='delete')
- enddo
-endif
 end subroutine ccsd_clean
 
 !!-----------------------------------------------------------
