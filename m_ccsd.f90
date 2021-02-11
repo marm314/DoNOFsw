@@ -6,7 +6,7 @@ implicit none
 double precision,parameter::zero=0.0d0
 double precision,parameter::half=5.0d-1
 double precision,parameter::one_fourth=2.5d-1
-integer,parameter::iunit=2341
+integer,parameter::iunit=2341,iunit2=2142
 logical::qnewton
 integer::Nocc,Mbasis2,iter
 double precision::tol8=1.0d-8
@@ -22,16 +22,17 @@ contains
 !!-----------------------------------------------------------
 !! Public
 !!-----------------------------------------------------------
-subroutine ccsd_init(Mbasis,Nocc_in,qnewton_in,FockM_in,ERImol)
+subroutine ccsd_init(Mbasis,Nocc_in,qnewton_in,FockM_in,ERImol,ERImol2)
 implicit none
 ! Arguments
 logical,intent(in)::qnewton_in
 integer,intent(in)::Mbasis,Nocc_in
 double precision,dimension(:,:),intent(in)::FockM_in
 double precision,dimension(:,:,:,:),intent(in)::ERImol
+double precision,dimension(:,:,:,:),optional,intent(in)::ERImol2
 ! Local variables
 double precision::value1
-logical::print_spin_with=.false.
+logical::print_spin_with=.true.
 integer::i,j,a,b
 ! Procedures
 iter=0
@@ -76,36 +77,29 @@ do i=1,Mbasis2
  endif
 enddo
 close(iunit)
-open(unit=iunit,form='formatted',file='erimol')
+open(unit=iunit,form='formatted',file='terimol')
+open(unit=iunit2,form='formatted',file='ferimol')
 do i=1,Mbasis2
  do j=1,Mbasis2
   do a=1,Mbasis2
    do b=1,Mbasis2
-    if(mod(i,2)==mod(a,2) .and. mod(j,2)==mod(b,2) .and. &
-     & abs(ERImol(slbasis(i),slbasis(j),slbasis(a),slbasis(b)))>tol8) then
-     write(iunit,'(i5,i5,i5,i5,f15.10)') i,j,a,b,ERImol(slbasis(i),slbasis(j),slbasis(a),slbasis(b))
+    if(mod(i,2)==mod(a,2) .and. mod(j,2)==mod(b,2)) then
+     if(abs(ERImol(slbasis(i),slbasis(j),slbasis(a),slbasis(b)))>tol8) then
+      write(iunit,'(i5,i5,i5,i5,f15.10)') i,j,a,b,ERImol(slbasis(i),slbasis(j),slbasis(a),slbasis(b))
+     endif
+     if(present(ERImol2)) then
+      if(abs(ERImol2(slbasis(i),slbasis(j),slbasis(a),slbasis(b)))>tol8) then
+       write(iunit2,'(i5,i5,i5,i5,f15.10)') i,j,a,b,ERImol2(slbasis(i),slbasis(j),slbasis(a),slbasis(b))
+      endif
+     endif
     endif
    enddo
   enddo
  enddo
 enddo
 close(iunit)
-open(unit=iunit,form='formatted',file='spinint')
-do i=1,Mbasis2
- do j=1,Mbasis2
-  do a=1,Mbasis2
-   do b=1,Mbasis2
-    value1=spin_int(i,j,a,b,ERImol)
-    if(abs(value1)>tol8) then
-     write(iunit,'(i5,i5,i5,i5,f15.10)') i,j,a,b,value1
-    endif 
-   enddo
-  enddo
- enddo
-enddo
-close(iunit)
+close(iunit2)
 endif
-
 end subroutine ccsd_init
 
 subroutine ccsd_read_guess()

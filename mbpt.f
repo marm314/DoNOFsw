@@ -1187,7 +1187,7 @@ C  RPA + SOSEX integrated
        NCO2=NCO*2
        NA2=NA*2
       endif
-      call ccsd_init(NBF,Nocc,QNCCSD,FockM,ERImol) 
+      call ccsd_init(NBF,Nocc,QNCCSD,FockM,ERImol,ERImol2) 
       deallocate(FockM)
       if(CCSD_READ) then
        write(*,'(a)') ' Reading the T amplitudes file'
