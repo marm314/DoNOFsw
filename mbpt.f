@@ -1198,7 +1198,7 @@ C  RPA + SOSEX integrated
        if(deltaE>tolcc .and. iter<maxiter) then
         call ccsd_update_ts(deltaE,ERImol) 
         IF(TUNEMBPT) then
-         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2) 
+         Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol2)  
         ELSE
          Eccsd_new=ccsd_en_nof(NCO2,NA2,ERImol)
         ENDIF
