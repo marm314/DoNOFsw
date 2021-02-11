@@ -30,6 +30,7 @@ integer,intent(in)::Mbasis,Nocc_in
 double precision,dimension(:,:),intent(in)::FockM_in
 double precision,dimension(:,:,:,:),intent(in)::ERImol
 ! Local variables
+double precision::value1
 logical::print_spin_with=.false.
 integer::i,j,a,b
 ! Procedures
@@ -84,6 +85,20 @@ do i=1,Mbasis2
      & abs(ERImol(slbasis(i),slbasis(j),slbasis(a),slbasis(b)))>tol8) then
      write(iunit,'(i5,i5,i5,i5,f15.10)') i,j,a,b,ERImol(slbasis(i),slbasis(j),slbasis(a),slbasis(b))
     endif
+   enddo
+  enddo
+ enddo
+enddo
+close(iunit)
+open(unit=iunit,form='formatted',file='spinint')
+do i=1,Mbasis2
+ do j=1,Mbasis2
+  do a=1,Mbasis2
+   do b=1,Mbasis2
+    value1=spin_int(i,j,a,b,ERImol)
+    if(abs(value1)>tol8) then
+     write(iunit,'(i5,i5,i5,i5,f15.10)') i,j,a,b,value1
+    endif 
    enddo
   enddo
  enddo
