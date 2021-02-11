@@ -30,6 +30,7 @@ integer,intent(in)::Mbasis,Nocc_in
 double precision,dimension(:,:),intent(in)::FockM_in
 double precision,dimension(:,:,:,:),intent(in)::ERImol
 ! Local variables
+logical::print_spin_with=.false.
 integer::i,j,a,b
 ! Procedures
 iter=0
@@ -65,6 +66,31 @@ do i=1,Nocc
   enddo
  enddo
 enddo
+! Print FockM and ERIs?
+if(print_spin_with) then
+open(unit=iunit,form='formatted',file='fockm')
+do i=1,Mbasis2
+ if(abs(FockM(i,i))>tol8) then
+  write(iunit,'(i5,i5,f15.10)') i,i,FockM(i,i)
+ endif
+enddo
+close(iunit)
+open(unit=iunit,form='formatted',file='erimol')
+do i=1,Mbasis2
+ do j=1,Mbasis2
+  do a=1,Mbasis2
+   do b=1,Mbasis2
+    if(mod(i,2)==mod(a,2) .and. mod(j,2)==mod(b,2) .and. &
+     & abs(ERImol(slbasis(i),slbasis(j),slbasis(a),slbasis(b)))>tol8) then
+     write(iunit,'(i5,i5,i5,i5,f15.10)') i,j,a,b,ERImol(slbasis(i),slbasis(j),slbasis(a),slbasis(b))
+    endif
+   enddo
+  enddo
+ enddo
+enddo
+close(iunit)
+endif
+
 end subroutine ccsd_init
 
 subroutine ccsd_read_guess()
