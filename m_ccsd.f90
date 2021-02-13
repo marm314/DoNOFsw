@@ -32,7 +32,7 @@ double precision,dimension(:,:,:,:),intent(in)::ERImol
 double precision,dimension(:,:,:,:),optional,intent(in)::ERImol2
 ! Local variables
 double precision::value1
-logical::print_spin_with=.true.
+logical::print_spin_with=.false.
 integer::i,j,a,b
 ! Procedures
 iter=0

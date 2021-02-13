@@ -25,7 +25,7 @@ C MBPT
       PARAMETER (ONE=1.0D0)
       PARAMETER (TWO=2.0D0)
       PARAMETER (FOUR=4.0D0)
-      LOGICAL::diagFOCK
+      LOGICAL::diagFOCK,only_one=.true.
       INTEGER::i,j,k,l,a,b,info,last_coup
       INTEGER::order
       INTEGER,DIMENSION(NIJKL)::IERI
@@ -39,7 +39,7 @@ C MBPT
       DOUBLE PRECISION,DIMENSION(NBF,NBF)::ELAG,COEF
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:)::OCC,EIG,BIGOMEGA,TEMPV
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:)::CINTER,CINTRA 
-      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::TEMPM,TEMPM2,FOCKm
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::TEMPM,FOCKm
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::ApB,AmB
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::XmY,XpY 
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:,:,:)::ERImol,ERImol2
@@ -80,13 +80,6 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         TEMPM(i,j) = COEF(i,j)
        enddo
       ENDDO
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Prepare coef. factors CINTRA and CINTER.
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      if(TUNEMBPT) then ! as used in PRL and PRA papers for NCWO=-1
-       ALLOCATE(CINTER(NBF),CINTRA(NBF))
-       call tune_coefs(CINTER,CINTRA,OCC,NBF,NA)
-      endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  One orbital energies (EIG) and FOCK matrix (FOCKm) with COEF/=CHF
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -94,49 +87,34 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       CALL FOCKMOL(NBF,COEF,TEMPM,ELAG,EIG,FOCKm,AHCORE,IERI,ERI,ESD)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Allocate 2e_integrals array(s) and form ERI in MO basis (see mp2.f)
+C  Prepare coef. factors CINTRA and CINTER.
+C  Tune Fock(i,a) and ERImol elements before computing W, wmn, etc. 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       ALLOCATE(ERImol(NBF,NBF,NBF,NBF))
-      IF(TUNEMBPT) THEN
-       ALLOCATE(ERImol2(NBF,NBF,NBF,NBF))
-      ENDIF
       CALL ERIC1c(ERImol,IERI,ERI,TEMPM,NBF)
       CALL ERIC23c(ERImol,TEMPM,NBF)
       CALL ERIC4c(ERImol,TEMPM,NBF)
-      IF(TUNEMBPT) THEN 
-       ERImol2=ERImol
-      ENDIF
-      DEALLOCATE(TEMPM)
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Print 2e- integrals in NO basis
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C     call print2eint(NBF,ERImol)
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Tune Fock(i,a) and ERImol elements before computing W, wmn, etc. 
-C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      diagFOCK=.true.
-      if(TUNEMBPT) then
-       ALLOCATE(TEMPM2(NBF,NBF))
+      IF(TUNEMBPT) THEN 
+       ALLOCATE(CINTER(NBF),CINTRA(NBF),ERImol2(NBF,NBF,NBF,NBF))
+       ERImol2=ERImol
+       call tune_coefs(CINTER,CINTRA,OCC,NBF,NA)
        call tunefock(CINTRA,CINTER,FOCKm,NBF,NCO,NVIR,NCWO,NO1PT2,NA)
        call tuneerimol(CINTER,CINTRA,NBF,NCO,NVIR,NCWO,NO1PT2,ERImol,NA)
+       DEALLOCATE(CINTER,CINTRA)
       endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-C  Transform FOCKm and ERIs from NO basis to "DIAG(FOCK)" basis (TEMPM2)
+C  Transform FOCKm and ERIs from NO basis to "DIAG(FOCK)" basis (TEMPM)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      if(TUNEMBPT) then   
-       call diafock(FOCKm,NBF,EIG,TEMPM2,diagFOCK)
-       DEALLOCATE(CINTER,CINTRA,FOCKm)
-       if(diagFOCK.eqv..false.) then
-        if(mbptmem) then
-         call transform2mem(NBF,TEMPM2,ERImol)
-         call transform2mem(NBF,TEMPM2,ERImol2)
-        else
-         call transform2(NBF,TEMPM2,ERImol,ERImol2)
-        endif
-       endif
-       DEALLOCATE(TEMPM2)
-      else
-       DEALLOCATE(FOCKm)
+      TEMPM=ZERO 
+      diagFOCK=.true.
+      call diafock(FOCKm,NBF,EIG,TEMPM,diagFOCK)
+      DEALLOCATE(FOCKm)
+      if(.not.diagFOCK) then
+       call transformERI(NBF,TEMPM,ERImol)
+       if(TUNEMBPT) call transformERI(NBF,TEMPM,ERImol2)
       endif
+      DEALLOCATE(TEMPM)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Print orb. energies and occ numbers.
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -318,7 +296,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      & ESD+EcMP2,ESD+EcCCSD,ESDc+EcRPA,ESDc+iEcRPA,ESDc+iEcRPASOS,
      & ESDc+EcGoWo,ESDc+EcGoWoSOS,ESDc+EcMP2,ESDc+EcCCSD
       ENDIF
-      IF(TUNEMBPT.eqv..false.) then ! HF(NOF orbs) + DYN (NOF orbs = CANONICAL orbs for ICOEF=0)
+      IF(.not.TUNEMBPT) then ! HF(NOF orbs) + DYN (NOF orbs = CANONICAL orbs for ICOEF=0)
       write(6,4)ESD,EPNOF,EcRPA,iEcRPA,iEcSOSEX,iEcRPASOS,
      & EcGoWo,EcGMSOS,EcGoWoSOS,EcMP2,EcCCSD,ESD+EcRPA,ESD+iEcRPA,
      & ESD+iEcRPASOS,ESD+EcGoWo,ESD+EcGoWoSOS,ESD+EcMP2,ESD+EcCCSD
@@ -753,32 +731,24 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       INTEGER::i,j,k,l,a
       DOUBLE PRECISION::tol10,tol6
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) ::MDIPx,MDIPy,MDIPz
-      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) ::COEFT,TEMPM
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) ::TEMPM
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) ::STATICPOL
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:) ::OSCSTR,DIPSUM
       tol6=1.0D-6
       tol10=1.0D-10
 C  Prepare dipole moment from AO to MO
       ALLOCATE(MDIPx(NBF,NBF),MDIPy(NBF,NBF),MDIPz(NBF,NBF))
-      ALLOCATE(COEFT(NBF,NBF),TEMPM(NBF,NBF))
-      do i=1,NBF
-       do j=1,NBF
-        COEFT(i,j)=COEF(j,i)  ! MO COEFs in columns
-       enddo
-      enddo
+      ALLOCATE(TEMPM(NBF,NBF))
 C      x
       TEMPM=matmul(ADIPx,COEF) 
-      TEMPM=matmul(COEFT,TEMPM)
-      MDIPx=TEMPM
+      MDIPx=matmul(transpose(COEF),TEMPM)
 C      y
       TEMPM=matmul(ADIPy,COEF) 
-      TEMPM=matmul(COEFT,TEMPM)
-      MDIPy=TEMPM
+      MDIPy=matmul(transpose(COEF),TEMPM)
 C      z
       TEMPM=matmul(ADIPz,COEF) 
-      TEMPM=matmul(COEFT,TEMPM)
-      MDIPz=TEMPM
-      DEALLOCATE(COEFT,TEMPM)
+      MDIPz=matmul(transpose(COEF),TEMPM)
+      DEALLOCATE(TEMPM)
 C  Compute OSCILLATOR STRENGHTS and 2nd contribution to EcRPA
       ALLOCATE(OSCSTR(Nab),DIPSUM(3),TEMPM(3,Nab))
       OSCSTR=0.0d0
@@ -1187,7 +1157,11 @@ C  RPA + SOSEX integrated
        NCO2=NCO*2
        NA2=NA*2
       endif
-      call ccsd_init(NBF,Nocc,QNCCSD,FockM,ERImol,ERImol2) 
+      if(TUNEMBPT) then
+       call ccsd_init(NBF,Nocc,QNCCSD,FockM,ERImol,ERImol2)
+      else 
+       call ccsd_init(NBF,Nocc,QNCCSD,FockM,ERImol) 
+      endif
       deallocate(FockM)
       if(CCSD_READ) then
        write(*,'(a)') ' Reading the T amplitudes file'
@@ -1223,190 +1197,11 @@ C  RPA + SOSEX integrated
       call ccsd_clean()
       end subroutine ccsd_eq
 
-      subroutine transform2(NBF,TEMPM2,ERImol,ERImol2)
+      subroutine transformERI(NBF,TEMPM,ERImol)
       implicit none
       integer,intent(in)::NBF
       double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
-      double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol2
-      double precision,dimension(nbf,nbf),intent(in)::TEMPM2
-      integer::i,j,k,l,m
-      double precision::tol10,aux,aux2
-      tol10=1.0D-10
-      write(*,*) ' '
-      write(*,*) ' Starting transformation <IJ|KL> -> <PQ|RS>'
-      ! L -> S
-      open(unit=66,form='unformatted')
-      open(unit=67,form='unformatted')
-      do i=1,NBF
-       do j=1,NBF
-        do k=1,NBF
-         do m=1,NBF
-          aux=0.0d0
-          aux2=0.0d0
-          do l=1,NBF
-           aux=aux+TEMPM2(l,m)*ERImol(i,j,k,l)
-           aux2=aux2+TEMPM2(l,m)*ERImol2(i,j,k,l)
-          enddo
-          if(abs(aux).gt.tol10)  write(66) i,j,k,m,aux
-          if(abs(aux2).gt.tol10) write(67) i,j,k,m,aux2
-         enddo
-        enddo
-       enddo
-      enddo
-      close(66)
-      close(67)
-      ERImol=0.0d0
-      ERImol2=0.0d0
-      open(unit=66,form='unformatted',status='old')
-       do while(.true.)
-        read(66,end=99) i,j,k,l,aux
-        if (i.eq.0) goto 99
-         ERImol(i,j,k,l)=aux
-       enddo
-   99  continue
-      close(66)
-      open(unit=67,form='unformatted',status='old')
-       do while(.true.)
-        read(67,end=100) i,j,k,l,aux
-        if (i.eq.0) goto 100
-         ERImol2(i,j,k,l)=aux
-       enddo
-  100 continue
-      close(67)
-      call system("/bin/rm fort.66 fort.67")
-      write(*,*) ' L -> S done'
-      ! K -> R
-      open(unit=66,form='unformatted')
-      open(unit=67,form='unformatted')
-      do i=1,NBF
-       do j=1,NBF
-        do m=1,NBF
-         do l=1,NBF
-          aux=0.0d0
-          aux2=0.0d0
-          do k=1,NBF
-           aux=aux+TEMPM2(k,m)*ERImol(i,j,k,l)
-           aux2=aux2+TEMPM2(k,m)*ERImol2(i,j,k,l)
-          enddo
-          if(abs(aux).gt.tol10)  write(66) i,j,m,l,aux
-          if(abs(aux2).gt.tol10) write(67) i,j,m,l,aux2
-         enddo
-        enddo
-       enddo
-      enddo
-      close(66)
-      close(67)
-      ERImol=0.0d0
-      ERImol2=0.0d0
-      open(unit=66,form='unformatted',status='old')
-       do while(.true.)
-        read(66,end=101) i,j,k,l,aux
-        if (i.eq.0) goto 101
-         ERImol(i,j,k,l)=aux
-       enddo
-  101 continue
-      close(66)
-      open(unit=67,form='unformatted',status='old')
-       do while(.true.)
-        read(67,end=102) i,j,k,l,aux
-        if (i.eq.0) goto 102
-         ERImol2(i,j,k,l)=aux
-       enddo
-  102 continue
-      close(67)
-      call system("/bin/rm fort.66 fort.67")
-      write(*,*) ' K -> R done'
-      ! J -> Q
-      open(unit=66,form='unformatted')
-      open(unit=67,form='unformatted')
-      do i=1,NBF
-       do m=1,NBF
-        do k=1,NBF
-         do l=1,NBF
-          aux=0.0d0
-          aux2=0.0d0
-          do j=1,NBF
-           aux=aux+TEMPM2(j,m)*ERImol(i,j,k,l)
-           aux2=aux2+TEMPM2(j,m)*ERImol2(i,j,k,l)
-          enddo
-          if(abs(aux).gt.tol10)  write(66) i,m,k,l,aux
-          if(abs(aux2).gt.tol10) write(67) i,m,k,l,aux2
-         enddo
-        enddo
-       enddo
-      enddo
-      close(66)
-      close(67)
-      ERImol=0.0d0
-      ERImol2=0.0d0
-      open(unit=66,form='unformatted',status='old')
-       do while(.true.)
-        read(66,end=103) i,j,k,l,aux
-        if (i.eq.0) goto 103
-         ERImol(i,j,k,l)=aux
-       enddo
-  103 continue
-      close(66)
-      open(unit=67,form='unformatted',status='old')
-       do while(.true.)
-        read(67,end=104) i,j,k,l,aux
-        if (i.eq.0) goto 104
-         ERImol2(i,j,k,l)=aux
-       enddo
-  104 continue
-      close(67)
-      call system("/bin/rm fort.66 fort.67")
-      write(*,*) ' J -> Q done'
-      ! I -> P
-      open(unit=66,form='unformatted')
-      open(unit=67,form='unformatted')
-      do m=1,NBF
-       do j=1,NBF
-        do k=1,NBF
-         do l=1,NBF
-          aux=0.0d0
-          aux2=0.0d0
-          do i=1,NBF
-           aux=aux+TEMPM2(i,m)*ERImol(i,j,k,l)
-           aux2=aux2+TEMPM2(i,m)*ERImol2(i,j,k,l)
-          enddo
-          if(abs(aux).gt.tol10)  write(66) m,j,k,l,aux
-          if(abs(aux2).gt.tol10) write(67) m,j,k,l,aux2
-         enddo
-        enddo
-       enddo
-      enddo
-      close(66)
-      close(67)
-      ERImol=0.0d0
-      ERImol2=0.0d0
-      open(unit=66,form='unformatted',status='old')
-       do while(.true.)
-        read(66,end=105) i,j,k,l,aux
-        if (i.eq.0) goto 105
-         ERImol(i,j,k,l)=aux
-       enddo
-  105 continue
-      close(66)
-      open(unit=67,form='unformatted',status='old')
-       do while(.true.)
-        read(67,end=106) i,j,k,l,aux
-        if (i.eq.0) goto 106
-         ERImol2(i,j,k,l)=aux
-       enddo
-  106 continue
-      close(67)
-      call system("/bin/rm fort.66 fort.67")
-      write(*,*) ' I -> P done'
-      write(*,*) ' Transformation finished'
-      write(*,*) ' '
-      end subroutine transform2
-
-      subroutine transform2mem(NBF,TEMPM2,ERImol)
-      implicit none
-      integer,intent(in)::NBF
-      double precision,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol
-      double precision,dimension(nbf,nbf),intent(in)::TEMPM2
+      double precision,dimension(nbf,nbf),intent(in)::TEMPM
       double precision,dimension(:,:,:,:),allocatable::TMPDM2
       integer::i,j,k,l,m
       write(*,*) ' '
@@ -1419,7 +1214,7 @@ C  RPA + SOSEX integrated
          do m=1,NBF
           TMPDM2(i,j,k,m)=0.0d0
           do l=1,NBF
-           TMPDM2(i,j,k,m)=TMPDM2(i,j,k,m)+TEMPM2(l,m)*ERImol(i,j,k,l)
+           TMPDM2(i,j,k,m)=TMPDM2(i,j,k,m)+TEMPM(l,m)*ERImol(i,j,k,l)
           enddo
          enddo
         enddo
@@ -1433,7 +1228,7 @@ C  RPA + SOSEX integrated
          do l=1,NBF
           ERImol(i,j,m,l)=0.0d0
           do k=1,NBF
-           ERImol(i,j,m,l)=ERImol(i,j,m,l)+TEMPM2(k,m)*TMPDM2(i,j,k,l)
+           ERImol(i,j,m,l)=ERImol(i,j,m,l)+TEMPM(k,m)*TMPDM2(i,j,k,l)
           enddo
          enddo
         enddo
@@ -1447,7 +1242,7 @@ C  RPA + SOSEX integrated
          do l=1,NBF
           TMPDM2(i,m,k,l)=0.0d0
           do j=1,NBF
-           TMPDM2(i,m,k,l)=TMPDM2(i,m,k,l)+TEMPM2(j,m)*ERImol(i,j,k,l)
+           TMPDM2(i,m,k,l)=TMPDM2(i,m,k,l)+TEMPM(j,m)*ERImol(i,j,k,l)
           enddo
          enddo
         enddo
@@ -1461,7 +1256,7 @@ C  RPA + SOSEX integrated
          do l=1,NBF
           ERImol(m,j,k,l)=0.0d0
           do i=1,NBF
-           ERImol(m,j,k,l)=ERImol(m,j,k,l)+TEMPM2(i,m)*TMPDM2(i,j,k,l)
+           ERImol(m,j,k,l)=ERImol(m,j,k,l)+TEMPM(i,m)*TMPDM2(i,j,k,l)
           enddo
          enddo
         enddo
@@ -1471,7 +1266,7 @@ C  RPA + SOSEX integrated
       write(*,*) ' Transformation finished'
       write(*,*) ' '
       deallocate(TMPDM2)
-      end subroutine transform2mem
+      end subroutine transformERI
 
 C      subroutine print2eint(nbf,erimol)
 C      implicit none

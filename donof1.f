@@ -263,9 +263,9 @@ C-----------------------------------------------------------------------
        COMMON/INPNOF_SC2MCPT/SC2MCPT
        LOGICAL OIMP2
        COMMON/INPNOF_OIMP2/OIMP2
-       LOGICAL MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD,CCSD_READ,QNCCSD
+       LOGICAL MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD
        LOGICAL DIISCC
-       COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD_READ,CCSD
+       COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,CCSD_READ,CCSD
        COMMON/INPNOF_MBPT2/QNCCSD,DIISCC,NTHRESHCC
        COMMON/INPNOF_CGM/ICGMETHOD
        LOGICAL CHKORTHO,ORTHO
@@ -4234,9 +4234,6 @@ C
 C.......... TDHF                True will use TD-HF instead of TD-H
 C                     = F       (DEFAULT)
 C
-C.......... MBPTMEM             Use MBPT with large memory allocation for ERIs
-C                     = T       (DEFAULT)
-C
 C.......... CCSD                Do NOFc-CCSD calc.
 C                     = F       (DEFAULT)
 C
@@ -4413,7 +4410,7 @@ C-----------------------------------------------------------------------
      &                DIAGLAG,IAIMPAC,IEKT,NOUTRDM,NTHRESHDM,NSQT,
      &                NOUTCJK,NTHRESHCJK,NOUTTijab,NTHRESHTijab,
      &                ORTHO,CHKORTHO,FROZEN,IFROZEN,ICGMETHOD,
-     &                MBPT,TUNEMBPT,TDHF,MBPTMEM,CCSD,CCSD_READ,QNCCSD,
+     &                MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD,
      &                DIISCC,NTHRESHCC
 C-----------------------------------------------------------------------
 C     Preset values to namelist variables
@@ -4463,7 +4460,6 @@ C     Options for pertubative calculations
       OIMP2=.FALSE.
       MBPT=.FALSE.
       TUNEMBPT=.FALSE.
-      MBPTMEM=.TRUE.
       TDHF=.FALSE.
       CCSD=.FALSE.
       NTHRESHCC=6
