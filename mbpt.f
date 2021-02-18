@@ -525,6 +525,9 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       enddo
   687 continue
       if(diagF.eqv..false.) then
+       write(*,*) ' '
+       write(*,*) ' Diagonalizing the Fock Op.'
+       write(*,*) ' '
        allocate(TEMPV(NBF))
        CALL DIAG(NBF,FOCKm,EIGENVE,EIG,TEMPV) 
        deallocate(TEMPV)
