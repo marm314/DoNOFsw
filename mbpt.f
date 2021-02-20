@@ -111,8 +111,16 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       call diafock(FOCKm,NBF,EIG,TEMPM,diagFOCK)
       DEALLOCATE(FOCKm)
       if(.not.diagFOCK) then
-       call transformERI(NBF,TEMPM,ERImol)
-       if(TUNEMBPT) call transformERI(NBF,TEMPM,ERImol2)
+       if(MBPTMEM) then
+        call transformERI(NBF,TEMPM,ERImol)
+        if(TUNEMBPT) call transformERI(NBF,TEMPM,ERImol2)
+       else
+        if(TUNEMBPT) then
+         call transformERI2(NBF,TEMPM,ERImol)
+        else
+         write(*,*) 'Code not prepared for this end' ! TODO
+        endif
+       endif
       endif
       DEALLOCATE(TEMPM)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -261,8 +269,10 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       endif
       iEcRPA=0.0d0
       iEcSOSEX=0.0d0
-      call rpa_sosex_eq(NA,NCO,NBF,Nab,ERImol,ERImol2,EIG,BIGOMEGA,wmn,
-     &  iEcRPA,iEcSOSEX,TUNEMBPT)
+      if(ACRPA) then
+       call rpa_sosex_eq(NA,NCO,NBF,Nab,ERImol,ERImol2,EIG,BIGOMEGA,wmn,
+     &   iEcRPA,iEcSOSEX,TUNEMBPT)
+      endif
       iEcRPASOS=iEcRPA+iEcSOSEX
       DEALLOCATE(wmn,BIGOMEGA)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -276,7 +286,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         write(*,*)'Computing CCSD standard correction'
        endif
        call ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
-     &  CCSD_READ,DIISCC,QNCCSD,NTHRESHCC)
+     &  CCSD_READ,QNCCSD,NTHRESHCC)
       endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C  Write  Ec energies and final results
@@ -1098,10 +1108,10 @@ C  RPA + SOSEX integrated
       end subroutine rpa_sosex_eq
       
       subroutine ccsd_eq(NA,NCO,NBF,ERImol,ERImol2,EIG,EcCCSD,TUNEMBPT,
-     & CCSD_READ,DIISCC,QNCCSD,NTHRESHCC)
+     & CCSD_READ,QNCCSD,NTHRESHCC)
       USE m_ccsd
       implicit none
-      logical,intent(in)::TUNEMBPT,QNCCSD,CCSD_READ,DIISCC
+      logical,intent(in)::TUNEMBPT,QNCCSD,CCSD_READ
       integer,intent(in)::NCO,NBF,NA,NTHRESHCC
       double precision,intent(inout)::EcCCSD
       double precision,dimension(NBF),intent(in)::EIG
@@ -1270,6 +1280,184 @@ C  RPA + SOSEX integrated
       write(*,*) ' '
       deallocate(TMPDM2)
       end subroutine transformERI
+
+      subroutine transformERI2(NBF,TEMPM2,ERImol,ERImol2)
+      implicit none
+      integer,intent(in)::NBF
+      real,dimension(nbf,nbf,nbf,nbf),intent(inout)::ERImol,ERImol2
+      real,dimension(nbf,nbf),intent(in)::TEMPM2
+      integer::i,j,k,l,m
+      real::tol10,aux,aux2
+      tol10=1.0D-10
+      write(*,*) ' '
+      write(*,*) ' Starting transformation <IJ|KL> -> <PQ|RS>'
+      ! L -> S
+      open(unit=66,form='unformatted')
+      open(unit=67,form='unformatted')
+      do i=1,NBF
+       do j=1,NBF
+        do k=1,NBF
+         do m=1,NBF
+          aux=0.0d0
+          aux2=0.0d0
+          do l=1,NBF
+           aux=aux+TEMPM2(l,m)*ERImol(i,j,k,l)
+           aux2=aux2+TEMPM2(l,m)*ERImol2(i,j,k,l)
+          enddo
+          if(abs(aux).gt.tol10)  write(66) i,j,k,m,aux
+          if(abs(aux2).gt.tol10) write(67) i,j,k,m,aux2
+         enddo
+        enddo
+       enddo
+      enddo
+      close(66)
+      close(67)
+      ERImol=0.0d0
+      ERImol2=0.0d0
+      open(unit=66,form='unformatted',status='old')
+       do while(.true.)
+        read(66,end=99) i,j,k,l,aux
+        if (i.eq.0) goto 99
+         ERImol(i,j,k,l)=aux
+       enddo
+   99  continue
+      close(66)
+      open(unit=67,form='unformatted',status='old')
+       do while(.true.)
+        read(67,end=100) i,j,k,l,aux
+        if (i.eq.0) goto 100
+         ERImol2(i,j,k,l)=aux
+       enddo
+  100 continue
+      close(67)
+      call system("/bin/rm fort.66 fort.67")
+      write(*,*) ' L -> S done'
+      ! K -> R
+      open(unit=66,form='unformatted')
+      open(unit=67,form='unformatted')
+      do i=1,NBF
+       do j=1,NBF
+        do m=1,NBF
+         do l=1,NBF
+          aux=0.0d0
+          aux2=0.0d0
+          do k=1,NBF
+           aux=aux+TEMPM2(k,m)*ERImol(i,j,k,l)
+           aux2=aux2+TEMPM2(k,m)*ERImol2(i,j,k,l)
+          enddo
+          if(abs(aux).gt.tol10)  write(66) i,j,m,l,aux
+          if(abs(aux2).gt.tol10) write(67) i,j,m,l,aux2
+         enddo
+        enddo
+       enddo
+      enddo
+      close(66)
+      close(67)
+      ERImol=0.0d0
+      ERImol2=0.0d0
+      open(unit=66,form='unformatted',status='old')
+       do while(.true.)
+        read(66,end=101) i,j,k,l,aux
+        if (i.eq.0) goto 101
+         ERImol(i,j,k,l)=aux
+       enddo
+  101 continue
+      close(66)
+      open(unit=67,form='unformatted',status='old')
+       do while(.true.)
+        read(67,end=102) i,j,k,l,aux
+        if (i.eq.0) goto 102
+         ERImol2(i,j,k,l)=aux
+       enddo
+  102 continue
+      close(67)
+      call system("/bin/rm fort.66 fort.67")
+      write(*,*) ' K -> R done'
+      ! J -> Q
+      open(unit=66,form='unformatted')
+      open(unit=67,form='unformatted')
+      do i=1,NBF
+       do m=1,NBF
+        do k=1,NBF
+         do l=1,NBF
+          aux=0.0d0
+          aux2=0.0d0
+          do j=1,NBF
+           aux=aux+TEMPM2(j,m)*ERImol(i,j,k,l)
+           aux2=aux2+TEMPM2(j,m)*ERImol2(i,j,k,l)
+          enddo
+          if(abs(aux).gt.tol10)  write(66) i,m,k,l,aux
+          if(abs(aux2).gt.tol10) write(67) i,m,k,l,aux2
+         enddo
+        enddo
+       enddo
+      enddo
+      close(66)
+      close(67)
+      ERImol=0.0d0
+      ERImol2=0.0d0
+      open(unit=66,form='unformatted',status='old')
+       do while(.true.)
+        read(66,end=103) i,j,k,l,aux
+        if (i.eq.0) goto 103
+         ERImol(i,j,k,l)=aux
+       enddo
+  103 continue
+      close(66)
+      open(unit=67,form='unformatted',status='old')
+       do while(.true.)
+        read(67,end=104) i,j,k,l,aux
+        if (i.eq.0) goto 104
+         ERImol2(i,j,k,l)=aux
+       enddo
+  104 continue
+      close(67)
+      call system("/bin/rm fort.66 fort.67")
+      write(*,*) ' J -> Q done'
+      ! I -> P
+      open(unit=66,form='unformatted')
+      open(unit=67,form='unformatted')
+      do m=1,NBF
+       do j=1,NBF
+        do k=1,NBF
+         do l=1,NBF
+          aux=0.0d0
+          aux2=0.0d0
+          do i=1,NBF
+           aux=aux+TEMPM2(i,m)*ERImol(i,j,k,l)
+           aux2=aux2+TEMPM2(i,m)*ERImol2(i,j,k,l)
+          enddo
+          if(abs(aux).gt.tol10)  write(66) m,j,k,l,aux
+          if(abs(aux2).gt.tol10) write(67) m,j,k,l,aux2
+         enddo
+        enddo
+       enddo
+      enddo
+      close(66)
+      close(67)
+      ERImol=0.0d0
+      ERImol2=0.0d0
+      open(unit=66,form='unformatted',status='old')
+       do while(.true.)
+        read(66,end=105) i,j,k,l,aux
+        if (i.eq.0) goto 105
+         ERImol(i,j,k,l)=aux
+       enddo
+  105 continue
+      close(66)
+      open(unit=67,form='unformatted',status='old')
+       do while(.true.)
+        read(67,end=106) i,j,k,l,aux
+        if (i.eq.0) goto 106
+         ERImol2(i,j,k,l)=aux
+       enddo
+  106 continue
+      close(67)
+      call system("/bin/rm fort.66 fort.67")
+      write(*,*) ' I -> P done'
+      write(*,*) ' Transformation finished'
+      write(*,*) ' '
+      end subroutine transformERI2
 
 C      subroutine print2eint(nbf,erimol)
 C      implicit none

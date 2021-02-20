@@ -263,10 +263,9 @@ C-----------------------------------------------------------------------
        COMMON/INPNOF_SC2MCPT/SC2MCPT
        LOGICAL OIMP2
        COMMON/INPNOF_OIMP2/OIMP2
-       LOGICAL MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD
-       LOGICAL DIISCC
-       COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,CCSD_READ,CCSD
-       COMMON/INPNOF_MBPT2/QNCCSD,DIISCC,NTHRESHCC
+       LOGICAL MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD,MBPTMEM,ACRPA
+       COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,CCSD_READ,CCSD,MBPTMEM
+       COMMON/INPNOF_MBPT2/QNCCSD,NTHRESHCC,ACRPA
        COMMON/INPNOF_CGM/ICGMETHOD
        LOGICAL CHKORTHO,ORTHO
        COMMON/INPNOF_ORTHOGONALITY/CHKORTHO,ORTHO
@@ -4231,6 +4230,12 @@ C
 C.......... TUNEMBPT            NOF - X (X=RPA, GW, SOSEX, etc.) use tune Cinter and Cintra
 C                     = F       (DEFAULT)
 C
+C.......... ACRPA               Compute AC-RPA and AC-SOSEX
+C                     = T       (DEFAULT)
+C
+C.......... MBPTMEM             Store 3 ERI integrals
+C                     = T       (DEFAULT)
+C
 C.......... TDHF                True will use TD-HF instead of TD-H
 C                     = F       (DEFAULT)
 C
@@ -4241,9 +4246,6 @@ C.......... CCSD_READ           NOFc-CCSD read T1 and T2 amplitudes
 C                     = F       (DEFAULT)
 C
 C.......... QNCCSD              Do Quasi-Newton CCSD to update T1.
-C                     = F       (DEFAULT)
-C
-C.......... DIISCC              Do DIIS on CCSD T1 and T2 updates.
 C                     = F       (DEFAULT)
 C
 C.......... NTHRESHCC           Threshold to stop T1 and T2 updates (based on Ecorr).
@@ -4411,7 +4413,7 @@ C-----------------------------------------------------------------------
      &                NOUTCJK,NTHRESHCJK,NOUTTijab,NTHRESHTijab,
      &                ORTHO,CHKORTHO,FROZEN,IFROZEN,ICGMETHOD,
      &                MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD,
-     &                DIISCC,NTHRESHCC
+     &                NTHRESHCC,MBPTMEM,ACRPA
 C-----------------------------------------------------------------------
 C     Preset values to namelist variables
 C-----------------------------------------------------------------------
@@ -4460,11 +4462,12 @@ C     Options for pertubative calculations
       OIMP2=.FALSE.
       MBPT=.FALSE.
       TUNEMBPT=.FALSE.
+      MBPTMEM=.TRUE.
+      ACRPA=.TRUE.
       TDHF=.FALSE.
       CCSD=.FALSE.
       NTHRESHCC=6
       QNCCSD=.FALSE.
-      DIISCC=.FALSE.
       CCSD_READ=.FALSE.
 
 C     Input Options for Gamma (Occ), C and Diagonal F
