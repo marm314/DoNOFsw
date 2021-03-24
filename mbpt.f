@@ -1204,7 +1204,7 @@ C  RPA + SOSEX integrated
       write(*,'(a,i5,a,F15.8)') ' CCSD procedure finished after ',
      & iter,' iter. with deltaE ',deltaE
       write(*,*) ' '
-      EcCCSD=Eccsd_new
+      EcCCSD=Eccsd_new  
       write(filep,'(a)') 't_amps'
       call ccsd_write_ts(filep)
       call ccsd_clean()
