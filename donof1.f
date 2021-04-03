@@ -242,7 +242,7 @@ C-----------------------------------------------------------------------
        COMMON/INPNOF_THRESH/THRESHEID,THRESHL,THRESHE,THRESHEC,THRESHEN
        LOGICAL PRINTLAG
        COMMON/INPNOF_OUTPUT_1/PRINTLAG
-       COMMON/INPNOF_OUTPUT_2/NPRINT,IWRITEC,IMULPOP,IAIMPAC
+       COMMON/INPNOF_OUTPUT_2/NPRINT,IWRITEC,IMULPOP,ICHEMPOT,IAIMPAC
        COMMON/INPNOF_OUTPUT_3/IEKT
        COMMON/INPNOF_OUTPUT_4/NOUTRDM,NTHRESHDM,NSQT
        COMMON/INPNOF_OUTPUT_5/THRESHDM,THRESHCJK,THRESHTijab
@@ -4413,7 +4413,7 @@ C-----------------------------------------------------------------------
      &                NOUTCJK,NTHRESHCJK,NOUTTijab,NTHRESHTijab,
      &                ORTHO,CHKORTHO,FROZEN,IFROZEN,ICGMETHOD,
      &                MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD,
-     &                NTHRESHCC,MBPTMEM,ACRPA
+     &                NTHRESHCC,MBPTMEM,ACRPA,ICHEMPOT
 C-----------------------------------------------------------------------
 C     Preset values to namelist variables
 C-----------------------------------------------------------------------
@@ -4483,6 +4483,7 @@ C     Output Options
 C     for NPRINT>0
       IWRITEC=0
       IMULPOP=0
+      ICHEMPOT=0
       APSG=.FALSE.
       NTHAPSG=10
       PRINTLAG=.FALSE.
@@ -4739,7 +4740,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        ENDIF
       ENDIF
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      WRITE(6,11)NPRINT,IWRITEC,IMULPOP,IAIMPAC,IEKT
+      WRITE(6,11)NPRINT,IWRITEC,IMULPOP,ICHEMPOT,IAIMPAC,IEKT
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       IF(APSG)THEN
        WRITE(6,*)
@@ -4815,6 +4816,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      * /1X,'Output Option:                          (NPRINT)    ',I5,
      * /1X,'Output the Coefficient Matrix:          (IWRITEC)   ',I5,
      * /1X,'Do a Mulliken Population Analysis:      (IMULPOP)   ',I5,
+     * /1X,'Print Chemical Potential:               (ICHEMPOT)  ',I5,
      * /1X,'Write Information into a WFN file:      (IAIMPAC)   ',I5,
      * /1X,'Calculate IPs using Ext. Koopmans Theo: (IEKT)      ',I5)
    12 FORMAT(
@@ -12561,10 +12563,11 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C       Calculate the chemical potential (CHEMP) for PNOF5,7(Nc)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        ICHEMPOT=0
-        IF(ICHEMPOT==1.and.MSpin==0.and.(IPNOF==5.or.IPNOF==7))
-     &   CALL CHEMPOTrc(HCORE,QJ,QK,RO,DIPx,DIPy,DIPz)       
-       END IF
+        IF(ICHEMPOT==1.and.MSpin==0)THEN
+         WRITE(6,6)
+         CALL CHEMPOTrc(HCORE,QJ,QK,RO,DIPx,DIPy,DIPz)       
+        ENDIF
+       ENDIF
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C      Energy Output
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -12631,6 +12634,10 @@ C    2 FORMAT(/,3X,'Chem Pot =',F12.6,4X,F15.6)
     5 FORMAT(/,
      * /,2X,'------------------------------',/,
      *   2X,' Mulliken Population Analysis ',/,
+     *   2X,'------------------------------')
+    6 FORMAT(/,
+     * /,2X,'------------------------------',/,
+     *   2X,'     Chemical Potential       ',/,
      *   2X,'------------------------------')
 C    6 FORMAT(/2X,' Occupations ',
 C     *       /2X,'-------------')
