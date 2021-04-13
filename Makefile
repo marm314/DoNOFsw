@@ -18,7 +18,7 @@ all: serial #serialg mpi
 
 serial:
 
-	$(F90) -o donof.x m_ccsd.f90 donof1.f mbpt.f donof2.f90 gauss_legendre.f90 
+	$(F90) -o donof.x m_ccsd.f90 donof1.f mbpt.f launch_hess.f donof2.f90 gauss_legendre.f90 
 
 ########################################################################
 

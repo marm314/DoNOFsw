@@ -6,7 +6,7 @@ if (-f $1.fra) mv -f $1.fra FRAG
 
 if (-f $1.tamps) mv -f $1.tamps t_amps
 
-nice +18 /home/marm314/Installers/DoNOF/old/DoNOFsw/donof.x < $1.inp > $1.out
+nice +18 /home/marm314/Installers/DoNOF/DoNOFsw/donof.x < $1.inp > $1.out
 
 if (-f WFN) mv -f WFN $1.wfn
 
