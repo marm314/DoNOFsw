@@ -3,7 +3,8 @@
 ########################################################################
 
 # Intel Fortran
-F90 = ifort -i8 -r8 -fpp -static -O3 -mkl
+#F90 = ifort -i8 -r8 -fpp -static -O3 -mkl
+F90 = ifort -i8 -r8 -fpp -static -O0 -mkl
 MPIF90 = mpiifort -DMPI -r8 -i8 -fpp -O3 -mkl
 
 # GNU Fortran
@@ -18,7 +19,7 @@ all: serial #serialg mpi
 
 serial:
 
-	$(F90) -o donof.x m_ccsd.f90 donof1.f mbpt.f launch_hess.f donof2.f90 gauss_legendre.f90 
+	$(F90) -o donof.x m_ccsd.f90 donof1.f mbpt.f donof2.f90 gauss_legendre.f90 launch_hess.f90
 
 ########################################################################
 
