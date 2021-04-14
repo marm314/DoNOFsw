@@ -105,6 +105,14 @@
                    & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
                    & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
         enddo
+        ! Inter PNOF7 ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, below and below Fl]
+        if(ipnof==7) then
+         do iorb2=iorb1+1,nfl
+          horb2=1.0d0-OCC(iorb2)
+          calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
+                    & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
+         enddo
+        endif
         ! Inter PNOF5 -> np nq (2 Jpq - Kpq) [Omegag and Omegaf, below and above Fl]
         do iorb2=nfl+1,forb-1
          calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb1))&
