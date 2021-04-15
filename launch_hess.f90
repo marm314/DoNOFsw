@@ -1,7 +1,7 @@
       SUBROUTINE LAUNCH_HESS(ELAG,COEF,RO,CJ12,CK12,AHCORE,ADIPx,ADIPy,ADIPz,IERI,ERI)
       USE PARCOM
       PARAMETER (ZERO=0.0d0)
-      INTEGER::i,j,k,l,a,b,nbf2,nbf3,nbf4,ipnof_in
+      INTEGER::i,j,k,l,a,b,nbf2,nbf3,nbf4,nfl,ipnof_in
       DOUBLE PRECISION::Epnof,Epnof_old
       INTEGER,DIMENSION(NIJKL)::IERI
       DOUBLE PRECISION,DIMENSION(NIJKL)::ERI
@@ -29,6 +29,7 @@
 !
 !           NCO + NSOC     |       NVIR          = NBF
 !-----------------------------------------------------------------------
+      nfl=NDOC+NO1
       ipnof_in=ipnof
       if(ista==1) then
        ipnof_in=-ipnof_in
@@ -49,10 +50,9 @@
       CALL ERIC4c(ERImol,VEC,NBF)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
       write(*,*) 'IPNOF, THRESHOLD EN, MAXIT ',ipnof_in,THRESHEN,MAXIT
-      write(*,*) 'Fl, ninact',nfl,ninact
       do i=1,MAXIT
        
-       Epnof=EN+calc_epnof(OCC,HCOREmol,ERImol,NBF,(NDOC+NO1),NO1,NCWO,ipnof_in) 
+       Epnof=EN+calc_epnof(OCC,HCOREmol,ERImol,NBF,nfl,NO1,NCWO,ipnof_in) 
        write(*,*) epnof
        if(abs(Epnof-Epnof_old)>THRESHEN) goto 92
 
