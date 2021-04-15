@@ -82,19 +82,19 @@
         lorb=(nfl+ncoup)+ncoup*(nfl-iorb1)
         do iorb2=forb,lorb
          calc_epnof=calc_epnof+OCC(iorb2)*(2.0d0*HCOREmol(iorb2,iorb2)+ERImol(iorb2,iorb2,iorb2,iorb2)) 
-         ! - sqrt(np nq) Lpq [below Fl and above ]
+         ! - sqrt(np nq) Lpq [below and above Fl]
          calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2))*(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
-         ! + sqrt(np nq) Lpq [above Fl both]
+         ! + sqrt(np nq) Lpq [both above Fl]
          do iorb3=iorb2+1,lorb
           calc_epnof=calc_epnof+sqrt(OCC(iorb2)*OCC(iorb3))*(ERImol(iorb3,iorb2,iorb3,iorb2)+ERImol(iorb2,iorb3,iorb2,iorb3))
          enddo
-         ! Inter PNOF5 ->  np nq (2 Jpq - Kpq)  [above Fl both]
+         ! Inter PNOF5 ->  np nq (2 Jpq - Kpq) [both above Fl]
          do iorb3=lorb+1,nbf
           calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb3))&
                     & *(2.0d0*(ERImol(iorb2,iorb3,iorb3,iorb2)+ERImol(iorb3,iorb2,iorb2,iorb3))&
                     & -(ERImol(iorb2,iorb3,iorb2,iorb3)+ERImol(iorb3,iorb2,iorb3,iorb2)))
          enddo
-         ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, above Fl both]
+         ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, both above Fl]
          if(ipnof==7) then
           horb2=1.0d0-OCC(iorb2)
           do iorb3=lorb+1,nbf
@@ -113,13 +113,13 @@
           ! Nth done
          endif
         enddo
-        ! Inter PNOF5 -> np nq (2 Jpq - Kpq) [Omegag and Omegaf, below and below Fl]
+        ! Inter PNOF5 -> np nq (2 Jpq - Kpq) [Omegag and Omegaf, both below Fl]
         do iorb2=iorb1+1,nfl
          calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb1))&
                    & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
                    & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
         enddo
-        ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, below and below Fl]
+        ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, both below Fl]
         if(ipnof==7) then
          do iorb2=iorb1+1,nfl
           horb2=1.0d0-OCC(iorb2)
