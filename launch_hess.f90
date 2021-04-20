@@ -49,139 +49,175 @@
       CALL ERIC23c(ERImol,VEC,NBF)
       CALL ERIC4c(ERImol,VEC,NBF)
       !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-      write(*,*) 'IPNOF, THRESHOLD EN, MAXIT ',ipnof_in,THRESHEN,MAXIT
+      write(*,*) 'IPNOF     ',ipnof_in
+      write(*,'(a11,e15.5)')  ' THRESH. E ',THRESHEN
+      write(*,*) 'MAXIT     ',MAXIT
+      write(*,*) 'Ninactive ',NO1
+      write(*,*) 'Ncoup     ',NCWO
+      write(*,*) 'NFL       ',nfl
+      Epnof_old=EN+calc_epnof(OCC,HCOREmol,ERImol,NBF,nfl,NO1,NCWO,ipnof_in) 
       do i=1,MAXIT
        
+       call grad_n_pnof(OCC,HCOREmol,ERImol,NBF,nfl,NO1,NCWO,ipnof_in) 
        Epnof=EN+calc_epnof(OCC,HCOREmol,ERImol,NBF,nfl,NO1,NCWO,ipnof_in) 
-       write(*,*) epnof
-       if(abs(Epnof-Epnof_old)>THRESHEN) goto 92
-
+       if(abs(Epnof-Epnof_old)<THRESHEN) goto 92
+       Epnof_old=Epnof
+ 
       enddo 
 92    continue      
+      write(*,'(a7,f20.8)') ' EPNOF ',epnof
       deallocate(OCC,VEC,HCOREmol,ERImol)
 
       END SUBROUTINE LAUNCH_HESS
     
-      function calc_epnof(OCC,HCOREmol,ERImol,nbf,nfl,ninact,ncoup,ipnof)
-      implicit none
-      integer::nbf,nfl,ninact,ncoup,ipnof
-      double precision::calc_epnof
-      double precision,dimension(nbf)::OCC
-      double precision,dimension(nbf,nbf)::HCOREmol
-      double precision,dimension(nbf,nbf,nbf,nbf)::ERImol
-      integer::iorb1,iorb2,iorb3,forb,lorb
-      double precision::horb1,horb2,horb3
-      calc_epnof=0.0d0
-      do iorb1=1,nfl
-       if(iorb1>ninact) then
-        horb1=1.0d0-OCC(iorb1)
-        calc_epnof=calc_epnof+OCC(iorb1)*(2.0d0*HCOREmol(iorb1,iorb1)+ERImol(iorb1,iorb1,iorb1,iorb1)) 
-        ! Intra [same for PNOF5, PNOF7, and PNOF7s]
-        ! np (2 hpp + Jpp)
-        forb=(nfl+1)+ncoup*(nfl-iorb1)
-        lorb=(nfl+ncoup)+ncoup*(nfl-iorb1)
-        do iorb2=forb,lorb
-         calc_epnof=calc_epnof+OCC(iorb2)*(2.0d0*HCOREmol(iorb2,iorb2)+ERImol(iorb2,iorb2,iorb2,iorb2)) 
-         ! - sqrt(np nq) Lpq [below and above Fl]
-         calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2))*(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
-         ! + sqrt(np nq) Lpq [both above Fl]
-         do iorb3=iorb2+1,lorb
-          calc_epnof=calc_epnof+sqrt(OCC(iorb2)*OCC(iorb3))*(ERImol(iorb3,iorb2,iorb3,iorb2)+ERImol(iorb2,iorb3,iorb2,iorb3))
-         enddo
-         ! Inter PNOF5 ->  np nq (2 Jpq - Kpq) [both above Fl]
-         do iorb3=lorb+1,nbf
-          calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb3))&
-                    & *(2.0d0*(ERImol(iorb2,iorb3,iorb3,iorb2)+ERImol(iorb3,iorb2,iorb2,iorb3))&
-                    & -(ERImol(iorb2,iorb3,iorb2,iorb3)+ERImol(iorb3,iorb2,iorb3,iorb2)))
-         enddo
-         ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, both above Fl]
-         if(ipnof==7) then
-          horb2=1.0d0-OCC(iorb2)
-          do iorb3=lorb+1,nbf
-           horb3=1.0d0-OCC(iorb3)
-           calc_epnof=calc_epnof-sqrt(OCC(iorb2)*OCC(iorb3)*horb2*horb3)&
-                     & *(ERImol(iorb2,iorb3,iorb2,iorb3)+ERImol(iorb3,iorb2,iorb3,iorb2))
-          enddo
-         elseif(ipnof==-7) then
-          horb2=1.0d0-OCC(iorb2)
-          do iorb3=lorb+1,nbf
-           horb3=1.0d0-OCC(iorb3)
-           calc_epnof=calc_epnof-4.0d0*(OCC(iorb2)*OCC(iorb3)*horb2*horb3)&
-                     & *(ERImol(iorb2,iorb3,iorb2,iorb3)+ERImol(iorb3,iorb2,iorb3,iorb2))
-          enddo
-         else
-          ! Nth done
-         endif
-        enddo
-        ! Inter PNOF5 -> np nq (2 Jpq - Kpq) [Omegag and Omegaf, both below Fl]
-        do iorb2=iorb1+1,nfl
-         calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb1))&
-                   & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
-                   & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
-        enddo
-        ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, both below Fl]
-        if(ipnof==7) then
-         do iorb2=iorb1+1,nfl
-          horb2=1.0d0-OCC(iorb2)
-          calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
-                    & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
-         enddo
-        elseif(ipnof==-7) then
-         do iorb2=iorb1+1,nfl
-          horb2=1.0d0-OCC(iorb2)
-          calc_epnof=calc_epnof-4.0d0*(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
-                    & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
-         enddo
-        else
-         ! Nth done 
-        endif
-        ! Inter PNOF5 -> np nq (2 Jpq - Kpq) [Omegag and Omegaf, below and above Fl]
-        do iorb2=nfl+1,forb-1
-         calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb1))&
-                   & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
-                   & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
-        enddo
-        do iorb2=lorb+1,nbf
-         calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb1))&
-                   & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
-                   & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
-        enddo
-        ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, below and above Fl]
-        if(ipnof==7) then
-         do iorb2=nfl+1,forb-1
-          horb2=1.0d0-OCC(iorb2)
-          calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
-                    & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
-         enddo
-         do iorb2=lorb+1,nbf
-          horb2=1.0d0-OCC(iorb2)
-          calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
-                    & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
-         enddo
-        elseif(ipnof==-7) then
-         do iorb2=nfl+1,forb-1
-          horb2=1.0d0-OCC(iorb2)
-          calc_epnof=calc_epnof-4.0d0*(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
-                    & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
-         enddo
-         do iorb2=lorb+1,nbf
-          horb2=1.0d0-OCC(iorb2)
-          calc_epnof=calc_epnof-4.0d0*(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
-                    & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
-         enddo
-        else
-         ! Nth done
-        endif
-       else
-        ! SD energy ->   Jpp 
-        calc_epnof=calc_epnof+2.0d0*HCOREmol(iorb1,iorb1)+ERImol(iorb1,iorb1,iorb1,iorb1)
-        ! SD energy -> 1 nq (2 Jpq - Kpq)
-        do iorb2=iorb1+1,nbf
-         calc_epnof=calc_epnof+OCC(iorb2)&
-                   & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
-                   & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
-        enddo
-       endif 
-      enddo
-      return
-      end function
+function calc_epnof(OCC,HCOREmol,ERImol,nbf,nfl,ninact,ncoup,ipnof)
+implicit none
+! Parameters
+integer::nbf,nfl,ninact,ncoup,ipnof
+double precision::calc_epnof
+double precision,dimension(nbf)::OCC
+double precision,dimension(nbf,nbf)::HCOREmol
+double precision,dimension(nbf,nbf,nbf,nbf)::ERImol
+! Local variables
+integer::iorb1,iorb2,iorb3,forb,lorb
+double precision::horb1,horb2,horb3
+! Code
+calc_epnof=0.0d0
+do iorb1=1,nfl
+ if(iorb1>ninact) then
+  horb1=1.0d0-OCC(iorb1)
+  calc_epnof=calc_epnof+OCC(iorb1)*(2.0d0*HCOREmol(iorb1,iorb1)+ERImol(iorb1,iorb1,iorb1,iorb1)) 
+  ! Intra [same for PNOF5, PNOF7, and PNOF7s]
+  ! np (2 hpp + Jpp)
+  forb=(nfl+1)+ncoup*(nfl-iorb1)
+  lorb=(nfl+ncoup)+ncoup*(nfl-iorb1)
+  do iorb2=forb,lorb
+   calc_epnof=calc_epnof+OCC(iorb2)*(2.0d0*HCOREmol(iorb2,iorb2)+ERImol(iorb2,iorb2,iorb2,iorb2)) 
+   ! - sqrt(np nq) Lpq [below and above Fl]
+   calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2))*(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
+   ! + sqrt(np nq) Lpq [both above Fl]
+   do iorb3=iorb2+1,lorb
+    calc_epnof=calc_epnof+sqrt(OCC(iorb2)*OCC(iorb3))*(ERImol(iorb3,iorb2,iorb3,iorb2)+ERImol(iorb2,iorb3,iorb2,iorb3))
+   enddo
+   ! Inter PNOF5 ->  np nq (2 Jpq - Kpq) [both above Fl]
+   do iorb3=lorb+1,nbf
+    calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb3))&
+              & *(2.0d0*(ERImol(iorb2,iorb3,iorb3,iorb2)+ERImol(iorb3,iorb2,iorb2,iorb3))&
+              & -(ERImol(iorb2,iorb3,iorb2,iorb3)+ERImol(iorb3,iorb2,iorb3,iorb2)))
+   enddo
+   ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, both above Fl]
+   if(ipnof==7) then
+    horb2=1.0d0-OCC(iorb2)
+    do iorb3=lorb+1,nbf
+     horb3=1.0d0-OCC(iorb3)
+     calc_epnof=calc_epnof-sqrt(OCC(iorb2)*OCC(iorb3)*horb2*horb3)&
+               & *(ERImol(iorb2,iorb3,iorb2,iorb3)+ERImol(iorb3,iorb2,iorb3,iorb2))
+    enddo
+   elseif(ipnof==-7) then
+    horb2=1.0d0-OCC(iorb2)
+    do iorb3=lorb+1,nbf
+     horb3=1.0d0-OCC(iorb3)
+     calc_epnof=calc_epnof-4.0d0*(OCC(iorb2)*OCC(iorb3)*horb2*horb3)&
+               & *(ERImol(iorb2,iorb3,iorb2,iorb3)+ERImol(iorb3,iorb2,iorb3,iorb2))
+    enddo
+   else
+    ! Nth done
+   endif
+  enddo
+  ! Inter PNOF5 -> np nq (2 Jpq - Kpq) [Omegag and Omegaf, both below Fl]
+  do iorb2=iorb1+1,nfl
+   calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb1))&
+             & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
+             & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
+  enddo
+  ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, both below Fl]
+  if(ipnof==7) then
+   do iorb2=iorb1+1,nfl
+    horb2=1.0d0-OCC(iorb2)
+    calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
+              & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
+   enddo
+  elseif(ipnof==-7) then
+   do iorb2=iorb1+1,nfl
+    horb2=1.0d0-OCC(iorb2)
+    calc_epnof=calc_epnof-4.0d0*(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
+              & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
+   enddo
+  else
+   ! Nth done 
+  endif
+  ! Inter PNOF5 -> np nq (2 Jpq - Kpq) [Omegag and Omegaf, below and above Fl]
+  do iorb2=nfl+1,forb-1
+   calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb1))&
+             & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
+             & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
+  enddo
+  do iorb2=lorb+1,nbf
+   calc_epnof=calc_epnof+(OCC(iorb2)*OCC(iorb1))&
+             & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
+             & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
+  enddo
+  ! Inter PNOF7(s) ->  - sqrt(np hp nq hq) Lpq [Omegag and Omegaf, below and above Fl]
+  if(ipnof==7) then
+   do iorb2=nfl+1,forb-1
+    horb2=1.0d0-OCC(iorb2)
+    calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
+              & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
+   enddo
+   do iorb2=lorb+1,nbf
+    horb2=1.0d0-OCC(iorb2)
+    calc_epnof=calc_epnof-sqrt(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
+              & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
+   enddo
+  elseif(ipnof==-7) then
+   do iorb2=nfl+1,forb-1
+    horb2=1.0d0-OCC(iorb2)
+    calc_epnof=calc_epnof-4.0d0*(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
+              & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
+   enddo
+   do iorb2=lorb+1,nbf
+    horb2=1.0d0-OCC(iorb2)
+    calc_epnof=calc_epnof-4.0d0*(OCC(iorb1)*OCC(iorb2)*horb1*horb2)&
+              & *(ERImol(iorb1,iorb2,iorb1,iorb2)+ERImol(iorb2,iorb1,iorb2,iorb1))
+   enddo
+  else
+   ! Nth done
+  endif
+ else
+  ! SD energy ->   Jpp 
+  calc_epnof=calc_epnof+2.0d0*HCOREmol(iorb1,iorb1)+ERImol(iorb1,iorb1,iorb1,iorb1)
+  ! SD energy -> 1 nq (2 Jpq - Kpq)
+  do iorb2=iorb1+1,nbf
+   calc_epnof=calc_epnof+OCC(iorb2)&
+             & *(2.0d0*(ERImol(iorb2,iorb1,iorb1,iorb2)+ERImol(iorb1,iorb2,iorb2,iorb1))&
+             & -(ERImol(iorb2,iorb1,iorb2,iorb1)+ERImol(iorb1,iorb2,iorb1,iorb2)))
+  enddo
+ endif 
+enddo
+return
+end function
+
+subroutine grad_n_pnof(OCC,HCOREmol,ERImol,nbf,nfl,ninact,ncoup,ipnof)
+implicit none
+! Parameters
+integer::nbf,nfl,ninact,ncoup,ipnof
+double precision::calc_epnof
+double precision,dimension(nbf)::OCC
+double precision,dimension(nbf,nbf)::HCOREmol
+double precision,dimension(nbf,nbf,nbf,nbf)::ERImol
+! Local variables
+integer::ngrad,igrad1,iorb1,forb,lorb  
+double precision,allocatable,dimension(:)::Grad
+! Code
+ngrad=(nfl-ninact)*ncoup
+allocate(Grad(ngrad))
+write(*,*) ' Ngrad',ngrad
+Grad(:)=0.0d0
+do igrad1=(1+ninact),nfl
+ Grad(igrad1)=2.0d0*HCOREmol(iorb1,iorb1)+ERImol(iorb1,iorb1,iorb1,iorb1)
+ forb=(nfl+1)+ncoup*(nfl-iorb1)
+ lorb=(nfl+ncoup)+ncoup*(nfl-iorb1)
+enddo
+
+deallocate(Grad)
+end subroutine grad_n_pnof
