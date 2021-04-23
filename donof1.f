@@ -11448,6 +11448,7 @@ C OCUPENERGYrc
      &                        QD,HCORE,QJ,QK,DIPN,ADIPx,ADIPy,ADIPz,
      &                        DIPx,DIPy,DIPz,ENERGY,GRAD,NV)
       USE PARCOM
+      use m_noft_driver
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)   
       DOUBLE PRECISION,DIMENSION(3)::DIPN
       DOUBLE PRECISION,DIMENSION(NV)::GAMMA,GRAD
@@ -11461,7 +11462,12 @@ C OCUPENERGYrc
 C----------------------------------------------------------------------- 
 C     Occupations
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      CALL OCUPACIONr(GAMMA,RO,CJ12,CK12,DR,DCJ12r,DCK12r,NV)
+      !CALL OCUPACIONr(GAMMA,RO,CJ12,CK12,DR,DCJ12r,DCK12r,NV)
+      !write(*,*) 'MAU'
+      write(*,*) 'MAU1'
+      call run_noft(.false.,0,7,1,NBF5,NO1,NDOC,NCWO,NB,NA,NV,
+     &     HCORE,QJ,QK,GAMMA,RO,CJ12,CK12,DR,DCJ12r,DCK12r)
+
 C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C                                ENERGY
@@ -11520,6 +11526,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        ENDIF
+      write(*,*) ENERGY
 c- - - including Electric Field  - - - - - - - - - - - - - - - - -
        if(EFIELDL)then
         CALL DIPMOMr(DIPN,ADIPx,ADIPy,ADIPz,DIPx,DIPy,DIPz,
@@ -12022,7 +12029,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         if(MSpin==0)then
          CALL MULLIKENrc(ATMNAME,ZNUC,LIMLOW,LIMSUP,OVERLAP,RO,QD)
         else if(MSpin>0)then
-c        CALL MULLIKENro        to do!
+c        CALL MULLIKENro        todo!
         end if
        ENDIF
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
