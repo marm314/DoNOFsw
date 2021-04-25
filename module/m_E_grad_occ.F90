@@ -41,12 +41,12 @@ contains
 !!  Calculate the Energy from gamma independent parameters 
 !!
 !! INPUTS
-!!  hCORE=One-body integrals 
+!!  hCORE=Diagonal part of the One-body integrals (h_pp) 
 !!  ERI_J=Lower triangular part of the J_pq matrix
 !!  ERI_K=Lower triangular part of the K_pq matrix
 !!
 !! OUTPUT
-!!  Energy=Energy computed from the occs (lambdas indeed)
+!!  Energy=Energy computed from the occs (actually from gammas)
 !!
 !! PARENTS
 !!  
@@ -68,7 +68,7 @@ subroutine calc_E_occ(RDMd,Energy,hCORE,ERI_J,ERI_K)
 !arrays
 !************************************************************************
  
- call gamma_to_2rdm(RDMd,RDMd%Docc_gamma)
+ call gamma_to_2rdm(RDMd)
  Energy=0.0d0
  if(RDMd%MSpin==0) then
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --

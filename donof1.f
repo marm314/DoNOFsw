@@ -11526,7 +11526,6 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        ENDIF
-      write(*,*) ENERGY
 c- - - including Electric Field  - - - - - - - - - - - - - - - - -
        if(EFIELDL)then
         CALL DIPMOMr(DIPN,ADIPx,ADIPy,ADIPz,DIPx,DIPy,DIPz,

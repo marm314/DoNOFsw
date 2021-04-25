@@ -47,7 +47,7 @@ contains
 !! INPUTS
 !!
 !! OUTPUT
-!! Docc_gamma=Derivative of occupancies w.r.t. gamma
+!!  RDMd=Object containg all required variables whose arrays are properly updated
 !!
 !! PARENTS
 !!  
@@ -55,12 +55,11 @@ contains
 !!
 !! SOURCE
 
-subroutine gamma_to_2rdm(RDMd,Docc_gamma)
+subroutine gamma_to_2rdm(RDMd)
 !Arguments ------------------------------------
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::Docc_gamma
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,iorb6,iorb7,iorb8
@@ -69,14 +68,14 @@ subroutine gamma_to_2rdm(RDMd,Docc_gamma)
  double precision::occ_n,hole_n,sqrt_occ_n,sqrt_hole_orb,SQRTorb
 !arrays
  double precision,allocatable,dimension(:)::Docc_gamma0,sqrt_occ,Dsqrt_occ_gamma0,hole
- double precision,allocatable,dimension(:,:)::Dsqrt_occ_gamma,Dhole_gamma
+ double precision,allocatable,dimension(:,:)::Dsqrt_occ_gamma,Dhole_gamma,Docc_gamma 
 !************************************************************************
 
 !-----------------------------------------------------------------------
 !                 Occupancies and their Derivatives
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  allocate(Docc_gamma0(RDMd%NBF_occ),sqrt_occ(RDMd%NBF_occ),Dsqrt_occ_gamma0(RDMd%NBF_occ))
- allocate(Dsqrt_occ_gamma(RDMd%NBF_occ,RDMd%Ngammas))
+ allocate(Dsqrt_occ_gamma(RDMd%NBF_occ,RDMd%Ngammas),Docc_gamma(RDMd%NBF_occ,RDMd%Ngammas))
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  RDMd%occ = 0.0d0; sqrt_occ = 0.0d0; Docc_gamma0 = 0.0d0; Dsqrt_occ_gamma0 = 0.0d0;
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -234,7 +233,10 @@ subroutine gamma_to_2rdm(RDMd,Docc_gamma)
  enddo
 !-----------------------------------------------------------------------
 !                   DM2_J, DM2_K, DDM2_gamma_J, DDM2_gamma_K
+!Comment: This is not the cleanest way to call them but it is fastest way 
+!         to program them without requiring extra memory allocations or pointers.
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+ RDMd%Docc_gamma=reshape(Docc_gamma,(/RDMd%NBF_occ*RDMd%Ngammas/))
  if(RDMd%INOF==5) then
   call dm2_pnof5(RDMd,RDMd%Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,RDMd%DM2_J,RDMd%DM2_K,RDMd%DDM2_gamma_J,RDMd%DDM2_gamma_K)
  else if(RDMd%INOF==7) then
@@ -243,7 +245,7 @@ subroutine gamma_to_2rdm(RDMd,Docc_gamma)
   ! Nth
  endif
 !-----------------------------------------------------------------------
- deallocate(sqrt_occ,Dsqrt_occ_gamma)
+ deallocate(sqrt_occ,Dsqrt_occ_gamma,Docc_gamma)
 
 end subroutine gamma_to_2rdm
 !!***
