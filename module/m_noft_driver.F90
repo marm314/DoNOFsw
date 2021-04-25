@@ -11,6 +11,7 @@
 !!                           | Nsingleocc  |   NBF_occ - Npairs_p_sing - Nfrozen   | Nempty   = NBF
 !!                           Nbeta         Nalpha                                  NBF_occ
 !!- - - - - - - - - - - - - - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+!! GAMMAs=Independent variables used in the unconstrained optimization as cos^2 (gamma) + sin^2 (gamma) = 1
 !!
 !! PARENTS
 !!
@@ -42,7 +43,6 @@ contains
 !!  Run optimization w.r.t occ numbers 
 !!
 !! INPUTS
-!! GAMMAs=Independent variables used in the unconstrained optimization as cos^2 (gamma) + sin^2 (gamma) = 1
 !! HighSpin_in=Logical variable to decide what spin-uncompensated version to use (default=False i.e. use mixture of states)
 !! MSpin_in=Integer variable to define the MS (default=0 i.e. spin-compensated)
 !! INOF_in=PNOFi functional to use
@@ -69,7 +69,7 @@ contains
 !! SOURCE
 
 subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,Nvars,hCORE,ERI_J,ERI_K,GAMMAs,RO,CJ12,CK12,DR,DCJ12r,DCK12r)
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,Nvars,hCORE,ERI_J,ERI_K,GAMMAs_in,RO,CJ12,CK12,DR,DCJ12r,DCK12r)
 !Arguments ------------------------------------
 !scalars
  logical,intent(in)::HighSpin_in
@@ -83,7 +83,7 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
  !! TO REMOVE !!
  !!!!!!!!!!!!!!!
  integer,intent(in)::Nvars
- double precision,dimension(Nvars),intent(inout)::GAMMAs
+ double precision,dimension(Nvars),intent(inout)::GAMMAs_in
  double precision,dimension(NBF_occ_in),intent(inout)::RO
  double precision,dimension(NBF_occ_in*NBF_occ_in),intent(inout)::CJ12,CK12
  double precision,dimension(NBF_occ_in*Nvars),intent(inout)::DR
@@ -94,15 +94,14 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
 !Local variables ------------------------------
 !scalars
  double precision::Energy
+ double precision,dimension(:),allocatable::GAMMAs
  type(rdm_t),target::RDMd
 !arrays
 
  call rdm_init(RDMd,HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
+ allocate(GAMMAs(RDMd%Ngammas))
 
- do ind=1,Nvars
-  RDMd%GAMMAs(ind)=GAMMAs(ind)
- enddo
  do ind=1,NBF_occ_in
   RDMd%occ(ind)=RO(ind)
  enddo
@@ -118,11 +117,10 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
   RDMd%DDM2_gamma_K(ind)=DCK12r(ind)
  enddo
 
- call calc_E_occ(RDMd,Energy,hCORE,ERI_J,ERI_K)
+ GAMMAs=GAMMAs_in
+ call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
+ write(*,*) Energy
 
- do ind=1,Nvars
-  GAMMAs(ind)=RDMd%GAMMAs(ind) 
- enddo
  do ind=1,NBF_occ_in
   RO(ind)=RDMd%occ(ind)
  enddo
@@ -138,6 +136,7 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
   DCK12r(ind)=RDMd%DDM2_gamma_K(ind)
  enddo
 
+ deallocate(GAMMAs)
  call RDMd%free() 
 
 end subroutine run_noft

@@ -42,12 +42,12 @@ contains
 !! FUNCTION
 !!  Build the occ numbers and its derivatives from gamma_i (i.e. the independent variables used in the unconstrained optmization)
 !!  Then, call the construction of the 2-RDM element in DM2_J and DM2_K & its derivatives w.r.t occ numbers
-!!  RDMd%GAMMAs=Independent variables used in the unconstrained optimization as cos^2 (gamma) + sin^2 (gamma) = 1
 !!
 !! INPUTS
 !!
 !! OUTPUT
 !!  RDMd=Object containg all required variables whose arrays are properly updated
+!!  GAMMAs=Independent variables used in the unconstrained optimization as cos^2 (gamma) + sin^2 (gamma) = 1
 !!
 !! PARENTS
 !!  
@@ -55,11 +55,12 @@ contains
 !!
 !! SOURCE
 
-subroutine gamma_to_2rdm(RDMd)
+subroutine gamma_to_2rdm(RDMd,GAMMAs)
 !Arguments ------------------------------------
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
+ double precision,dimension(RDMd%Ngammas),intent(in)::GAMMAs
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,iorb6,iorb7,iorb8
@@ -90,9 +91,9 @@ subroutine gamma_to_2rdm(RDMd)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  do igamma=1,RDMd%Npairs
   iorb1 = RDMd%Nfrozen+igamma
-  RDMd%occ(iorb1) = DCOS(RDMd%GAMMAs(igamma))
+  RDMd%occ(iorb1) = DCOS(GAMMAs(igamma))
   RDMd%occ(iorb1) = 0.5d0 + 0.5d0*RDMd%occ(iorb1)*RDMd%occ(iorb1)
-  Docc_gamma0(iorb1) = -0.5d0*DSIN(2.0d0*RDMd%GAMMAs(igamma))
+  Docc_gamma0(iorb1) = -0.5d0*DSIN(2.0d0*GAMMAs(igamma))
   sqrt_occ(iorb1) = DSQRT(RDMd%occ(iorb1))
   Dsqrt_occ_gamma0(iorb1) = 0.5d0*Docc_gamma0(iorb1)/sqrt_occ(iorb1)
  enddo
@@ -129,11 +130,11 @@ subroutine gamma_to_2rdm(RDMd)
    Docc_gamma(iorb,igamma) = Docc_gamma0(iorb)
    Dsqrt_occ_gamma(iorb,igamma) = Dsqrt_occ_gamma0(iorb)
    iorb1 = RDMd%Nalpha_elect+RDMd%Npairs-igamma+1  ! iorb1=RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-igamma)+RDMd%Ncoupled with RDMd%Ncoupled=1
-   sqrt_occ(iorb1) = DSIN(RDMd%GAMMAs(igamma))*DSQRT(0.5d0)
-   Dsqrt_occ_gamma0(iorb1) = DCOS(RDMd%GAMMAs(igamma))*DSQRT(0.5d0)
+   sqrt_occ(iorb1) = DSIN(GAMMAs(igamma))*DSQRT(0.5d0)
+   Dsqrt_occ_gamma0(iorb1) = DCOS(GAMMAs(igamma))*DSQRT(0.5d0)
    Dsqrt_occ_gamma(iorb1,igamma) = Dsqrt_occ_gamma0(iorb1)
    RDMd%occ(iorb1) = sqrt_occ(iorb1)*sqrt_occ(iorb1)
-   Docc_gamma0(iorb1) = 0.5d0*DSIN(2.0d0*RDMd%GAMMAs(igamma))
+   Docc_gamma0(iorb1) = 0.5d0*DSIN(2.0d0*GAMMAs(igamma))
    Docc_gamma(iorb1,igamma) = Docc_gamma0(iorb1)
   enddo
  else                            ! PNOFi(Nc): Extended PNOF (RDMd%Ncoupled>1)
@@ -152,10 +153,10 @@ subroutine gamma_to_2rdm(RDMd)
     iorb4 = (RDMd%Ncoupled-1)*(igamma1-1)+iorb3                 ! iorb4=1,RDMd%Npairs*(RDMd%Ncoupled-1)
     igamma = RDMd%Npairs+iorb4                                  ! igamma=RDMd%Npairs+1,RDMd%Npairs*RDMd%Ncoupled
     iorb5 = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-igamma1)+iorb3   ! iorb5=RDMd%Nalpha_elect+1,RDMd%Nalpha_elect+RDMd%Ncoupled*RDMd%Npairs-1
-    sqrt_occ_n = DSIN(RDMd%GAMMAs(igamma))
+    sqrt_occ_n = DSIN(GAMMAs(igamma))
     occ_n = sqrt_occ_n*sqrt_occ_n
-    Docc_gamma0(iorb5) = DSIN(2.0d0*RDMd%GAMMAs(igamma))
-    Dsqrt_occ_gamma0(iorb5) = DCOS(RDMd%GAMMAs(igamma))
+    Docc_gamma0(iorb5) = DSIN(2.0d0*GAMMAs(igamma))
+    Dsqrt_occ_gamma0(iorb5) = DCOS(GAMMAs(igamma))
     RDMd%occ(iorb5) =  hole(iorb4)*occ_n
     sqrt_hole_orb = DSQRT(hole(iorb4))
     sqrt_occ(iorb5) = sqrt_hole_orb*sqrt_occ_n
@@ -195,10 +196,10 @@ subroutine gamma_to_2rdm(RDMd)
 !- - - - iorb4 = iorb2 - last occ  - - - - - - - - - - - - - -
    igamma = RDMd%Npairs+iorb2               ! igamma=RDMd%Npairs+igamma1*(RDMd%Ncoupled-1)
    iorb5 = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-igamma1)+RDMd%Ncoupled
-   sqrt_occ_n = DCOS(RDMd%GAMMAs(igamma))
+   sqrt_occ_n = DCOS(GAMMAs(igamma))
    hole_n = sqrt_occ_n*sqrt_occ_n 
-   Docc_gamma0(iorb5)  = -DSIN(2.0d0*RDMd%GAMMAs(igamma))
-   Dsqrt_occ_gamma0(iorb5) = -DSIN(RDMd%GAMMAs(igamma))
+   Docc_gamma0(iorb5)  = -DSIN(2.0d0*GAMMAs(igamma))
+   Dsqrt_occ_gamma0(iorb5) = -DSIN(GAMMAs(igamma))
    RDMd%occ(iorb5) = hole(iorb2)*hole_n
    SQRTorb = DSQRT(hole(iorb2))
    sqrt_occ(iorb5)= SQRTorb*sqrt_occ_n

@@ -54,12 +54,13 @@ contains
 !!
 !! SOURCE
 
-subroutine calc_E_occ(RDMd,Energy,hCORE,ERI_J,ERI_K) 
+subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K) 
 !Arguments ------------------------------------
 !scalars
  double precision,intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
 !arrays
+ double precision,dimension(RDMd%Ngammas),intent(in)::GAMMAs
  double precision,dimension(RDMd%NBF_occ),intent(in)::hCORE
  double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
 !Local variables ------------------------------
@@ -68,7 +69,7 @@ subroutine calc_E_occ(RDMd,Energy,hCORE,ERI_J,ERI_K)
 !arrays
 !************************************************************************
  
- call gamma_to_2rdm(RDMd)
+ call gamma_to_2rdm(RDMd,GAMMAs)
  Energy=0.0d0
  if(RDMd%MSpin==0) then
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --

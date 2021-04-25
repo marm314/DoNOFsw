@@ -44,7 +44,6 @@ module m_rdmd
   integer::Ngammas               ! Number of gammas (independet variables used in occ optimization procedure)
   double precision::Sums
 ! arrays 
-  double precision,allocatable,dimension(:)::GAMMAs
   double precision,allocatable,dimension(:)::OCC
   double precision,allocatable,dimension(:)::DM2_J,DM2_K
   double precision,allocatable,dimension(:)::Docc_gamma
@@ -124,7 +123,6 @@ subroutine rdm_init(RDMd,HighSpin,MSpin,INOF,Ista,NBF_occ,Nfrozen,Npairs,&
  allocate(RDMd%DDM2_gamma_J(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas))
  allocate(RDMd%DDM2_gamma_K(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas)) 
  allocate(RDMd%OCC(RDMd%NBF_occ))
- allocate(RDMd%GAMMAs(RDMd%Ngammas))
 
 end subroutine rdm_init
 !!***
@@ -158,7 +156,6 @@ subroutine rdm_free(RDMd)
 
 !************************************************************************
 
- deallocate(RDMd%GAMMAs)
  deallocate(RDMd%OCC)
  deallocate(RDMd%DM2_J,RDMd%DM2_K) 
  deallocate(RDMd%Docc_gamma) 
