@@ -120,7 +120,6 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
  GAMMAs=GAMMAs_in
  call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
  call calc_Grad_occ(RDMd,Grad_GAMMAs,hCORE,ERI_J,ERI_K)
- write(*,*) Grad_GAMMAs(:)
 
  do ind=1,NBF_occ_in
   RO(ind)=RDMd%occ(ind)
