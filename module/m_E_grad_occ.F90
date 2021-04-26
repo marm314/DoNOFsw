@@ -3,7 +3,8 @@
 !!  m_E_grad_occ
 !!
 !! FUNCTION
-!!  Module prepared to compute energies from Gammas and gradients of E w.r.t Gammas
+!!  Module prepared to compute energies from Gammas and gradients of the Energy from/w.r.t Gammas
+!!
 !!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !!  Nfrozen |            Npairs_p_sing     |              Nvirt                               = NBF               
 !!  Nfrozen |         Npairs + Nsingleocc  |     Ncoupled*Npairs                   + Nempty   = NBF               
@@ -27,7 +28,7 @@ module m_E_grad_occ
  private :: dm2_x_eri,occ_x_eri,Ddm2_gamma_x_ERI,Docc_gamma_x_ERI
 !!***
 
- public :: calc_E_occ
+ public :: calc_E_occ,calc_Grad_occ
 !!***
 
 contains
@@ -41,7 +42,8 @@ contains
 !!  Calculate the Energy from gamma independent parameters 
 !!
 !! INPUTS
-!!  hCORE=Diagonal part of the One-body integrals (h_pp) 
+!!  GAMMAs=Indep. variables used in the occ. optimization 
+!!  hCORE=DiagoRDMd%Nalpha_electl part of the One-body integrals (h_pp) 
 !!  ERI_J=Lower triangular part of the J_pq matrix
 !!  ERI_K=Lower triangular part of the K_pq matrix
 !!
@@ -72,6 +74,7 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
  call gamma_to_2rdm(RDMd,GAMMAs)
  Energy=0.0d0
  if(RDMd%MSpin==0) then
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 !      Singlet State (S=0,Ms=0) and Multiplet States (S>0,Ms=0)
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -126,6 +129,7 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
   endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  elseif(RDMd%MSpin>0) then
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 !      High-Spin Multiplet State (S>0,Ms=S)
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -162,7 +166,7 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                &
+    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )              &
     &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
     do iorb1=1,RDMd%Ncoupled-1
@@ -188,8 +192,158 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
  else
   ! Nth
  endif
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 end subroutine calc_E_occ
+!!***
+
+!!***
+!!****f* DoNOF/calc_Grad_occ
+!! NAME
+!!  calc_Grad_occ
+!!
+!! FUNCTION
+!!  Calculate the Gradient of the energy from gamma independent parameters 
+!!
+!! INPUTS
+!!  hCORE=DiagoRDMd%Nalpha_electl part of the One-body integrals (h_pp) 
+!!  ERI_J=Lower triangular part of the J_pq matrix
+!!  ERI_K=Lower triangular part of the K_pq matrix
+!!
+!! OUTPUT
+!!  Energy=Energy computed from the occs (actually from gammas)
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K) 
+!Arguments ------------------------------------
+!scalars
+ type(rdm_t),intent(inout)::RDMd
+ double precision,dimension(RDMd%Ngammas),intent(inout)::Grad
+!arrays
+ double precision,dimension(RDMd%NBF_occ),intent(in)::hCORE
+ double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
+!Local variables ------------------------------
+!scalars
+ integer::igamma,iorb,iorb1,ipair
+!arrays
+!************************************************************************
+ 
+ Grad = 0.0d0
+ if(RDMd%MSpin==0) then
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  if(RDMd%Ncoupled==1) then       ! PNOFi(1): Perfect Pairing (RDMd%Ncoupled=1)
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   do igamma=1,RDMd%Ngammas
+    do ipair=1,RDMd%Npairs
+     iorb = RDMd%Nfrozen+ipair
+     Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
+    &         * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                 &
+    &         + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+    &                   - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+     iorb = RDMd%Nalpha_elect+RDMd%Npairs-ipair+1
+     Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
+    &         * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                 &
+    &         + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+    &                   - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+    enddo
+   enddo
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  else                 ! PNOFi(Nc): Extended PNOF (RDMd%Ncoupled>1)
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   do igamma=1,RDMd%Ngammas
+    do ipair=1,RDMd%Npairs
+     iorb = RDMd%Nfrozen+ipair
+     Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
+     &        * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                 &
+     &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+     &                  - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+     do iorb1=1,RDMd%Ncoupled-1
+      iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+iorb1
+      Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)              &
+     &         * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                &
+     &         + 2.0d0 * (Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+     &                   -Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+     enddo
+     iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+RDMd%Ncoupled
+     Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
+     &        * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                 &
+     &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+     &                  - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+    enddo
+   enddo
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  endif
+!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --     
+ elseif(RDMd%MSpin>0) then
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+!      High-Spin Multiplet State (S>0,Ms=S)
+!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+  if(RDMd%Ncoupled==1) then       ! PNOFi(1): Perfect Pairing (RDMd%Ncoupled=1)
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   do igamma=1,RDMd%Ngammas
+    do ipair=1,RDMd%Npairs
+     iorb = RDMd%Nfrozen+ipair
+     GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
+     &        * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                 &
+     &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+     &                  - Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+     &        + 2.0d0 *   Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
+     &        -           Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+     iorb = RDMd%Nalpha_elect+RDMd%Npairs-ipair+1
+     GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
+     &        * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                 &
+     &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+     &                  - Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+     &        + 2.0d0 *   Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
+     &        -           Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+    enddo
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+   enddo
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+  else                  ! PNOFi(Nc): Extended PNOF (RDMd%Ncoupled>1)
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+   do igamma=1,RDMd%Ngammas
+    do ipair=1,RDMd%Npairs
+     iorb = RDMd%Nfrozen+ipair
+     GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
+     &        * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                 &
+     &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+     &                  - Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+     &        + 2.0d0 *   Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
+     &        -           Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+     do iorb1=1,RDMd%Ncoupled-1
+      iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+iorb1
+      GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)              &
+      &        * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                &
+      &        + 2.0d0 * (Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+      &                  -Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+      &        + 2.0d0 *  Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
+      &        -          Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+     enddo
+     iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+RDMd%Ncoupled
+     GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
+     &        * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )                                 &
+     &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
+     &                  - Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+     &        + 2.0d0 *   Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
+     &        -           Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+    enddo
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -          
+   enddo
+  endif
+!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+ else
+  ! Nth
+ endif
+!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+end subroutine calc_Grad_occ
 !!***
 
 !!***

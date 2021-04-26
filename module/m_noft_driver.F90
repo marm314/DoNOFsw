@@ -94,13 +94,13 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
 !Local variables ------------------------------
 !scalars
  double precision::Energy
- double precision,dimension(:),allocatable::GAMMAs
+ double precision,dimension(:),allocatable::GAMMAs,Grad_GAMMAs
  type(rdm_t),target::RDMd
 !arrays
 
  call rdm_init(RDMd,HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
- allocate(GAMMAs(RDMd%Ngammas))
+ allocate(GAMMAs(RDMd%Ngammas),GRAD_GAMMAs(RDMd%Ngammas))
 
  do ind=1,NBF_occ_in
   RDMd%occ(ind)=RO(ind)
@@ -119,7 +119,8 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
 
  GAMMAs=GAMMAs_in
  call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
- write(*,*) Energy
+ call calc_Grad_occ(RDMd,Grad_GAMMAs,hCORE,ERI_J,ERI_K)
+ write(*,*) Grad_GAMMAs(:)
 
  do ind=1,NBF_occ_in
   RO(ind)=RDMd%occ(ind)
@@ -136,7 +137,7 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
   DCK12r(ind)=RDMd%DDM2_gamma_K(ind)
  enddo
 
- deallocate(GAMMAs)
+ deallocate(GAMMAs,Grad_GAMMAs)
  call RDMd%free() 
 
 end subroutine run_noft
