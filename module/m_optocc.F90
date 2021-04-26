@@ -66,7 +66,7 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,iorb6,iorb7,iorb8
  integer::igamma,igamma1,igamma2
  integer::mult
- double precision::occ_n,hole_n,sqrt_occ_n,sqrt_hole_orb,SQRTorb
+ double precision::occ_orb,hole_orb,sqrt_occ_orb,sqrt_hole_orb,SQRTorb
 !arrays
  double precision,allocatable,dimension(:)::Docc_gamma0,sqrt_occ,Dsqrt_occ_gamma0,hole
  double precision,allocatable,dimension(:,:)::Dsqrt_occ_gamma,Dhole_gamma,Docc_gamma 
@@ -150,27 +150,27 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
    Dhole_gamma(iorb1:iorb2,igamma1) = - Docc_gamma0(iorb)
 !- - - -- - - - - - - - - - (igamma1,iorb3) <-> iorb4,igamma,iorb  - - - - - - - - - - - -
    do iorb3=1,RDMd%Ncoupled-1
-    iorb4 = (RDMd%Ncoupled-1)*(igamma1-1)+iorb3                 ! iorb4=1,RDMd%Npairs*(RDMd%Ncoupled-1)
-    igamma = RDMd%Npairs+iorb4                                  ! igamma=RDMd%Npairs+1,RDMd%Npairs*RDMd%Ncoupled
+    iorb4 = (RDMd%Ncoupled-1)*(igamma1-1)+iorb3                           ! iorb4=1,RDMd%Npairs*(RDMd%Ncoupled-1)
+    igamma = RDMd%Npairs+iorb4                                            ! igamma=RDMd%Npairs+1,RDMd%Npairs*RDMd%Ncoupled
     iorb5 = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-igamma1)+iorb3   ! iorb5=RDMd%Nalpha_elect+1,RDMd%Nalpha_elect+RDMd%Ncoupled*RDMd%Npairs-1
-    sqrt_occ_n = DSIN(GAMMAs(igamma))
-    occ_n = sqrt_occ_n*sqrt_occ_n
+    sqrt_occ_orb = DSIN(GAMMAs(igamma))
+    occ_orb = sqrt_occ_orb*sqrt_occ_orb
     Docc_gamma0(iorb5) = DSIN(2.0d0*GAMMAs(igamma))
     Dsqrt_occ_gamma0(iorb5) = DCOS(GAMMAs(igamma))
-    RDMd%occ(iorb5) =  hole(iorb4)*occ_n
+    RDMd%occ(iorb5) =  hole(iorb4)*occ_orb
     sqrt_hole_orb = DSQRT(hole(iorb4))
-    sqrt_occ(iorb5) = sqrt_hole_orb*sqrt_occ_n
-    Docc_gamma(iorb5,igamma1) = Dhole_gamma(iorb4,igamma1)*occ_n
+    sqrt_occ(iorb5) = sqrt_hole_orb*sqrt_occ_orb
+    Docc_gamma(iorb5,igamma1) = Dhole_gamma(iorb4,igamma1)*occ_orb
     if(sqrt_hole_orb>0.0d0) then
-     Dsqrt_occ_gamma(iorb5,igamma1) = 0.5d0*Dhole_gamma(iorb4,igamma1)*sqrt_occ_n/sqrt_hole_orb
+     Dsqrt_occ_gamma(iorb5,igamma1) = 0.5d0*Dhole_gamma(iorb4,igamma1)*sqrt_occ_orb/sqrt_hole_orb
     else
      Dsqrt_occ_gamma(iorb5,igamma1) = 0.0d0
     endif
     do iorb6=iorb1,iorb4-1                   !     iorb1 < iorb6   < iorb4-1
      igamma2 = RDMd%Npairs+iorb6             !   igamma1 < igamma2 < igamma
-     Docc_gamma(iorb5,igamma2) =  Dhole_gamma(iorb4,igamma2)*occ_n
+     Docc_gamma(iorb5,igamma2) =  Dhole_gamma(iorb4,igamma2)*occ_orb
      if(sqrt_hole_orb>0.0d0) then
-      Dsqrt_occ_gamma(iorb5,igamma2) = 0.5d0*Dhole_gamma(iorb4,igamma2)*sqrt_occ_n/sqrt_hole_orb
+      Dsqrt_occ_gamma(iorb5,igamma2) = 0.5d0*Dhole_gamma(iorb4,igamma2)*sqrt_occ_orb/sqrt_hole_orb
      else
       Dsqrt_occ_gamma(iorb5,igamma2) = 0.0d0
      endif
@@ -196,24 +196,24 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
 !- - - - iorb4 = iorb2 - last occ  - - - - - - - - - - - - - -
    igamma = RDMd%Npairs+iorb2               ! igamma=RDMd%Npairs+igamma1*(RDMd%Ncoupled-1)
    iorb5 = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-igamma1)+RDMd%Ncoupled
-   sqrt_occ_n = DCOS(GAMMAs(igamma))
-   hole_n = sqrt_occ_n*sqrt_occ_n 
+   sqrt_occ_orb = DCOS(GAMMAs(igamma))
+   hole_orb = sqrt_occ_orb*sqrt_occ_orb 
    Docc_gamma0(iorb5)  = -DSIN(2.0d0*GAMMAs(igamma))
    Dsqrt_occ_gamma0(iorb5) = -DSIN(GAMMAs(igamma))
-   RDMd%occ(iorb5) = hole(iorb2)*hole_n
+   RDMd%occ(iorb5) = hole(iorb2)*hole_orb
    SQRTorb = DSQRT(hole(iorb2))
-   sqrt_occ(iorb5)= SQRTorb*sqrt_occ_n
-   Docc_gamma(iorb5,igamma1) = Dhole_gamma(iorb2,igamma1)*hole_n
+   sqrt_occ(iorb5)= SQRTorb*sqrt_occ_orb
+   Docc_gamma(iorb5,igamma1) = Dhole_gamma(iorb2,igamma1)*hole_orb
    if(SQRTorb>0.0d0) then
-    Dsqrt_occ_gamma(iorb5,igamma1) = 0.5d0*Dhole_gamma(iorb2,igamma1)*sqrt_occ_n/SQRTorb
+    Dsqrt_occ_gamma(iorb5,igamma1) = 0.5d0*Dhole_gamma(iorb2,igamma1)*sqrt_occ_orb/SQRTorb
    else
     Dsqrt_occ_gamma(iorb5,igamma1) = 0.0d0
    endif
    do iorb6=iorb1,iorb2-1            !     iorb1 < iorb6   < iorb2-1
     igamma2 = RDMd%Npairs+iorb6      !   igamma1 < igamma2 < igamma
-    Docc_gamma(iorb5,igamma2) = Dhole_gamma(iorb2,igamma2)*hole_n
+    Docc_gamma(iorb5,igamma2) = Dhole_gamma(iorb2,igamma2)*hole_orb
     if(SQRTorb>0.0d0) then
-     Dsqrt_occ_gamma(iorb5,igamma2) = 0.5d0*Dhole_gamma(iorb2,igamma2)*sqrt_occ_n/SQRTorb
+     Dsqrt_occ_gamma(iorb5,igamma2) = 0.5d0*Dhole_gamma(iorb2,igamma2)*sqrt_occ_orb/SQRTorb
     else
      Dsqrt_occ_gamma(iorb5,igamma2) = 0.0d0
     endif
