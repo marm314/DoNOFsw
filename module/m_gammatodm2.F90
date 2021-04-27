@@ -1,6 +1,6 @@
-!!****m* DoNOF/m_optocc
+!!****m* DoNOF/m_gammatodm2
 !! NAME
-!!  m_optocc
+!!  m_gammatodm2
 !!
 !! FUNCTION
 !!  Module prepared to perform all procedures required for occ. optmization  
@@ -20,7 +20,7 @@
 !!
 !! SOURCE
 
-module m_optocc
+module m_gammatodm2
 
  use m_rdmd
 
@@ -477,5 +477,5 @@ subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
 end subroutine dm2_pnof7
 !!***
 
-end module m_optocc
+end module m_gammatodm2
 !!***

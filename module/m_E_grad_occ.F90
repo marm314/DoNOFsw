@@ -21,7 +21,7 @@
 module m_E_grad_occ
 
  use m_rdmd
- use m_optocc
+ use m_gammatodm2
 
  implicit none
 
