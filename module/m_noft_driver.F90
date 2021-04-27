@@ -16,7 +16,7 @@
 !! PARENTS
 !!
 !! CHILDREN
-!!   m_optocc
+!!   m_E_grad_occ
 !!
 !! SOURCE
 module m_noft_driver
@@ -40,7 +40,7 @@ contains
 !! run_noft
 !!
 !! FUNCTION
-!!  Run optimization w.r.t occ numbers 
+!!  Run NOFT procedures 
 !!
 !! INPUTS
 !! HighSpin_in=Logical variable to decide what spin-uncompensated version to use (default=False i.e. use mixture of states)

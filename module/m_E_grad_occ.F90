@@ -3,7 +3,7 @@
 !!  m_E_grad_occ
 !!
 !! FUNCTION
-!!  Module prepared to compute energies from Gammas and gradients of the Energy from/w.r.t Gammas
+!!  Module prepared to compute energies from Gammas and gradients of the Energy w.r.t Gammas
 !!
 !!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !!  Nfrozen |            Npairs_p_sing     |              Nvirt                               = NBF               
@@ -13,9 +13,10 @@
 !!- - - - - - - - - - - - - - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 !!
 !! PARENTS
-!!  m_optocc
+!!  m_noft_driver
 !!
 !! CHILDREN
+!!  m_gammatodm2
 !!
 !! SOURCE
 module m_E_grad_occ
@@ -644,4 +645,3 @@ end function Docc_gamma_x_ERI
 
 end module m_E_grad_occ 
 !!***
-

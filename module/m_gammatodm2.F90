@@ -3,7 +3,7 @@
 !!  m_gammatodm2
 !!
 !! FUNCTION
-!!  Module prepared to perform all procedures required for occ. optmization  
+!!  Module prepared to perform all procedures required for building the DM2 and their derivatives w.r.t. using gamma
 !!
 !!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !!  Nfrozen |            Npairs_p_sing     |              Nvirt                               = NBF               
