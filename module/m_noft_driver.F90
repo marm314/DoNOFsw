@@ -16,13 +16,13 @@
 !! PARENTS
 !!
 !! CHILDREN
-!!   m_E_grad_occ
+!!   m_optocc
 !!
 !! SOURCE
 module m_noft_driver
 
  use m_rdmd
- use m_E_grad_occ
+ use m_optocc
 
  implicit none
 
@@ -69,7 +69,7 @@ contains
 !! SOURCE
 
 subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,Nvars,hCORE,ERI_J,ERI_K,GAMMAs_in,RO,CJ12,CK12,DR,DCJ12r,DCK12r)
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,hCORE,ERI_J,ERI_K)
 !Arguments ------------------------------------
 !scalars
  logical,intent(in)::HighSpin_in
@@ -78,65 +78,18 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
 !arrays
  double precision,dimension(:),intent(inout)::hCORE,ERI_J,ERI_K
- 
- !!!!!!!!!!!!!!!
- !! TO REMOVE !!
- !!!!!!!!!!!!!!!
- integer,intent(in)::Nvars
- double precision,dimension(Nvars),intent(inout)::GAMMAs_in
- double precision,dimension(NBF_occ_in),intent(inout)::RO
- double precision,dimension(NBF_occ_in*NBF_occ_in),intent(inout)::CJ12,CK12
- double precision,dimension(NBF_occ_in*Nvars),intent(inout)::DR
- double precision,dimension(NBF_occ_in*NBF_occ_in*Nvars),intent(inout)::DCJ12r,DCK12r
- integer::ind
- !!!!!!!!!!!!!!!
-
 !Local variables ------------------------------
 !scalars
- double precision::Energy
- double precision,dimension(:),allocatable::GAMMAs,Grad_GAMMAs
  type(rdm_t),target::RDMd
 !arrays
 
  call rdm_init(RDMd,HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
- allocate(GAMMAs(RDMd%Ngammas),GRAD_GAMMAs(RDMd%Ngammas))
 
- do ind=1,NBF_occ_in
-  RDMd%occ(ind)=RO(ind)
- enddo
- do ind=1,NBF_occ_in*NBF_occ_in
-  RDMd%DM2_J(ind)=CJ12(ind)
-  RDMd%DM2_K(ind)=CK12(ind)
- enddo
- do ind=1,NBF_occ_in*Nvars
-  RDMd%Docc_gamma(ind)=DR(ind)
- enddo
- do ind=1,NBF_occ_in*NBF_occ_in*Nvars
-  RDMd%DDM2_gamma_J(ind)=DCJ12r(ind)
-  RDMd%DDM2_gamma_K(ind)=DCK12r(ind)
- enddo
+ !TODO
+ call opt_occ(RDMd,hCORE,ERI_J,ERI_K)
 
- GAMMAs=GAMMAs_in
- call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
- call calc_Grad_occ(RDMd,Grad_GAMMAs,hCORE,ERI_J,ERI_K)
 
- do ind=1,NBF_occ_in
-  RO(ind)=RDMd%occ(ind)
- enddo
- do ind=1,NBF_occ_in*NBF_occ_in
-  CJ12(ind)=RDMd%DM2_J(ind)     
-  CK12(ind)=RDMd%DM2_K(ind)
- enddo 
- do ind=1,NBF_occ_in*Nvars
-  DR(ind)=RDMd%Docc_gamma(ind)
- enddo
- do ind=1,NBF_occ_in*NBF_occ_in*Nvars
-  DCJ12r(ind)=RDMd%DDM2_gamma_J(ind)
-  DCK12r(ind)=RDMd%DDM2_gamma_K(ind)
- enddo
-
- deallocate(GAMMAs,Grad_GAMMAs)
  call RDMd%free() 
 
 end subroutine run_noft

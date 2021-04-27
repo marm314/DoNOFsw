@@ -11448,7 +11448,6 @@ C OCUPENERGYrc
      &                        QD,HCORE,QJ,QK,DIPN,ADIPx,ADIPy,ADIPz,
      &                        DIPx,DIPy,DIPz,ENERGY,GRAD,NV)
       USE PARCOM
-      use m_noft_driver
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)   
       DOUBLE PRECISION,DIMENSION(3)::DIPN
       DOUBLE PRECISION,DIMENSION(NV)::GAMMA,GRAD
@@ -11462,12 +11461,7 @@ C OCUPENERGYrc
 C----------------------------------------------------------------------- 
 C     Occupations
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      !CALL OCUPACIONr(GAMMA,RO,CJ12,CK12,DR,DCJ12r,DCK12r,NV)
-      !write(*,*) 'MAU'
-      write(*,*) 'MAU1'
-      call run_noft(.false.,0,7,1,NBF5,NO1,NDOC,NCWO,NB,NA,NV,
-     &     HCORE,QJ,QK,GAMMA,RO,CJ12,CK12,DR,DCJ12r,DCK12r)
-
+      CALL OCUPACIONr(GAMMA,RO,CJ12,CK12,DR,DCJ12r,DCK12r,NV)
 C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
 C                                ENERGY
@@ -11533,6 +11527,7 @@ c- - - including Electric Field  - - - - - - - - - - - - - - - - -
         ENERGY = ENERGY - EX*DMX - EY*DMY - EZ*DMZ
        endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      write(*,*) 'MAU2', ENERGY
       ENDIF
 C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
@@ -11811,16 +11806,18 @@ C-----------------------------------------------------------------------
 C LBFGSOCUPr
       SUBROUTINE LBFGSOCUPr(NV,GAMMA,USER,ENERGY)
       USE PARCOM
+      use m_noft_driver
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DOUBLE PRECISION,DIMENSION(NV)::GAMMA
       DOUBLE PRECISION,DIMENSION(NUSER)::USER
 C
-      COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
-      INTEGER,PARAMETER::MSAVE=7
+!      COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
+!      INTEGER,PARAMETER::MSAVE=7
       DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::W
+      DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::hcore,QJ,QK
       DOUBLE PRECISION X(NV),G(NV),DIAG(NV)
-      DOUBLE PRECISION::F,EPS,XTOL,GTOL,STPMIN,STPMAX
-      INTEGER::IFLAG,ICALL,N,M,MP,LP,NWORK
+      DOUBLE PRECISION::F,EPS,XTOL!,GTOL,STPMIN,STPMAX
+      INTEGER::IFLAG,ICALL,N,M,NWORK
       INTEGER,DIMENSION(2)::IPRINT
       LOGICAL::DIAGCO
 C     The driver for LBFGS must always declare LB2 as EXTERNAL
@@ -11859,6 +11856,15 @@ C     therefore set DIAGCO to FALSE.
       IFLAG=0
       X = GAMMA ! INITIAL ESTIMATE OF THE SOLUTION VECTOR
       MODE = 2
+
+      allocate(hcore(NBF5),QJ(NBFT5),QK(NBFT5))
+      hcore(1:NBF5)=USER(N8:N8+NBF5)
+      QJ(1:NBFT5)=USER(N9:N9+NBFT5)
+      QK(1:NBFT5)=USER(N10:N10+NBFT5)
+      call run_noft(.false.,0,7,1,NBF5,NO1,NDOC,NCWO,NB,NA,
+     &     hcore,QJ,QK)
+      deallocate(hcore,QJ,QK)
+
       DO
        if(NSOC==0)then
 C-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -23897,14 +23903,14 @@ C
       RETURN
       END
 
-      BLOCK DATA LB2
-      INTEGER LP,MP
-      DOUBLE PRECISION GTOL,STPMIN,STPMAX
-      COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
+!      BLOCK DATA LB2
+!      INTEGER LP,MP
+!      DOUBLE PRECISION GTOL,STPMIN,STPMAX
+!      COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
 C     DATA MP,LP,GTOL,STPMIN,STPMAX/6,6,9.0D-01,1.0D-20,1.0D+20/
 C SET UNIT=100 AS THE FILE WHERE WRITE DOWN OPTIMIZATION INFORMATION
-      DATA MP,LP,GTOL,STPMIN,STPMAX/11,11,9.0D-01,1.0D-20,1.0D+20/
-      END
+!      DATA MP,LP,GTOL,STPMIN,STPMAX/11,11,9.0D-01,1.0D-20,1.0D+20/
+!      END
 
       SUBROUTINE MCSRCH(N,X,F,G,S,STP,FTOL,XTOL,MAXFEV,INFO,NFEV,WA)
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)         
