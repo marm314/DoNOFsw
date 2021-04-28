@@ -11861,7 +11861,11 @@ C     therefore set DIAGCO to FALSE.
       hcore(1:NBF5)=USER(N8:N8+NBF5)
       QJ(1:NBFT5)=USER(N9:N9+NBFT5)
       QK(1:NBFT5)=USER(N10:N10+NBFT5)
-      call run_noft(.false.,0,7,1,NBF5,NO1,NDOC,NCWO,NB,NA,
+      ! Conjugate-grad
+      call run_noft(.false.,0,IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,0,
+     &     hcore,QJ,QK)
+      ! LBFGS
+      call run_noft(.false.,0,IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,1,
      &     hcore,QJ,QK)
       deallocate(hcore,QJ,QK)
 

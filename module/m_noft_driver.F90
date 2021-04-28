@@ -69,11 +69,11 @@ contains
 !! SOURCE
 
 subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,hCORE,ERI_J,ERI_K)
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,hCORE,ERI_J,ERI_K)
 !Arguments ------------------------------------
 !scalars
  logical,intent(in)::HighSpin_in
- integer,intent(in)::INOF_in,MSpin_in,Ista_in
+ integer,intent(in)::INOF_in,MSpin_in,Ista_in,imethocc
  integer,intent(in)::NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
 !arrays
@@ -87,7 +87,7 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
 
  !TODO
- call opt_occ(RDMd,hCORE,ERI_J,ERI_K)
+ call opt_occ(imethocc,RDMd,hCORE,ERI_J,ERI_K)
 
 
  call RDMd%free() 
