@@ -89,9 +89,9 @@ subroutine opt_occ(imethod,RDMd,Vnn,hCORE,ERI_J,ERI_K)
   if (iflag == 12) iWork(1) = 13
   goto 20
 
- 10   ig = iWork(g)
+10   ig = iWork(g)
 
- 20   call sumit(Work, Energy, Work2(ig), iWork, Nwork, Nwork2, RDMd%Ngammas, Work2, GAMMAs)
+20   call sumit(Work, Energy, Work2(ig), iWork, Nwork, Nwork2, RDMd%Ngammas, Work2, GAMMAs)
   if(iWork(1)-2<0) then 
    goto 30
   elseif(iWork(1)-2==0) then
@@ -100,17 +100,17 @@ subroutine opt_occ(imethod,RDMd,Vnn,hCORE,ERI_J,ERI_K)
    goto 50
   endif
 
- 30   icall1 = iWork(nfcall)
+30   icall1 = iWork(nfcall)
   call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
   icall=icall+1
   if (icall1 <= 0) iWork(toobig) = 1
   goto 20
 
- 40   call calc_Grad_occ(RDMd,Grad_GAMMAs,hCORE,ERI_J,ERI_K)
+40   call calc_Grad_occ(RDMd,Grad_GAMMAs,hCORE,ERI_J,ERI_K)
   Work2(ig:ig+RDMd%Ngammas)=Grad_GAMMAs(1:RDMd%Ngammas)
   goto 20
 
- 50   if(iWork(1) /= 14) then
+50   if(iWork(1) /= 14) then
         goto 60
       end if
 !
@@ -120,7 +120,8 @@ subroutine opt_occ(imethod,RDMd,Vnn,hCORE,ERI_J,ERI_K)
   iWork(nextv) = iWork(g) + RDMd%Ngammas
   if(iflag /= 13) goto 10
 
- 60 deallocate(iWork,Work,Work2)
+60 deallocate(iWork,Work,Work2)
+
  else ! LBFGS
   Nwork=RDMd%Ngammas*(2*msave+1)+2*msave
   Mtosave=5; info_print(1)= -1; info_print(2)= 0; diagco= .false.;
