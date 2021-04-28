@@ -74,7 +74,7 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
  
  call gamma_to_2rdm(RDMd,GAMMAs)
  Energy=0.0d0
- if(RDMd%MSpin==0) then
+ if(RDMd%Nsingleocc==0) then
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 !      Singlet State (S=0,Ms=0) and Multiplet States (S>0,Ms=0)
@@ -92,13 +92,13 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )              &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
-   if(RDMd%Nsingleocc>0) then
-    do ipair=RDMd%Npairs+1,RDMd%Npairs_p_sing
-     iorb = RDMd%Nfrozen+ipair
-     Energy = Energy + 2.0d0*RDMd%occ(iorb)*hCORE(iorb)                                            &
-     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
-    enddo
-   endif
+   !if(RDMd%Nsingleocc>0) then
+   ! do ipair=RDMd%Npairs+1,RDMd%Npairs_p_sing
+   !  iorb = RDMd%Nfrozen+ipair
+   !  Energy = Energy + 2.0d0*RDMd%occ(iorb)*hCORE(iorb)                                            &
+   !  &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+   ! enddo
+   !endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   else                  ! Extended PNOF (Ncoupled>1)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -119,17 +119,17 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )              &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
-   if(RDMd%Nsingleocc>0) then
-    do ipair=RDMd%Npairs+1,RDMd%Npairs_p_sing
-     iorb = RDMd%Nfrozen+ipair
-     Energy = Energy + 2.0d0*RDMd%occ(iorb)*hCORE(iorb)                                            &
-     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
-    enddo
-   endif
+   !if(RDMd%Nsingleocc>0) then
+   ! do ipair=RDMd%Npairs+1,RDMd%Npairs_p_sing
+   !  iorb = RDMd%Nfrozen+ipair
+   !  Energy = Energy + 2.0d0*RDMd%occ(iorb)*hCORE(iorb)                                            &
+   !  &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+   ! enddo
+   !endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- elseif(RDMd%MSpin>0) then
+ else 
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 !      High-Spin Multiplet State (S>0,Ms=S)
@@ -190,8 +190,6 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
- else
-  ! Nth
  endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -235,7 +233,7 @@ subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K)
 !************************************************************************
  
  Grad = 0.0d0
- if(RDMd%MSpin==0) then
+ if(RDMd%Nsingleocc==0) then
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   if(RDMd%Ncoupled==1) then       ! PNOFi(1): Perfect Pairing (RDMd%Ncoupled=1)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -280,7 +278,7 @@ subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   endif
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --     
- elseif(RDMd%MSpin>0) then
+ else
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 !      High-Spin Multiplet State (S>0,Ms=S)
@@ -339,8 +337,6 @@ subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K)
    enddo
   endif
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
- else
-  ! Nth
  endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
