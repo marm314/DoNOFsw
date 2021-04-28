@@ -92,13 +92,6 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )              &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
-   !if(RDMd%Nsingleocc>0) then
-   ! do ipair=RDMd%Npairs+1,RDMd%Npairs_p_sing
-   !  iorb = RDMd%Nfrozen+ipair
-   !  Energy = Energy + 2.0d0*RDMd%occ(iorb)*hCORE(iorb)                                            &
-   !  &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
-   ! enddo
-   !endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   else                  ! Extended PNOF (Ncoupled>1)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -119,13 +112,6 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb) + ERI_J(iorb*(iorb+1)/2) )              &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
-   !if(RDMd%Nsingleocc>0) then
-   ! do ipair=RDMd%Npairs+1,RDMd%Npairs_p_sing
-   !  iorb = RDMd%Nfrozen+ipair
-   !  Energy = Energy + 2.0d0*RDMd%occ(iorb)*hCORE(iorb)                                            &
-   !  &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
-   ! enddo
-   !endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

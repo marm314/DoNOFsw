@@ -43,8 +43,6 @@ contains
 !!  Run NOFT procedures 
 !!
 !! INPUTS
-!! HighSpin_in=Logical variable to decide what spin-uncompensated version to use (default=False i.e. use mixture of states)
-!! MSpin_in=Integer variable to define the MS (default=0 i.e. spin-compensated)
 !! INOF_in=PNOFi functional to use
 !! Ista_in=Use PNOF7 (Ista_in=0) or PNOF7s (Ista_in=1)
 !! NBF_occ_in=Number of orbitals that are occupied
@@ -68,12 +66,11 @@ contains
 !!
 !! SOURCE
 
-subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
+subroutine run_noft(INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,Vnn,hCORE,ERI_J,ERI_K)
 !Arguments ------------------------------------
 !scalars
- logical,intent(in)::HighSpin_in
- integer,intent(in)::INOF_in,MSpin_in,Ista_in,imethocc
+ integer,intent(in)::INOF_in,Ista_in,imethocc
  integer,intent(in)::NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
  double precision,intent(in)::Vnn
@@ -84,7 +81,7 @@ subroutine run_noft(HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,N
  type(rdm_t),target::RDMd
 !arrays
 
- call rdm_init(RDMd,HighSpin_in,MSpin_in,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
+ call rdm_init(RDMd,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
 
  !TODO

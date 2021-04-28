@@ -28,9 +28,7 @@ module m_rdmd
 
  type,public :: rdm_t
 
-  logical::HighSpin=.false.      ! Decide if it is a high-spin calc. or mixture of states
   integer::INOF=7                ! Functional to use (5-> PNOF5, 7-> PNOF7)
-  integer::MSpin=0               ! MS spin value
   integer::Ista=1                ! Use PNOF7s version
   integer::Nfrozen               ! Number of frozen orbitals in the NOFT calc.
   integer::Nbeta_elect           ! Number of orbitals containing beta electrons
@@ -69,8 +67,6 @@ CONTAINS  !=====================================================================
 !!  Initialize the data type rdm_t 
 !!
 !! INPUTS
-!! HighSpin=Logical variable to decide what spin-uncompensated version to use (default=False i.e. use mixture of states)
-!! MSpin=Integer variable to define the MS (default=0 i.e. spin-compensated)
 !! INOF=PNOFi functional to use
 !! Ista=Use PNOF7 (Ista=0) or PNOF7s (Ista=1)
 !! NBF_occ=Number of orbitals that are occupied
@@ -89,12 +85,11 @@ CONTAINS  !=====================================================================
 !!
 !! SOURCE
 
-subroutine rdm_init(RDMd,HighSpin,MSpin,INOF,Ista,NBF_occ,Nfrozen,Npairs,&
+subroutine rdm_init(RDMd,INOF,Ista,NBF_occ,Nfrozen,Npairs,&
 &  Ncoupled,Nbeta_elect,Nalpha_elect)
 !Arguments ------------------------------------
 !scalars
- logical,intent(in)::HighSpin
- integer,intent(in)::INOF,MSpin,Ista
+ integer,intent(in)::INOF,Ista
  integer,intent(in)::NBF_occ,Nfrozen,Npairs,Ncoupled
  integer,intent(in)::Nbeta_elect,Nalpha_elect
  type(rdm_t),intent(inout)::RDMd
@@ -104,9 +99,7 @@ subroutine rdm_init(RDMd,HighSpin,MSpin,INOF,Ista,NBF_occ,Nfrozen,Npairs,&
 
 !************************************************************************
 
- RDMd%HighSpin=HighSpin
  RDMd%INOF=INOF
- RDMd%MSpin=MSpin
  RDMd%Ista=Ista
  RDMd%Nfrozen=Nfrozen
  RDMd%Nbeta_elect=Nbeta_elect

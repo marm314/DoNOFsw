@@ -101,24 +101,14 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
 !     Occupancies (RDMd%Nfrozen+RDMd%Npairs+1,Nalpha=RDMd%Nfrozen+RDMd%Npairs_p_sing)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  if(RDMd%Nsingleocc>0) then
-  if(.not.RDMd%HighSpin) then
-   do iorb=RDMd%Npairs+1,RDMd%Npairs_p_sing
-    iorb1 = RDMd%Nfrozen+iorb
-    mult = RDMd%Nalpha_elect - RDMd%Nbeta_elect
-    RDMd%occ(iorb1)  = 0.5d0*mult/RDMd%Nsingleocc
-    Docc_gamma0(iorb1) = 0.0d0
-    sqrt_occ(iorb1) = DSQRT(RDMd%occ(iorb1))
-    Dsqrt_occ_gamma0(iorb1) = 0.0d0
-   enddo
-  else if(RDMd%HighSpin) then
-   do iorb=RDMd%Npairs+1,RDMd%Npairs_p_sing
-    iorb1 = RDMd%Nfrozen+iorb
-    RDMd%occ(iorb1)  = 1.0d0
-    Docc_gamma0(iorb1) = 0.0d0
-   enddo
-  else
-  ! Nth
-  end if
+  do iorb=RDMd%Npairs+1,RDMd%Npairs_p_sing
+   iorb1 = RDMd%Nfrozen+iorb
+   mult = RDMd%Nalpha_elect - RDMd%Nbeta_elect
+   RDMd%occ(iorb1)  = 0.5d0*mult/RDMd%Nsingleocc
+   Docc_gamma0(iorb1) = 0.0d0
+   sqrt_occ(iorb1) = DSQRT(RDMd%occ(iorb1))
+   Dsqrt_occ_gamma0(iorb1) = 0.0d0
+  enddo
  endif
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !     Occupancies (Nalpha+1,RDMd%NBF_occ)
@@ -306,7 +296,7 @@ subroutine dm2_pnof5(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
   enddo
  enddo
 !- - - - - - - - - - - - - - - - - - - - - - - -              
- if(RDMd%MSpin==0.and.RDMd%Nsingleocc>1) then
+ if(RDMd%Nsingleocc>1) then
   do iorb=RDMd%Nbeta_elect+1,RDMd%Nalpha_elect
    do iorb1=RDMd%Nbeta_elect+1,RDMd%Nalpha_elect
     DM2_K(iorb,iorb1) = 2.0d0*RDMd%occ(iorb)*RDMd%occ(iorb1)
@@ -435,7 +425,7 @@ subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
  enddo
  deallocate(FIs,DFIs)
 !- - - - - - - - - - - - - - - - - - - - - - - -              
- if(RDMd%MSpin==0.and.RDMd%Nsingleocc>1) then
+ if(RDMd%Nsingleocc>1) then
   do iorb=RDMd%Nbeta_elect+1,RDMd%Nalpha_elect
    do iorb1=RDMd%Nbeta_elect+1,RDMd%Nalpha_elect
     DM2_K(iorb,iorb1) = 2.0d0*RDMd%occ(iorb)*RDMd%occ(iorb1)

@@ -11853,10 +11853,10 @@ C     therefore set DIAGCO to FALSE.
       QJ(1:NBFT5)=USER(N9:N9+NBFT5)
       QK(1:NBFT5)=USER(N10:N10+NBFT5)
       ! Conjugate-grad
-      call run_noft(HighSpin,MSpin,IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,
+      call run_noft(IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,
      &     0,EN,hcore,QJ,QK)
       ! LBFGS
-      call run_noft(HighSpin,MSpin,IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,
+      call run_noft(IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,
      &     1,EN,hcore,QJ,QK)
       deallocate(hcore,QJ,QK)
 
