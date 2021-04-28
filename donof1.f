@@ -222,8 +222,6 @@ C-----------------------------------------------------------------------
        DOUBLE PRECISION,PARAMETER::OFAC=7.117668D-01 ! X10**34 ESU-CM**3
 C-----------------------------------------------------------------------
        CHARACTER(80) :: TITLE
-       LOGICAL NEWOPT
-       COMMON/INPNOF_NEWOPT/NEWOPT
        COMMON/TIT/TITLE
        COMMON/INPNOF_GENERALINF/ICOEF,MAXIT,IECP
        COMMON/INPNOF_PNOF/IPNOF,NTWOPAR
@@ -1001,11 +999,6 @@ C      Orbital-Invariant MP2 Perturbative Corrections
        IF(OIMP2) THEN
         CALL ORBINVMP2(ELAG,COEF,USER(N1),USER(N2),USER(N3),
      &          AHCORE,IJKL,XIJKL,USER(N12),USER(N13),USER(N14))
-       ENDIF
-C      NEWTON OPT. VIA EXP(-KAPPA) (MODULE)
-       IF(NEWOPT) THEN
-        CALL LAUNCH_HESS(ELAG,COEF,USER(N1),USER(N2),USER(N3),
-     &           AHCORE,USER(N12),USER(N13),USER(N14),IJKL,XIJKL)
        ENDIF
 C      MBPT Perturbative Corrections
        IF(MBPT) THEN
@@ -4420,7 +4413,7 @@ C-----------------------------------------------------------------------
      &                NOUTCJK,NTHRESHCJK,NOUTTijab,NTHRESHTijab,
      &                ORTHO,CHKORTHO,FROZEN,IFROZEN,ICGMETHOD,
      &                MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD,
-     &                NTHRESHCC,MBPTMEM,ACRPA,ICHEMPOT,NEWOPT
+     &                NTHRESHCC,MBPTMEM,ACRPA,ICHEMPOT
 C-----------------------------------------------------------------------
 C     Preset values to namelist variables
 C-----------------------------------------------------------------------
@@ -4461,7 +4454,6 @@ C     Options for the Orbital Optimization Program (ID Method)
       NTHDIIS=3
       NDIIS=5
       PERDIIS=.TRUE.
-      NEWOPT=.FALSE.
 
 C     Options for pertubative calculations
       SC2MCPT=.FALSE.
@@ -11704,6 +11696,7 @@ c- - - including Electric Field  - - - - - - - - - - - - - - - - -
         ENERGY = ENERGY - EX*DMX - EY*DMY - EZ*DMZ
        endif
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+      write(*,*) 'MAU2', ENERGY
       ENDIF
 C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
@@ -11862,11 +11855,11 @@ C     therefore set DIAGCO to FALSE.
       QJ(1:NBFT5)=USER(N9:N9+NBFT5)
       QK(1:NBFT5)=USER(N10:N10+NBFT5)
       ! Conjugate-grad
-      call run_noft(.false.,0,IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,0,
-     &     hcore,QJ,QK)
+      call run_noft(HighSpin,MSpin,IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,
+     &     0,EN,hcore,QJ,QK)
       ! LBFGS
-      call run_noft(.false.,0,IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,1,
-     &     hcore,QJ,QK)
+      call run_noft(HighSpin,MSpin,IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,
+     &     1,EN,hcore,QJ,QK)
       deallocate(hcore,QJ,QK)
 
       DO

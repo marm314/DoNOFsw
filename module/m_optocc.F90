@@ -51,10 +51,11 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_occ(imethod,RDMd,hCORE,ERI_J,ERI_K) 
+subroutine opt_occ(imethod,RDMd,Vnn,hCORE,ERI_J,ERI_K) 
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::imethod
+ double precision,intent(in)::Vnn
  type(rdm_t),intent(inout)::RDMd
 !arrays
  double precision,dimension(RDMd%NBF_occ),intent(in)::hCORE
@@ -139,7 +140,7 @@ subroutine opt_occ(imethod,RDMd,hCORE,ERI_J,ERI_K)
  endif
 
  call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
- write(*,'(a,f15.6,a,i6,a)') 'Optimized energy= ',Energy,' after ',icall,' iter.'
+ write(*,'(a,f15.6,a,i6,a)') 'Optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
 
  deallocate(GAMMAs,Grad_GAMMAs)
 
