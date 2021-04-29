@@ -41,6 +41,7 @@ contains
 !!
 !! FUNCTION
 !!  Calculate the Energy from gamma independent parameters 
+!!  Note: In the HF case, we play the trick that occ=occ^2 as occ=0,1
 !!
 !! INPUTS
 !!  GAMMAs=Indep. variables used in the occ. optimization 

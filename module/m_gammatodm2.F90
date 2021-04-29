@@ -249,6 +249,7 @@ end subroutine gamma_to_2rdm
 !!
 !! FUNCTION
 !!  Build from the occ numbers and its derivatives the 2-RDM elements and its derivatives w.r.t. gamma for HF
+!!  Note: For spin-uncompensated this is a weird HF. Warning!
 !!
 !! INPUTS
 !! sqrt_occ=Square root of the occupancies of the frozen + active orbitals
