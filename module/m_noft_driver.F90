@@ -93,10 +93,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%OCC(:)),' final occ. numbers '
  iorb1=RDMd%NBF_occ-(RDMd%NBF_occ/10)*10
  do iorb=1,(RDMd%NBF_occ/10)*10,10
-  write(*,'(f11.5,9f10.5)') RDMd%OCC(iorb:iorb+9)
+  write(*,'(f12.6,9f11.6)') RDMd%OCC(iorb:iorb+9)
  enddo
  iorb1=(RDMd%NBF_occ/10)*10+1 
- write(*,'(f11.5,*(f10.5))') RDMd%OCC(iorb1:) 
+ write(*,'(f12.6,*(f11.6))') RDMd%OCC(iorb1:) 
  write(*,*) ' '
 
  call RDMd%free() 
