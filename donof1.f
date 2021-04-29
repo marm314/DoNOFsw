@@ -263,6 +263,8 @@ C-----------------------------------------------------------------------
        COMMON/INPNOF_SC2MCPT/SC2MCPT
        LOGICAL OIMP2
        COMMON/INPNOF_OIMP2/OIMP2
+       LOGICAL EXTERN
+       COMMON/INPNOF_EXTERN/EXTERN
        LOGICAL MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD,MBPTMEM,ACRPA
        COMMON/INPNOF_MBPT/MBPT,TUNEMBPT,TDHF,CCSD_READ,CCSD,MBPTMEM
        COMMON/INPNOF_MBPT2/QNCCSD,NTHRESHCC,ACRPA
@@ -303,6 +305,11 @@ C-----------------------------------------------------------------------
        COMMON/SUMSZ/SUMS,SUMF
 C-----------------------------------------------------------------------
       END MODULE PARCOM
+     
+C PARCOM2
+      MODULE PARCOM2
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:) :: AHCORE2
+      END MODULE PARCOM2
 
 C RUNNOFHEADER
       SUBROUTINE RUNNOFHEADER(NATOMSn,ICHn,MULn,NBFn,NQMTn,NEn,NAn,NBn,
@@ -632,6 +639,7 @@ C ENERGRAD
      &                    KTYPE,KLOC,INTYP,KNG,KMIN,KMAX,ISH,ITYP,
      &                    C1,C2,EX,CS,CP,CD,CF,CG,CH,CI,GRADS,IRUNTYP,
      &                    DIPS,NOPTCG,IPRINTOPT)
+      USE PARCOM2
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       LOGICAL RESTART
       COMMON/INPNOF_INPUT_2/RESTART
@@ -689,7 +697,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C     Square Matrices AHCORE, OVERLAP
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      ALLOCATE(AHCORE(NBF,NBF),OVERLAP(NBF,NBF))
+      ALLOCATE(AHCORE(NBF,NBF),AHCORE2(NBF,NBF),OVERLAP(NBF,NBF))
       CALL CPYTSQ(H,AHCORE,NBF)
       CALL CPYTSQ(S,OVERLAP,NBF)            
       DEALLOCATE(H,S)
@@ -718,6 +726,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      &            NVAL,DQOInt,NINTEG,NREC,IBUF,BUF,NINTEGt,IDONTW,
      &            GRADS,IRUNTYP,DIPS,XINTS,IPRINTOPT)
       DEALLOCATE(AHCORE,OVERLAP,CHF,EiHF,DIPN,QUADN,OCTUN,DQOInt,AUX)
+      DEALLOCATE(AHCORE2)
       DEALLOCATE(IBUF,BUF,XINTS)
       NOPTCGMPI = NOPTCG
 #ifdef MPI
@@ -1005,6 +1014,10 @@ C      MBPT Perturbative Corrections
         CALL MBPTCALC(ELAG,COEF,USER(N1),USER(N2),USER(N3),
      &           AHCORE,USER(N12),USER(N13),USER(N14),IJKL,XIJKL)
        ENDIF
+C      External optimization (i.e. using a module)
+       IF(EXTERN) THEN
+        CALL EXTERN_OPT(COEF,AHCORE,IJKL,XIJKL)
+       ENDIF
 C      SC2-MCPT (Hartree-Fock Partition)
        IF(SC2MCPT.and.NSOC==0)CALL SC2MCPThf(USER(N1),COEF,
      &                        AHCORE,IJKL,XIJKL,USER(N10))
@@ -1064,9 +1077,13 @@ C       Orbital-Invariant MP2 Perturbative Corrections
         END IF
 C       MBPT Perturbative Corrections
         IF(MBPT) THEN
-        CALL MBPTCALC(ELAG,COEF,USER(N1),USER(N2),USER(N3),
+         CALL MBPTCALC(ELAG,COEF,USER(N1),USER(N2),USER(N3),
      &           AHCORE,USER(N12),USER(N13),USER(N14),IJKL,XIJKL)
         END IF
+C      External optimization (i.e. using a module)
+        IF(EXTERN) THEN
+         CALL EXTERN_OPT(COEF,AHCORE,IJKL,XIJKL)
+        ENDIF
 C       SC2-MCPT (Hartree-Fock Partition)
         IF(SC2MCPT.and.NSOC==0)CALL SC2MCPThf(USER(N1),COEF,
      &                          AHCORE,IJKL,XIJKL,USER(N10))
@@ -4413,7 +4430,7 @@ C-----------------------------------------------------------------------
      &                NOUTCJK,NTHRESHCJK,NOUTTijab,NTHRESHTijab,
      &                ORTHO,CHKORTHO,FROZEN,IFROZEN,ICGMETHOD,
      &                MBPT,TUNEMBPT,TDHF,CCSD,CCSD_READ,QNCCSD,
-     &                NTHRESHCC,MBPTMEM,ACRPA,ICHEMPOT
+     &                NTHRESHCC,MBPTMEM,ACRPA,ICHEMPOT,EXTERN
 C-----------------------------------------------------------------------
 C     Preset values to namelist variables
 C-----------------------------------------------------------------------
@@ -4443,6 +4460,7 @@ C     Convergence Criteria in NOF calculation
       NTHRESHEN=10
 
 C     Options for the Orbital Optimization Program (ID Method)
+      EXTERN=.FALSE.
       NOPTORB=-1                                 ! NOPTORB=NBF
       MAXLOOP=30
       SCALING=.TRUE.
@@ -4551,10 +4569,10 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         HFID = .FALSE.
         WRITE(6,'(/,1X,37A,/)')'!OPTGEO: HFID has been set equal FALSE'
        end if
-       if(OIMP2.OR.MBPT)then      
+       if(OIMP2.OR.MBPT.OR.EXTERN)then      
         OIMP2 = .FALSE.
         NOUTTijab = 0
-        WRITE(6,'(/,1X,50A,/)')'!OPTGEO: OIMP2 or MBPT 
+        WRITE(6,'(/,1X,50A,/)')'!OPTGEO: OIMP2 or MBPT or EXTERN 
      &  has been set equal FALSE'
        end if
       ENDIF
@@ -11797,7 +11815,6 @@ C-----------------------------------------------------------------------
 C LBFGSOCUPr
       SUBROUTINE LBFGSOCUPr(NV,GAMMA,USER,ENERGY)
       USE PARCOM
-      use m_noft_driver
       IMPLICIT DOUBLE PRECISION (A-H,O-Z)
       DOUBLE PRECISION,DIMENSION(NV)::GAMMA
       DOUBLE PRECISION,DIMENSION(NUSER)::USER
@@ -11805,7 +11822,6 @@ C
 !      COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX
 !      INTEGER,PARAMETER::MSAVE=7
       DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::W
-      DOUBLE PRECISION,DIMENSION(:),ALLOCATABLE::hcore,QJ,QK
       DOUBLE PRECISION X(NV),G(NV),DIAG(NV)
       DOUBLE PRECISION::F,EPS,XTOL!,GTOL,STPMIN,STPMAX
       INTEGER::IFLAG,ICALL,N,M,NWORK
@@ -11847,18 +11863,6 @@ C     therefore set DIAGCO to FALSE.
       IFLAG=0
       X = GAMMA ! INITIAL ESTIMATE OF THE SOLUTION VECTOR
       MODE = 2
-
-      allocate(hcore(NBF5),QJ(NBFT5),QK(NBFT5))
-      hcore(1:NBF5)=USER(N8:N8+NBF5)
-      QJ(1:NBFT5)=USER(N9:N9+NBFT5)
-      QK(1:NBFT5)=USER(N10:N10+NBFT5)
-      ! Conjugate-grad
-      call run_noft(IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,
-     &     0,EN,hcore,QJ,QK)
-      ! LBFGS
-      call run_noft(IPNOF,Ista,NBF5,NO1,NDOC,NCWO,NB,NA,
-     &     1,EN,hcore,QJ,QK)
-      deallocate(hcore,QJ,QK)
 
       DO
        if(NSOC==0)then
