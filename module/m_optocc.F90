@@ -141,7 +141,9 @@ subroutine opt_occ(imethod,RDMd,Vnn,hCORE,ERI_J,ERI_K)
  endif
 
  call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
+ write(*,*) ' '
  write(*,'(a,f15.6,a,i6,a)') 'Optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
+ write(*,*) ' '
 
  deallocate(GAMMAs,Grad_GAMMAs)
 
