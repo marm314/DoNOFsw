@@ -66,20 +66,19 @@ contains
 !!
 !! SOURCE
 
-subroutine run_noft(INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,Vnn,hCORE,ERI)
+subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,Vnn,MO_COEF,mo_ints1)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::INOF_in,Ista_in,imethocc
- integer,intent(in)::NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
+ integer,intent(in)::NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
  double precision,intent(in)::Vnn
 !arrays
- double precision,dimension(:,:),intent(inout)::hCORE
- double precision,dimension(:,:,:,:),intent(inout)::ERI
+ double precision,dimension(NBF_tot,NBF_tot),intent(inout)::MO_COEF
 !Local variables ------------------------------
 !scalars
- integer::iorb,iorb1,iorb2
+ integer::iorb,iorb1
  type(rdm_t),target::RDMd
 !arrays
  double precision,dimension(:),allocatable::hCOREpp,ERI_J,ERI_K
@@ -88,17 +87,8 @@ subroutine run_noft(INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  allocate(hCOREpp(RDMd%NBF_occ),ERI_J(RDMd%NBF_ldiag),ERI_K(RDMd%NBF_ldiag)) 
 
- iorb2=1
- do iorb=1,RDMd%NBF_occ
-  hCOREpp(iorb)=hCORE(iorb,iorb)
-  do iorb1=1,iorb
-   ERI_J(iorb2)=ERI(iorb,iorb1,iorb1,iorb) ! J
-   ERI_K(iorb2)=ERI(iorb,iorb1,iorb,iorb1) ! K
-   iorb2=iorb2+1
-  enddo
- enddo
-
  !TODO
+ call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
  call opt_occ(imethocc,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
 
  write(*,*) ' '
