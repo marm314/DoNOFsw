@@ -51,9 +51,10 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_occ(imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K) 
+subroutine opt_occ(iter,imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K) 
 !Arguments ------------------------------------
 !scalars
+ integer,intent(inout)::iter
  integer,intent(in)::imethod
  double precision,intent(in)::Vnn
  type(rdm_t),intent(inout)::RDMd
@@ -73,10 +74,17 @@ subroutine opt_occ(imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
 !************************************************************************
 
  allocate(GAMMAs(RDMd%Ngammas),GRAD_GAMMAs(RDMd%Ngammas))
- GAMMAs=0.1d0; GRAD_GAMMAs=0.0d0; ! Slightly perturbed occ. numbers
- 
+ GRAD_GAMMAs=0.0d0
+ if(iter==1) then 
+  GAMMAs=0.5d0             ! Perturbed occ. numbers
+ else
+  GAMMAs=RDMd%GAMMAs_old   ! Read from previous run
+ endif
+
+ write(*,'(a)') ' '  
  icall=0
- if(imethod==0) then ! Conjugate gradients
+ if(imethod==1) then ! Conjugate gradients
+  write(*,'(a)') 'Calling CG to optimize occ. numbers'
   Nwork=60; Nwork2=71+RDMd%Ngammas*(RDMd%Ngammas+15)/2; 
   allocate(iWork(Nwork),Work(RDMd%Ngammas),Work2(Nwork2))
   iWork=0; Work=0.1d0;   
@@ -123,6 +131,7 @@ subroutine opt_occ(imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
 60 deallocate(iWork,Work,Work2)
 
  else ! LBFGS
+  write(*,'(a)') 'Calling LBFGS to optimize occ. numbers'
   Nwork=RDMd%Ngammas*(2*msave+1)+2*msave
   Mtosave=5; info_print(1)= -1; info_print(2)= 0; diagco= .false.;
   eps= 1.0d-5; xtol= 1.0d-16; icall=0; iflag=0;
@@ -139,10 +148,12 @@ subroutine opt_occ(imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
   enddo
   deallocate(Work,diag)
  endif
+ 
+ iter=iter+1
+ if(iter>1) RDMd%GAMMAs_old=GAMMAs
 
  call calc_E_occ(RDMd,GAMMAs,Energy,hCOREpp,ERI_J,ERI_K)
- write(*,*) ' '
- write(*,'(a,f15.6,a,i6,a)') 'Optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
+ write(*,'(a,f15.6,a,i6,a)') 'Occ. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
  write(*,*) ' '
 
  deallocate(GAMMAs,Grad_GAMMAs)

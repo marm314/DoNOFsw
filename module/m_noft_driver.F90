@@ -78,7 +78,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
  double precision,dimension(NBF_tot,NBF_tot),intent(inout)::MO_COEF
 !Local variables ------------------------------
 !scalars
- integer::iorb,iorb1
+ integer::iorb,iorb1,iter,itermax=2
  type(rdm_t),target::RDMd
 !arrays
  double precision,dimension(:),allocatable::hCOREpp,ERI_J,ERI_K
@@ -87,9 +87,12 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  allocate(hCOREpp(RDMd%NBF_occ),ERI_J(RDMd%NBF_ldiag),ERI_K(RDMd%NBF_ldiag)) 
 
- !TODO
- call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
- call opt_occ(imethocc,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
+ iter=1
+ do
+  call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
+  call opt_occ(iter,imethocc,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
+  if(iter>itermax) exit
+ enddo
 
  write(*,*) ' '
  RDMd%OCC(:)=2.0d0*RDMd%OCC(:)

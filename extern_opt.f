@@ -4,15 +4,14 @@
       DOUBLE PRECISION,DIMENSION(NBF,NBF)::COEF
       EXTERNAL::mo_ints1
 C-----------------------------------------------------------------------
+      write(*,*) ' '
       if(ICGMETHOD==1) then
        write(*,*) 'Calling external module with CG'
-       call run_noft(IPNOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,0,EN,COEF,
-     &    mo_ints1) 
       else
        write(*,*) 'Calling external module with LBFGS'
-       call run_noft(IPNOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,1,EN,COEF,
-     &    mo_ints1) 
       endif
+      call run_noft(IPNOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ICGMETHOD,
+     &   EN,COEF,mo_ints1) 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 
