@@ -51,12 +51,13 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_occ(iter,imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K) 
+subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K) 
 !Arguments ------------------------------------
 !scalars
  integer,intent(inout)::iter
  integer,intent(in)::imethod
  double precision,intent(in)::Vnn
+ double precision,intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
 !arrays
  double precision,dimension(RDMd%NBF_occ),intent(in)::hCOREpp
@@ -66,13 +67,14 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
  logical::diagco
  integer,parameter::msave=7,nextv=47,nfcall=6,nfgcal=7,g=28,toobig=2,vneed=4
  integer::iflag,ig,icall,icall1,Mtosave,Nwork,Nwork2
- double precision::Energy,eps,xtol
+ double precision::eps,xtol
 !arrays
  integer,dimension(2)::info_print
  integer,dimension(:),allocatable::iWork
  double precision,dimension(:),allocatable::GAMMAs,Grad_GAMMAs,diag,Work,Work2
 !************************************************************************
 
+ Energy=0.0d0
  allocate(GAMMAs(RDMd%Ngammas),GRAD_GAMMAs(RDMd%Ngammas))
  GRAD_GAMMAs=0.0d0
  if(iter==0) then 
@@ -120,7 +122,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
 
 50   if(iWork(1) /= 14) then
         goto 60
-      end if
+     end if
 !
 !  Storage allocation
 !
@@ -155,6 +157,8 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
  call calc_E_occ(RDMd,GAMMAs,Energy,hCOREpp,ERI_J,ERI_K)
  write(*,'(a,f15.6,a,i6,a)') 'Occ. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
  write(*,*) ' '
+ 
+ if(icall.gt.2000) write(*,'(a)') 'Warning! Max. number of iterations reached in occ. optimization'
 
  deallocate(GAMMAs,Grad_GAMMAs)
 

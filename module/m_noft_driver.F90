@@ -67,18 +67,20 @@ contains
 !! SOURCE
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,Vnn,MO_COEF,mo_ints1)
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,itermax,&
+&  tolE,Vnn,MO_COEF,mo_ints1)
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::INOF_in,Ista_in,imethocc
+ integer,intent(in)::INOF_in,Ista_in,imethocc,itermax
  integer,intent(in)::NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
- double precision,intent(in)::Vnn
+ double precision,intent(in)::Vnn,tolE
 !arrays
  double precision,dimension(NBF_tot,NBF_tot),intent(inout)::MO_COEF
 !Local variables ------------------------------
 !scalars
- integer::iorb,iorb1,iter,itermax=2
+ integer::iorb,iorb1,iter
+ double precision::Energy,Energy_old
  type(rdm_t),target::RDMd
 !arrays
  double precision,dimension(:),allocatable::hCOREpp,ERI_J,ERI_K
@@ -87,17 +89,31 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  allocate(hCOREpp(RDMd%NBF_occ),ERI_J(RDMd%NBF_ldiag),ERI_K(RDMd%NBF_ldiag)) 
 
- !Occ optimization with guess orbs. (HF, CORE, etc).
+ ! Occ optimization using guess orbs. (HF, CORE, etc).
  iter=0
  call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
- call opt_occ(iter,imethocc,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
- !Orb. and occ. optimization
- do
+ call opt_occ(iter,imethocc,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
+ Energy_old=Energy
 
-  !Occ optimization
+ ! Orb. and occ. optimization
+ do
+  ! Orb. optimization
+  
+
+  ! Occ. optimization
   call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
-  call opt_occ(iter,imethocc,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
+  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
+
+  ! Check convergence
+  if(abs(Energy-Energy_old)<tolE) then
+   Energy_old=Energy
+   exit
+  endif
+  Energy_old=Energy
+  
+  ! Check maximum number of iterations
   if(iter>itermax) exit
+
  enddo
 
  write(*,*) ' '
