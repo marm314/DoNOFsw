@@ -75,8 +75,8 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
 
  allocate(GAMMAs(RDMd%Ngammas),GRAD_GAMMAs(RDMd%Ngammas))
  GRAD_GAMMAs=0.0d0
- if(iter==1) then 
-  GAMMAs=0.5d0             ! Perturbed occ. numbers
+ if(iter==0) then 
+  GAMMAs=0.785398163       ! Perturbed occ. numbers (i.e pi/4) -> occ(i<Fermi level) = 0.75
  else
   GAMMAs=RDMd%GAMMAs_old   ! Read from previous run
  endif
@@ -150,7 +150,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
  endif
  
  iter=iter+1
- if(iter>1) RDMd%GAMMAs_old=GAMMAs
+ if(iter>0) RDMd%GAMMAs_old=GAMMAs
 
  call calc_E_occ(RDMd,GAMMAs,Energy,hCOREpp,ERI_J,ERI_K)
  write(*,'(a,f15.6,a,i6,a)') 'Occ. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'

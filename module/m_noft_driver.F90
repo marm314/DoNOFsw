@@ -87,8 +87,14 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  allocate(hCOREpp(RDMd%NBF_occ),ERI_J(RDMd%NBF_ldiag),ERI_K(RDMd%NBF_ldiag)) 
 
- iter=1
+ !Occ optimization with guess orbs. (HF, CORE, etc).
+ iter=0
+ call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
+ call opt_occ(iter,imethocc,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
+ !Orb. and occ. optimization
  do
+
+  !Occ optimization
   call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
   call opt_occ(iter,imethocc,RDMd,Vnn,hCOREpp,ERI_J,ERI_K)
   if(iter>itermax) exit
