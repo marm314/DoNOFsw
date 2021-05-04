@@ -22,6 +22,7 @@
 module m_noft_driver
 
  use m_rdmd
+ use m_integd
  use m_optocc
  use m_optorb
 
@@ -84,31 +85,27 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  integer::iorb,iorb1,iter
  double precision::Energy,Energy_old
  type(rdm_t),target::RDMd
+ type(integ_t),target::INTEGd
 !arrays
- double precision,dimension(:),allocatable::hCOREpp,ERI_J,ERI_K
- double precision,dimension(:,:),allocatable::hCORE
- double precision,dimension(:,:,:,:),allocatable::ERImol
 !************************************************************************
 
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
- allocate(hCOREpp(RDMd%NBF_occ),ERI_J(RDMd%NBF_ldiag),ERI_K(RDMd%NBF_ldiag)) 
- allocate(hCORE(RDMd%NBF_tot,RDMd%NBF_tot))
- allocate(ERImol(RDMd%NBF_tot,RDMd%NBF_tot,RDMd%NBF_tot,RDMd%NBF_tot))
+ call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ)
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
  iter=0
- call mo_ints(MO_COEF,hCOREpp,ERI_J,ERI_K)
- call opt_occ(iter,imethocc,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
+ call mo_ints(MO_COEF,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
+ call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
  Energy_old=Energy
 
  ! Orb. and occ. optimization
  do
   ! Orb. optimization
-  call opt_orb(RDMd,Vnn,Energy,hCORE,ERImol,hCOREpp,ERI_J,ERI_K,MO_COEF,mo_ints)
+  call opt_orb(RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERImol,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K,MO_COEF,mo_ints)
 
   ! Occ. optimization
-  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
+  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
 
   ! Check convergence
   if(abs(Energy-Energy_old)<tolE) then
@@ -136,8 +133,8 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(f12.6,*(f11.6))') RDMd%OCC(iorb1:) 
  write(*,'(a)') ' '
 
- deallocate(ERImol,hCORE)
- deallocate(hCOREpp,ERI_J,ERI_K)
+ ! Free all allocated arrays
+ call INTEGd%free()
  call RDMd%free() 
 
 end subroutine run_noft
