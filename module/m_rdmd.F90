@@ -164,6 +164,7 @@ subroutine rdm_free(RDMd)
 end subroutine rdm_free
 
 !!***
+
 !!***
 !!****f* DoNOF/print_rdm
 !! NAME
@@ -229,4 +230,3 @@ end subroutine print_rdm
 
 end module m_rdmd
 !!***
-
