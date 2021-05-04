@@ -68,11 +68,17 @@ subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,MO_COEF,mo_ints)
  Energy=0.0d0
  
  icall=0
+ do
+  icall=icall+1
+  call mo_ints(MO_COEF,INTEGd%hCORE,INTEGd%ERImol)
 
- call mo_ints(MO_COEF,INTEGd%hCORE,INTEGd%ERImol)
+! We allow at most 2000 evaluations of Energy and Gradient
+  if(icall.gt.0) exit ! MAU
+!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
+ enddo
+
  call INTEGd%htohpp(RDMd%NBF_occ)
  call INTEGd%eritoeriJK(RDMd%NBF_occ)
-
  call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
  write(*,'(a,f15.6,a,i6,a)') 'Orb. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
  
