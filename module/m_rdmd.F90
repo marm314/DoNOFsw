@@ -34,6 +34,7 @@ module m_rdmd
   integer::Nbeta_elect           ! Number of orbitals containing beta electrons
   integer::Nalpha_elect          ! Number of orbitals containing alpha electrons
   integer::Nsingleocc=0          ! Number of singly occ orbitals
+  integer::NBF_tot               ! Number of total orbitals
   integer::NBF_occ               ! Number of frozen plus active orbitals
   integer::NBF_ldiag             ! Size of the arrays that contain J and K integrals
   integer::Ncoupled              ! Number of 'virtual' coupled orbital per 'occupied' orbital  
@@ -51,6 +52,9 @@ module m_rdmd
  contains 
    procedure :: free => rdm_free
    ! Destructor.
+
+   procedure :: print_dmn => print_rdm
+   ! Print the 2-RDM into an unformated file.
 
  end type rdm_t
 
@@ -70,6 +74,7 @@ CONTAINS  !=====================================================================
 !! INPUTS
 !! INOF=PNOFi functional to use
 !! Ista=Use PNOF7 (Ista=0) or PNOF7s (Ista=1)
+!! NBF_tot=Number of total orbitals
 !! NBF_occ=Number of orbitals that are occupied
 !! Nfrozen=Number of frozen orbitals that remain with occ=2.0 
 !! Npairs=Number of electron pairs
@@ -86,18 +91,17 @@ CONTAINS  !=====================================================================
 !!
 !! SOURCE
 
-subroutine rdm_init(RDMd,INOF,Ista,NBF_occ,Nfrozen,Npairs,&
+subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
 &  Ncoupled,Nbeta_elect,Nalpha_elect)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::INOF,Ista
- integer,intent(in)::NBF_occ,Nfrozen,Npairs,Ncoupled
+ integer,intent(in)::NBF_tot,NBF_occ,Nfrozen,Npairs,Ncoupled
  integer,intent(in)::Nbeta_elect,Nalpha_elect
  type(rdm_t),intent(inout)::RDMd
 !Local variables ------------------------------
 !scalars
 !arrays
-
 !************************************************************************
 
  RDMd%INOF=INOF
@@ -106,6 +110,7 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_occ,Nfrozen,Npairs,&
  RDMd%Nbeta_elect=Nbeta_elect
  RDMd%Nalpha_elect=Nalpha_elect
  RDMd%NBF_occ=NBF_occ
+ RDMd%NBF_tot=NBF_tot
  RDMd%Ncoupled=Ncoupled
  RDMd%Npairs=Npairs
  RDMd%Nsingleocc=Nalpha_elect-Nbeta_elect
@@ -131,7 +136,6 @@ end subroutine rdm_init
 !!  Free allocated arrays of the data type rdm_t 
 !!
 !! INPUTS
-!!  
 !!
 !! OUTPUT
 !!
@@ -148,7 +152,6 @@ subroutine rdm_free(RDMd)
 !Local variables ------------------------------
 !scalars
 !arrays
-
 !************************************************************************
 
  deallocate(RDMd%GAMMAs_old)
@@ -159,9 +162,70 @@ subroutine rdm_free(RDMd)
  deallocate(RDMd%DDM2_gamma_K) 
 
 end subroutine rdm_free
+
 !!***
+!!***
+!!****f* DoNOF/print_rdm
+!! NAME
+!! print_rdm
+!!
+!! FUNCTION
+!!  Print the 2-RDM matrix allocated in rdm_t to the binary file DM2 
+!!  Print the 1-RDM matrix allocated in rdm_t to the binary file DM1
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
 
+subroutine print_rdm(RDMd,DM2_J,DM2_K)
+!Arguments ------------------------------------
+!scalars
+ class(rdm_t),intent(inout)::RDMd
+!arrays
+ double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(in)::DM2_J,DM2_K
+!Local variables ------------------------------
+!scalars
+integer::iorb,iorb1,iunit=312
+double precision::tol8=1.0d-8
+!arrays
 
+!************************************************************************
+
+ ! Print the 2-RDM
+ open(unit=iunit,form='unformatted',file='DM2')
+ do iorb=1,RDMd%NBF_occ
+  if(dabs(RDMd%OCC(iorb))>tol8) write(iunit) iorb,iorb,iorb,iorb,RDMd%OCC(iorb)
+  do iorb1=1,iorb-1
+   if(dabs(DM2_J(iorb,iorb1))>tol8) then
+     write(iunit) iorb,iorb1,iorb,iorb1,DM2_J(iorb,iorb1)  
+     write(iunit) iorb1,iorb,iorb1,iorb,DM2_J(iorb,iorb1)  
+   endif
+   if(dabs(DM2_K(iorb,iorb1))>tol8) then
+    write(iunit) iorb,iorb1,iorb1,iorb,-DM2_K(iorb,iorb1)
+    write(iunit) iorb1,iorb,iorb,iorb1,-DM2_K(iorb,iorb1)
+   endif
+  enddo
+ enddo
+ write(iunit) 0,0,0,0,0.0d0
+ write(iunit) 0,0,0,0,0.0d0
+ close(iunit)
+
+ ! Print the 1-RDM
+ open(unit=iunit,form='unformatted',file='DM1')
+ do iorb=1,RDMd%NBF_occ
+  if(dabs(RDMd%OCC(iorb))>tol8) write(iunit) iorb,iorb,2.0d0*RDMd%OCC(iorb)
+ enddo
+ write(iunit) 0,0,0.0d0
+ close(iunit)
+
+end subroutine print_rdm
+!!***
 
 end module m_rdmd
 !!***

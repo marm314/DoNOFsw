@@ -39,11 +39,13 @@ contains
 !!
 !! INPUTS
 !!  imethocc=Method to use for the occ. optimization (default = 0, i.e. conjugate gradients)
-!!  hCOREpp=diagoRDMd%Nalpha_electl part of the One-body integrals (h_pp) 
+!!  hCOREpp=diagonal part of the One-body integrals (h_pp) 
 !!  ERI_J=Lower triangular part of the J_pq matrix
 !!  ERI_K=Lower triangular part of the K_pq matrix
+!!  Vnn=Nuclear-nuclear rep. energy
 !!
 !! OUTPUT
+!!  Energy=Sum of nuclear and electronic energy
 !!
 !! PARENTS
 !!  
@@ -83,7 +85,6 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
   GAMMAs=RDMd%GAMMAs_old   ! Read from previous run
  endif
 
- write(*,'(a)') ' '  
  icall=0
  if(imethod==1) then ! Conjugate gradients
   write(*,'(a)') 'Calling CG to optimize occ. numbers'
@@ -156,7 +157,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
 
  call calc_E_occ(RDMd,GAMMAs,Energy,hCOREpp,ERI_J,ERI_K)
  write(*,'(a,f15.6,a,i6,a)') 'Occ. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
- write(*,*) ' '
+ write(*,'(a)') ' '
  
  if(icall.gt.2000) write(*,'(a)') 'Warning! Max. number of iterations reached in occ. optimization'
 

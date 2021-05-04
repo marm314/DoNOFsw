@@ -4,7 +4,7 @@
       INTEGER::itermax=1000
       DOUBLE PRECISION::tolE=1.0d-8
       DOUBLE PRECISION,DIMENSION(NBF,NBF)::COEF
-      EXTERNAL::mo_ints1
+      EXTERNAL::mo_ints
 C-----------------------------------------------------------------------
       write(*,*) ' '
       if(ICGMETHOD==1) then
@@ -13,11 +13,11 @@ C-----------------------------------------------------------------------
        write(*,*) 'Calling external module with LBFGS'
       endif
       call run_noft(IPNOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ICGMETHOD,
-     &   itermax,tolE,EN,COEF,mo_ints1) 
+     &   itermax,1,tolE,EN,COEF,mo_ints) 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 
-      SUBROUTINE mo_ints1(COEF,HCOREpp,ERI_J,ERI_K)
+      SUBROUTINE mo_ints(COEF,HCOREpp,ERI_J,ERI_K)
       USE PARCOM
       USE PARCOM2
       INTEGER::i,j,k
@@ -44,7 +44,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       enddo
       DEALLOCATE(HCORE,ERImol)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      END SUBROUTINE mo_ints1
+      END SUBROUTINE mo_ints
 
       SUBROUTINE HCOREc(COEF,HCORE)
       USE PARCOM

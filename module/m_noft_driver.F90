@@ -23,6 +23,7 @@ module m_noft_driver
 
  use m_rdmd
  use m_optocc
+ use m_optorb
 
  implicit none
 
@@ -66,17 +67,18 @@ contains
 !!
 !! SOURCE
 
-subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,itermax,&
-&  tolE,Vnn,MO_COEF,mo_ints1)
+subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,itermax,iprintdmn,&
+&  tolE,Vnn,MO_COEF,mo_ints)
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::INOF_in,Ista_in,imethocc,itermax
- integer,intent(in)::NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
+ integer,intent(in)::INOF_in,Ista_in,imethocc,itermax,iprintdmn
+ integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
  double precision,intent(in)::Vnn,tolE
+ external::mo_ints
 !arrays
- double precision,dimension(NBF_tot,NBF_tot),intent(inout)::MO_COEF
+ double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::MO_COEF
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iter
@@ -84,24 +86,28 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
  type(rdm_t),target::RDMd
 !arrays
  double precision,dimension(:),allocatable::hCOREpp,ERI_J,ERI_K
+ double precision,dimension(:,:),allocatable::hCORE
+ double precision,dimension(:,:,:,:),allocatable::ERImol
 !************************************************************************
 
- call rdm_init(RDMd,INOF_in,Ista_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
+ call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  allocate(hCOREpp(RDMd%NBF_occ),ERI_J(RDMd%NBF_ldiag),ERI_K(RDMd%NBF_ldiag)) 
+ allocate(hCORE(RDMd%NBF_tot,RDMd%NBF_tot))
+ allocate(ERImol(RDMd%NBF_tot,RDMd%NBF_tot,RDMd%NBF_tot,RDMd%NBF_tot))
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
+ write(*,'(a)') ' '
  iter=0
- call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
+ call mo_ints(MO_COEF,hCOREpp,ERI_J,ERI_K)
  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
  Energy_old=Energy
 
  ! Orb. and occ. optimization
  do
   ! Orb. optimization
-  
+  call opt_orb(RDMd,Vnn,Energy,hCORE,ERImol,hCOREpp,ERI_J,ERI_K,MO_COEF,mo_ints)
 
   ! Occ. optimization
-  call mo_ints1(MO_COEF,hCOREpp,ERI_J,ERI_K)
   call opt_occ(iter,imethocc,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
 
   ! Check convergence
@@ -116,7 +122,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  enddo
 
- write(*,*) ' '
+ if(iprintdmn==1) call RDMd%print_dmn(RDMd%DM2_J,RDMd%DM2_K) 
+
+ ! Print final occ. numbers
+ write(*,'(a)') ' '
  RDMd%OCC(:)=2.0d0*RDMd%OCC(:)
  write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%OCC(:)),' final occ. numbers '
  iorb1=RDMd%NBF_occ-(RDMd%NBF_occ/10)*10
@@ -125,8 +134,9 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot,NBF_occ_in,Nfrozen_in,Npairs_in,&
  enddo
  iorb1=(RDMd%NBF_occ/10)*10+1 
  write(*,'(f12.6,*(f11.6))') RDMd%OCC(iorb1:) 
- write(*,*) ' '
+ write(*,'(a)') ' '
 
+ deallocate(ERImol,hCORE)
  deallocate(hCOREpp,ERI_J,ERI_K)
  call RDMd%free() 
 
