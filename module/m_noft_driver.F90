@@ -95,14 +95,16 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
  iter=0
- call mo_ints(MO_COEF,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
+ call mo_ints(MO_COEF,INTEGd%hCORE,INTEGd%ERImol)
+ call INTEGd%htohpp(RDMd%NBF_occ)
+ call INTEGd%eritoeriJK(RDMd%NBF_occ)
  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
  Energy_old=Energy
 
  ! Orb. and occ. optimization
  do
   ! Orb. optimization
-  call opt_orb(RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERImol,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K,MO_COEF,mo_ints)
+  call opt_orb(RDMd,INTEGd,Vnn,Energy,MO_COEF,mo_ints)
 
   ! Occ. optimization
   call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)

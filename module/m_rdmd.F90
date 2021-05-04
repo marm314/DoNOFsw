@@ -162,7 +162,6 @@ subroutine rdm_free(RDMd)
  deallocate(RDMd%DDM2_gamma_K) 
 
 end subroutine rdm_free
-
 !!***
 
 !!***

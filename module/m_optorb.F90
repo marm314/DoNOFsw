@@ -14,6 +14,7 @@
 module m_optorb
 
  use m_rdmd
+ use m_integd
  use m_E_grad_occ
 
  implicit none
@@ -49,17 +50,15 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_orb(RDMd,Vnn,Energy,hCORE,ERImol,hCOREpp,ERI_J,ERI_K,MO_COEF,mo_ints) 
+subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,MO_COEF,mo_ints) 
 !Arguments ------------------------------------
 !scalars
  double precision,intent(in)::Vnn
  double precision,intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
+ type(integ_t),intent(inout)::INTEGd
 !arrays
- double precision,dimension(RDMd%NBF_occ),intent(inout)::hCOREpp
- double precision,dimension(RDMd%NBF_ldiag),intent(inout)::ERI_J,ERI_K
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::hCORE,MO_COEF
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot,RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::ERImol
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::MO_COEF
 !Local variables ------------------------------
 !scalars
  integer::icall
@@ -70,9 +69,11 @@ subroutine opt_orb(RDMd,Vnn,Energy,hCORE,ERImol,hCOREpp,ERI_J,ERI_K,MO_COEF,mo_i
  
  icall=0
 
- call mo_ints(MO_COEF,hCOREpp,ERI_J,ERI_K)
+ call mo_ints(MO_COEF,INTEGd%hCORE,INTEGd%ERImol)
+ call INTEGd%htohpp(RDMd%NBF_occ)
+ call INTEGd%eritoeriJK(RDMd%NBF_occ)
 
- call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,hCOREpp,ERI_J,ERI_K)
+ call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
  write(*,'(a,f15.6,a,i6,a)') 'Orb. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
  
  if(icall.gt.2000) write(*,'(a)') 'Warning! Max. number of iterations reached in orb. optimization'

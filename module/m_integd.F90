@@ -37,6 +37,12 @@ module m_integd
    procedure :: free => integ_free
    ! Destructor.
 
+   procedure :: htohpp => hcore_to_hcorepp
+   ! hCORE to hCOREpp.
+
+   procedure :: eritoeriJK => eri_to_eriJK  
+   ! ERImol to ERI_J and ERI_K.
+
  end type integ_t
 
  public :: integ_init     ! Main creation method.
@@ -117,6 +123,84 @@ subroutine integ_free(Integd)
  deallocate(Integd%ERI_K) 
 
 end subroutine integ_free
+!!***
+
+!!***
+!!****f* DoNOF/hcore_to_hcorepp
+!! NAME
+!! hcore_to_hcorepp
+!!
+!! FUNCTION
+!!  Get hCOREpp from hCORE 
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine hcore_to_hcorepp(Integd,NBF_occ)
+!Arguments ------------------------------------
+!scalars
+ integer,intent(in)::NBF_occ
+ class(integ_t),intent(inout)::Integd
+!Local variables ------------------------------
+!scalars
+ integer::iorb
+!arrays
+!************************************************************************
+
+ do iorb=1,NBF_occ
+  Integd%hCOREpp(iorb)=Integd%hCORE(iorb,iorb)
+ enddo
+
+end subroutine hcore_to_hcorepp
+!!***
+
+!!***
+!!****f* DoNOF/eri_to_eriJK
+!! NAME
+!! eri_to_eriJK
+!!
+!! FUNCTION
+!!  Get ERI_J, ERI_K from ERI
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine eri_to_eriJK(Integd,NBF_occ)
+!Arguments ------------------------------------
+!scalars
+ integer,intent(in)::NBF_occ
+ class(integ_t),intent(inout)::Integd
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1,iorb2
+!arrays
+!************************************************************************
+
+ iorb2=1
+ do iorb=1,NBF_occ
+  do iorb1=1,iorb
+   Integd%ERI_J(iorb2)=Integd%ERImol(iorb,iorb1,iorb1,iorb) ! J in DoNOF
+   Integd%ERI_K(iorb2)=Integd%ERImol(iorb,iorb1,iorb,iorb1) ! K in DoNOF
+   iorb2=iorb2+1
+  enddo
+ enddo
+
+end subroutine eri_to_eriJK
+!!***
 
 end module m_integd
 !!***

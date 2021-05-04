@@ -17,32 +17,18 @@ C-----------------------------------------------------------------------
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 
-      SUBROUTINE mo_ints(COEF,HCOREpp,ERI_J,ERI_K)
+      SUBROUTINE mo_ints(COEF,HCORE,ERImol)
       USE PARCOM
       USE PARCOM2
-      INTEGER::i,j,k
-      DOUBLE PRECISION,DIMENSION(NBF5),intent(inout)::HCOREpp
-      DOUBLE PRECISION,DIMENSION(NBFT5),intent(inout)::ERI_J,ERI_K
+      DOUBLE PRECISION,DIMENSION(NBF,NBF),intent(inout)::HCORE
+      DOUBLE PRECISION,DIMENSION(NBF,NBF,NBF,NBF),intent(inout)::ERImol
       DOUBLE PRECISION,DIMENSION(NBF,NBF),intent(in)::COEF
-      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:,:,:)::ERImol
-      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::HCORE
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      ALLOCATE(HCORE(NBF,NBF),ERImol(NBF,NBF,NBF,NBF))
       HCORE=0.0d0; ERImol=0.0d0;
       CALL HCOREc(COEF,HCORE)
       CALL ERIC1c(ERImol,IJKL,XIJKL,COEF,NBF)
       CALL ERIC23c(ERImol,COEF,NBF)
       CALL ERIC4c(ERImol,COEF,NBF)
-      k=1
-      do i=1,NBF5
-       HCOREpp(i)=HCORE(i,i)
-       do j=1,i
-        ERI_J(k)=ERImol(i,j,j,i) !J
-        ERI_K(k)=ERImol(i,j,i,j) !K
-        k=k+1
-       enddo
-      enddo
-      DEALLOCATE(HCORE,ERImol)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE mo_ints
 
