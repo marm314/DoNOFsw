@@ -66,10 +66,7 @@ subroutine build_elag(RDMd,INTEGd,Lambdas,DM2_J,DM2_K)
  Lambdas=0.0d0
 
  do iorb=1,RDMd%NBF_occ
-  Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)
- enddo
-
- do iorb=1,RDMd%NBF_occ
+  Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                  ! Init: Lambda_pq = n_p hCORE_qp
   Lambdas(iorb,:)=Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)       ! any<->iorb,iorb<->iorb
   do iorb1=1,RDMd%NBF_occ
    Lambdas(iorb,:)=Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1
