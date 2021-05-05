@@ -1,6 +1,6 @@
-!!****m* DoNOF/m_optocc
+!!****m* DoNOF/m_optorb
 !! NAME
-!!  m_optocc
+!!  m_optorb
 !!
 !! FUNCTION
 !!  Module prepared to compute occ optimization for a fixed hCOREpp and ERIs
@@ -15,6 +15,7 @@ module m_optorb
 
  use m_rdmd
  use m_integd
+ use m_elag
  use m_E_grad_occ
 
  implicit none
@@ -63,19 +64,24 @@ subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,MO_COEF,mo_ints)
 !scalars
  integer::icall
 !arrays
+ double precision,dimension(:,:),allocatable::Lambdas
 !************************************************************************
 
+ allocate(Lambdas(RDMd%NBF_tot,RDMd%NBF_tot))
  Energy=0.0d0
  
  icall=0
  do
   icall=icall+1
   call mo_ints(MO_COEF,INTEGd%hCORE,INTEGd%ERImol)
+  call build_elag(RDMd,INTEGd,Lambdas,RDMd%DM2_J,RDMd%DM2_K)
 
 ! We allow at most 2000 evaluations of Energy and Gradient
   if(icall.gt.0) exit ! MAU
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
+ 
+ deallocate(Lambdas)
 
  call INTEGd%htohpp(RDMd%NBF_occ)
  call INTEGd%eritoeriJK(RDMd%NBF_occ)
