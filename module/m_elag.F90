@@ -23,7 +23,7 @@ module m_elag
 !!private :: 
 !!***
 
- public :: build_elag
+ public :: build_elag,diag_ekt
 !!***
 
 contains
@@ -37,11 +37,11 @@ contains
 !!  Build the Lagrange multipliers Lambda matrix. Nothe that the electron rep. integrals are given in DoNOF format
 !!
 !! INPUTS
-!!  INTEGd=Object containg all integrals
 !!  RDMd=Object containg all required variables whose arrays are properly updated
+!!  INTEGd=Object containg all integrals
 !!
 !! OUTPUT
-!!  Lambdas=Matrix build with the Lagrange multipliers Lambda_pq
+!!  INTEGd%Lambdas=Matrix build with the Lagrange multipliers Lambda_pq
 !!
 !! PARENTS
 !!  
@@ -49,13 +49,12 @@ contains
 !!
 !! SOURCE
 
-subroutine build_elag(RDMd,INTEGd,Lambdas,DM2_J,DM2_K)
+subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
 !Arguments ------------------------------------
 !scalars
  type(rdm_t),intent(in)::RDMd
- type(integ_t),intent(in)::INTEGd
+ type(integ_t),intent(inout)::INTEGd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::Lambdas
  double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
 !Local variables ------------------------------
 !scalars
@@ -63,20 +62,116 @@ subroutine build_elag(RDMd,INTEGd,Lambdas,DM2_J,DM2_K)
 !arrays
 !************************************************************************
 
- Lambdas=0.0d0
+ INTEGd%Lambdas=0.0d0
 
  do iorb=1,RDMd%NBF_occ
-  Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                  ! Init: Lambda_pq = n_p hCORE_qp
-  Lambdas(iorb,:)=Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)       ! any<->iorb,iorb<->iorb
+  INTEGd%Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                          ! Init: Lambda_pq = n_p hCORE_qp
+  INTEGd%Lambdas(iorb,:)=INTEGd%Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
   do iorb1=1,RDMd%NBF_occ
-   Lambdas(iorb,:)=Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1
-   Lambdas(iorb,:)=Lambdas(iorb,:)-DM2_K(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb,iorb1) ! any<->iorb1,iorb1<->iorb
+   if(iorb/=iorb1) then
+    INTEGd%Lambdas(iorb,:)=INTEGd%Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1
+    INTEGd%Lambdas(iorb,:)=INTEGd%Lambdas(iorb,:)-DM2_K(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb,iorb1) ! any<->iorb1,iorb1<->iorb
+   endif
   enddo
  enddo 
 
- Lambdas=2.0d0*Lambdas
+ INTEGd%Lambdas=INTEGd%Lambdas
 
 end subroutine build_elag
+!!***
+
+!!****f* DoNOF/diag_ekt
+!! NAME
+!! diag_ekt
+!!
+!! FUNCTION
+!!  Diagonalize the Lagrange multipliers Lambda matrix (produce either the 'canonical orbitals' or EKT). 
+!!
+!! INPUTS
+!!  RDMd=Object containg all required variables whose arrays are properly updated
+!!  INTEGd=Object containg all integrals
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine diag_ekt(RDMd,INTEGd,MO_COEF,ekt)
+!Arguments ------------------------------------
+!scalars
+ logical,optional::ekt
+ type(rdm_t),intent(in)::RDMd
+ type(integ_t),intent(in)::INTEGd
+!arrays
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::MO_COEF
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1,lwork,info
+ double precision::sqrt_occ_iorb,sqrt_occ_iorb1,tol6=1d-6
+!arrays
+ double precision,dimension(:),allocatable::Eigval,Eigval_occ,Work
+ double precision,dimension(:,:),allocatable::Eigvec
+!************************************************************************
+
+ allocate(Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Eigval(RDMd%NBF_tot),Work(1))
+ allocate(Eigval_occ(RDMd%NBF_occ))
+ 
+ Eigvec=INTEGd%Lambdas
+
+ if(present(ekt)) then
+  do iorb=1,RDMd%NBF_tot
+   do iorb1=1,RDMd%NBF_tot
+    if(iorb<=RDMd%NBF_occ.and.iorb1<=RDMd%NBF_occ) then
+     sqrt_occ_iorb =DSQRT(RDMd%OCC(iorb))
+     sqrt_occ_iorb1=DSQRT(RDMd%OCC(iorb1))
+     if((DABS(sqrt_occ_iorb)>tol6).and.(DABS(sqrt_occ_iorb1)>tol6)) then
+      Eigvec(iorb,iorb1)=Eigvec(iorb,iorb1)/(sqrt_occ_iorb*sqrt_occ_iorb1)
+     else
+      Eigvec(iorb,iorb1)=0.0d0
+     endif
+    else
+     Eigvec(iorb,iorb1)=0.0d0
+    endif
+   enddo
+  enddo
+ endif
+
+ lwork=-1 
+ call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,Eigval,Work,lwork,info)
+ lwork= nint(Work(1))
+
+ if(info==0) then
+  deallocate(Work)
+  allocate(Work(lwork)) 
+  call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,Eigval,Work,lwork,info)
+ endif
+
+ ! Print final eigenvalues
+ write(*,'(a)') ' '
+ if(present(ekt)) then
+  
+  write(*,'(a)') 'Final EKT ionization potentials'
+ else
+
+  write(*,'(a)') 'Final canonical orbital eigenvalues'
+ endif
+
+ Eigval_occ(1:RDMd%NBF_occ)=Eigval(1:RDMd%NBF_occ)
+ iorb1=RDMd%NBF_occ-(RDMd%NBF_occ/10)*10
+ do iorb=1,(RDMd%NBF_occ/10)*10,10
+  write(*,'(f12.6,9f11.6)') Eigval_occ(iorb:iorb+9)
+ enddo
+ iorb1=(RDMd%NBF_occ/10)*10+1
+ write(*,'(f12.6,*(f11.6))') Eigval_occ(iorb1:)
+ write(*,'(a)') ' '
+
+  
+ deallocate(Eigvec,Work,Eigval,Eigval_occ)
+
+end subroutine diag_ekt
 !!***
 
 end module m_elag

@@ -23,6 +23,7 @@ module m_noft_driver
 
  use m_rdmd
  use m_integd
+ use m_elag
  use m_optocc
  use m_optorb
 
@@ -122,6 +123,9 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  enddo
 
  if(iprintdmn==1) call RDMd%print_dmn(RDMd%DM2_J,RDMd%DM2_K) 
+
+ ! Print final INTEGd%Lambda values
+ call diag_ekt(RDMd,INTEGd,MO_COEF)
 
  ! Print final occ. numbers
  write(*,'(a)') ' '
