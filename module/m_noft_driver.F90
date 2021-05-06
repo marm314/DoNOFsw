@@ -132,7 +132,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Print final diagonalized INTEGd%Lambdas values
  call diag_ekt(RDMd,NO_COEF)
 
- ! Print final EKT values
+ ! Print final Extended Koopmans' Theorem (EKT) values
  call diag_ekt(RDMd,NO_COEF,ekt)
 
  ! Print final occ. numbers

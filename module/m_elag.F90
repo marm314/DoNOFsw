@@ -152,6 +152,7 @@ subroutine diag_ekt(RDMd,NO_COEF,ekt)
  ! Print final eigenvalues
  write(*,'(a)') ' '
  if(present(ekt)) then
+  Eigval=-Eigval
   write(*,'(a)') 'Final EKT ionization potentials'
  else
   coef_file='CANON_COEF'
