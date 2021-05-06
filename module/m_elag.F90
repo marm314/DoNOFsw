@@ -41,7 +41,7 @@ contains
 !!  INTEGd=Object containg all integrals
 !!
 !! OUTPUT
-!!  INTEGd%Lambdas=Matrix build with the Lagrange multipliers Lambda_pq
+!!  RDMd%Lambdas=Matrix build with the Lagrange multipliers Lambda_pq
 !!
 !! PARENTS
 !!  
@@ -52,8 +52,8 @@ contains
 subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
 !Arguments ------------------------------------
 !scalars
- type(rdm_t),intent(in)::RDMd
- type(integ_t),intent(inout)::INTEGd
+ type(rdm_t),intent(inout)::RDMd
+ type(integ_t),intent(in)::INTEGd
 !arrays
  double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
 !Local variables ------------------------------
@@ -62,20 +62,20 @@ subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
 !arrays
 !************************************************************************
 
- INTEGd%Lambdas=0.0d0
+ RDMd%Lambdas=0.0d0
 
  do iorb=1,RDMd%NBF_occ
-  INTEGd%Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                          ! Init: Lambda_pq = n_p hCORE_qp
-  INTEGd%Lambdas(iorb,:)=INTEGd%Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
+  RDMd%Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                          ! Init: Lambda_pq = n_p hCORE_qp
+  RDMd%Lambdas(iorb,:)=RDMd%Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
   do iorb1=1,RDMd%NBF_occ
    if(iorb/=iorb1) then
-    INTEGd%Lambdas(iorb,:)=INTEGd%Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1
-    INTEGd%Lambdas(iorb,:)=INTEGd%Lambdas(iorb,:)-DM2_K(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb,iorb1) ! any<->iorb1,iorb1<->iorb
+    RDMd%Lambdas(iorb,:)=RDMd%Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1
+    RDMd%Lambdas(iorb,:)=RDMd%Lambdas(iorb,:)-DM2_K(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb,iorb1) ! any<->iorb1,iorb1<->iorb
    endif
   enddo
  enddo 
 
- INTEGd%Lambdas=INTEGd%Lambdas
+ RDMd%Lambdas=RDMd%Lambdas
 
 end subroutine build_elag
 !!***
@@ -99,27 +99,27 @@ end subroutine build_elag
 !!
 !! SOURCE
 
-subroutine diag_ekt(RDMd,INTEGd,MO_COEF,ekt)
+subroutine diag_ekt(RDMd,NO_COEF,ekt)
 !Arguments ------------------------------------
 !scalars
  logical,optional::ekt
  type(rdm_t),intent(in)::RDMd
- type(integ_t),intent(in)::INTEGd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::MO_COEF
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::NO_COEF
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,lwork,info
  double precision::sqrt_occ_iorb,sqrt_occ_iorb1,tol6=1d-6
 !arrays
+ character(len=10)::coef_file
  double precision,dimension(:),allocatable::Eigval,Eigval_occ,Work
- double precision,dimension(:,:),allocatable::Eigvec
+ double precision,dimension(:,:),allocatable::Eigvec,CANON_COEF
 !************************************************************************
 
  allocate(Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Eigval(RDMd%NBF_tot),Work(1))
  allocate(Eigval_occ(RDMd%NBF_occ))
  
- Eigvec=INTEGd%Lambdas
+ Eigvec=RDMd%Lambdas
 
  if(present(ekt)) then
   do iorb=1,RDMd%NBF_tot
@@ -152,20 +152,22 @@ subroutine diag_ekt(RDMd,INTEGd,MO_COEF,ekt)
  ! Print final eigenvalues
  write(*,'(a)') ' '
  if(present(ekt)) then
-  
   write(*,'(a)') 'Final EKT ionization potentials'
  else
-
+  coef_file='CANON_COEF'
+  allocate(CANON_COEF(RDMd%NBF_tot,RDMd%NBF_tot))
+  CANON_COEF=matmul(NO_COEF,Eigvec)
+  call RDMd%print_orbs(CANON_COEF,coef_file)
+  deallocate(CANON_COEF)
   write(*,'(a)') 'Final canonical orbital eigenvalues'
  endif
 
  Eigval_occ(1:RDMd%NBF_occ)=Eigval(1:RDMd%NBF_occ)
- iorb1=RDMd%NBF_occ-(RDMd%NBF_occ/10)*10
  do iorb=1,(RDMd%NBF_occ/10)*10,10
   write(*,'(f12.6,9f11.6)') Eigval_occ(iorb:iorb+9)
  enddo
- iorb1=(RDMd%NBF_occ/10)*10+1
- write(*,'(f12.6,*(f11.6))') Eigval_occ(iorb1:)
+ iorb=(RDMd%NBF_occ/10)*10+1
+ write(*,'(f12.6,*(f11.6))') Eigval_occ(iorb:)
  write(*,'(a)') ' '
 
   

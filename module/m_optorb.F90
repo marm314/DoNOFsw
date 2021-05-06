@@ -51,7 +51,7 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,MO_COEF,mo_ints) 
+subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints) 
 !Arguments ------------------------------------
 !scalars
  double precision,intent(in)::Vnn
@@ -59,7 +59,7 @@ subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,MO_COEF,mo_ints)
  type(rdm_t),intent(inout)::RDMd
  type(integ_t),intent(inout)::INTEGd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::MO_COEF
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
  integer::icall
@@ -71,7 +71,7 @@ subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,MO_COEF,mo_ints)
  icall=0
  do
   icall=icall+1
-  call mo_ints(MO_COEF,INTEGd%hCORE,INTEGd%ERImol)
+  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
   call build_elag(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
 
 ! We allow at most 2000 evaluations of Energy and Gradient

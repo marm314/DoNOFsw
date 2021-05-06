@@ -48,13 +48,17 @@ module m_rdmd
   double precision,allocatable,dimension(:)::DM2_J,DM2_K
   double precision,allocatable,dimension(:)::Docc_gamma
   double precision,allocatable,dimension(:)::DDM2_gamma_J,DDM2_gamma_K
+  double precision,allocatable,dimension(:,:)::Lambdas
 
  contains 
    procedure :: free => rdm_free
    ! Destructor.
 
    procedure :: print_dmn => print_rdm
-   ! Print the 2-RDM into an unformated file.
+   ! Print the 1,2-RDMs into unformated files.
+
+   procedure :: print_orbs => print_orb_coefs
+   ! Print orbital coefs to a formated file.
 
  end type rdm_t
 
@@ -123,6 +127,7 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
  allocate(RDMd%DDM2_gamma_K(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas)) 
  allocate(RDMd%GAMMAs_old(RDMd%Ngammas))
  allocate(RDMd%OCC(RDMd%NBF_occ))
+ allocate(RDMd%Lambdas(NBF_tot,NBF_tot))
 
 end subroutine rdm_init
 !!***
@@ -160,6 +165,7 @@ subroutine rdm_free(RDMd)
  deallocate(RDMd%Docc_gamma) 
  deallocate(RDMd%DDM2_gamma_J)
  deallocate(RDMd%DDM2_gamma_K) 
+ deallocate(RDMd%Lambdas) 
 
 end subroutine rdm_free
 !!***
@@ -225,6 +231,54 @@ double precision::tol8=1.0d-8
  close(iunit)
 
 end subroutine print_rdm
+!!***
+
+!!***
+!!****f* DoNOF/print_orb_coefs
+!! NAME
+!! print_orb_coefs
+!!
+!! FUNCTION
+!!  Print the orbital coefficients to a given file
+!!
+!! INPUTS
+!!  COEF=Orbital coefs.
+!!  name_file=Name of the file where the orb. coefs. are printed
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine print_orb_coefs(RDMd,COEF,name_file)
+!Arguments ------------------------------------
+!scalars
+ class(rdm_t),intent(in)::RDMd
+!arrays
+ character(len=10)::name_file 
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::COEF
+!Local variables ------------------------------
+!scalars
+integer::iorb,iorb1,iorb2,iunit=312
+!arrays
+
+!************************************************************************
+
+ ! Print the orb. coefs
+ open(unit=iunit,form='formatted',file=name_file)
+ do iorb=1,RDMd%NBF_tot
+  do iorb1=1,(RDMd%NBF_tot/10)*10,10
+   write(iunit,'(f14.8,9f13.8)') COEF(iorb1:iorb1+9,iorb)  
+  enddo
+  iorb1=(RDMd%NBF_tot/10)*10+1
+  write(iunit,'(f14.8,*(f13.8))') COEF(iorb1:,iorb)
+ enddo
+ close(iunit)
+
+end subroutine print_orb_coefs
 !!***
 
 end module m_rdmd

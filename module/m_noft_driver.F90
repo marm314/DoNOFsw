@@ -71,7 +71,7 @@ contains
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,itermax,iprintdmn,&
-&  tolE,Vnn,MO_COEF,mo_ints)
+&  tolE,Vnn,NO_COEF,mo_ints)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::INOF_in,Ista_in,imethocc,itermax,iprintdmn
@@ -80,14 +80,16 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  double precision,intent(in)::Vnn,tolE
  external::mo_ints
 !arrays
- double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::MO_COEF
+ double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
+ logical::ekt
  integer::iorb,iorb1,iter
  double precision::Energy,Energy_old
  type(rdm_t),target::RDMd
  type(integ_t),target::INTEGd
 !arrays
+ character(len=10)::coef_file
 !************************************************************************
 
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
@@ -96,7 +98,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
  iter=0
- call mo_ints(MO_COEF,INTEGd%hCORE,INTEGd%ERImol)
+ call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
  call INTEGd%htohpp(RDMd%NBF_occ)
  call INTEGd%eritoeriJK(RDMd%NBF_occ)
  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
@@ -105,7 +107,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Orb. and occ. optimization
  do
   ! Orb. optimization
-  call opt_orb(RDMd,INTEGd,Vnn,Energy,MO_COEF,mo_ints)
+  call opt_orb(RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
 
   ! Occ. optimization
   call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
@@ -124,8 +126,14 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  if(iprintdmn==1) call RDMd%print_dmn(RDMd%DM2_J,RDMd%DM2_K) 
 
- ! Print final INTEGd%Lambda values
- call diag_ekt(RDMd,INTEGd,MO_COEF)
+ ! Free all allocated INTEGd arrays
+ call INTEGd%free()
+
+ ! Print final diagonalized INTEGd%Lambdas values
+ call diag_ekt(RDMd,NO_COEF)
+
+ ! Print final EKT values
+ call diag_ekt(RDMd,NO_COEF,ekt)
 
  ! Print final occ. numbers
  write(*,'(a)') ' '
@@ -139,8 +147,11 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(f12.6,*(f11.6))') RDMd%OCC(iorb1:) 
  write(*,'(a)') ' '
 
- ! Free all allocated arrays
- call INTEGd%free()
+ ! Print final nat. orb. coef.
+ coef_file='NO_COEF'
+ call RDMd%print_orbs(NO_COEF,coef_file)
+
+ ! Free all allocated RDMd arrays
  call RDMd%free() 
 
 end subroutine run_noft

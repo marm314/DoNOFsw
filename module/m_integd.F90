@@ -30,7 +30,7 @@ module m_integd
 
 ! arrays 
  double precision,dimension(:),allocatable::hCOREpp,ERI_J,ERI_K
- double precision,dimension(:,:),allocatable::hCORE,Lambdas
+ double precision,dimension(:,:),allocatable::hCORE
  double precision,dimension(:,:,:,:),allocatable::ERImol
 
  contains 
@@ -83,7 +83,7 @@ subroutine integ_init(Integd,NBF_tot,NBF_occ)
 
  NBF_ldiag=NBF_occ*(NBF_occ+1)/2
  allocate(Integd%hCOREpp(NBF_occ),Integd%ERI_J(NBF_ldiag),Integd%ERI_K(NBF_ldiag))
- allocate(Integd%hCORE(NBF_tot,NBF_tot),Integd%Lambdas(NBF_tot,NBF_tot))
+ allocate(Integd%hCORE(NBF_tot,NBF_tot))
  allocate(Integd%ERImol(NBF_tot,NBF_tot,NBF_tot,NBF_tot))
 
 end subroutine integ_init
@@ -116,7 +116,6 @@ subroutine integ_free(Integd)
 !arrays
 !************************************************************************
 
- deallocate(Integd%Lambdas) 
  deallocate(Integd%hCORE) 
  deallocate(Integd%hCOREpp) 
  deallocate(Integd%ERImol) 
