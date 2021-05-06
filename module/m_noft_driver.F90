@@ -108,6 +108,8 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  do
   ! Orb. optimization
   call opt_orb(RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
+  coef_file='TEMP_COEF'
+  call RDMd%print_orbs(NO_COEF,coef_file)
 
   ! Occ. optimization
   call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
