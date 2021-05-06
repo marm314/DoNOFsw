@@ -84,7 +84,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 !Local variables ------------------------------
 !scalars
  logical::ekt
- integer::iorb,iorb1,iter
+ integer::iorb,iter
  double precision::Energy,Energy_old
  type(rdm_t),target::RDMd
  type(integ_t),target::INTEGd
@@ -141,12 +141,11 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a)') ' '
  RDMd%OCC(:)=2.0d0*RDMd%OCC(:)
  write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%OCC(:)),' final occ. numbers '
- iorb1=RDMd%NBF_occ-(RDMd%NBF_occ/10)*10
  do iorb=1,(RDMd%NBF_occ/10)*10,10
   write(*,'(f12.6,9f11.6)') RDMd%OCC(iorb:iorb+9)
  enddo
- iorb1=(RDMd%NBF_occ/10)*10+1 
- write(*,'(f12.6,*(f11.6))') RDMd%OCC(iorb1:) 
+ iorb=(RDMd%NBF_occ/10)*10+1 
+ write(*,'(f12.6,*(f11.6))') RDMd%OCC(iorb:) 
  write(*,'(a)') ' '
 
  ! Print final nat. orb. coef.
