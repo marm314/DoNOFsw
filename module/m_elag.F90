@@ -65,7 +65,7 @@ subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
  RDMd%Lambdas=0.0d0
 
  do iorb=1,RDMd%NBF_occ
-  RDMd%Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                          ! Init: Lambda_pq = n_p hCORE_qp
+  RDMd%Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                        ! Init: Lambda_pq = n_p hCORE_qp
   RDMd%Lambdas(iorb,:)=RDMd%Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
   do iorb1=1,RDMd%NBF_occ
    if(iorb/=iorb1) then
@@ -75,7 +75,7 @@ subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
   enddo
  enddo 
 
- RDMd%Lambdas=RDMd%Lambdas
+ !RDMd%Lambdas=2.0d0*RDMd%Lambdas ! We only need half for 'alpha' orbs to define gradients
 
 end subroutine build_elag
 !!***
