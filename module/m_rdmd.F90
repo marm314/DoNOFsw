@@ -207,6 +207,7 @@ double precision::tol8=1.0d-8
 !************************************************************************
 
  ! Print the 2-RDM
+ ! TODO: Missing terms for Nsingleocc>0 !
  open(unit=iunit,form='unformatted',file='DM2')
  do iorb=1,RDMd%NBF_occ
   if(dabs(RDMd%OCC(iorb))>tol8) write(iunit) iorb,iorb,iorb,iorb,RDMd%OCC(iorb)
