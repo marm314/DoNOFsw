@@ -99,9 +99,8 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a)') ' '
  iter=0
  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
- call INTEGd%htohpp(RDMd%NBF_occ)
  call INTEGd%eritoeriJK(RDMd%NBF_occ)
- call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
+ call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K)
  Energy_old=Energy
 
  ! Orb. and occ. optimization
@@ -112,7 +111,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
   call RDMd%print_orbs(NO_COEF,coef_file)
 
   ! Occ. optimization
-  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCOREpp,INTEGd%ERI_J,INTEGd%ERI_K)
+  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K)
 
   ! Check convergence
   if(abs(Energy-Energy_old)<tolE) then

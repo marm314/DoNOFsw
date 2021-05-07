@@ -3,7 +3,7 @@
 !!  m_optocc
 !!
 !! FUNCTION
-!!  Module prepared to compute occ optimization for a fixed hCOREpp and ERIs
+!!  Module prepared to compute occ optimization for a fixed hCORE and ERIs
 !!
 !! PARENTS
 !!  m_noft_driver
@@ -39,7 +39,7 @@ contains
 !!
 !! INPUTS
 !!  imethocc=Method to use for the occ. optimization (default = 0, i.e. conjugate gradients)
-!!  hCOREpp=diagonal part of the One-body integrals (h_pp) 
+!!  hCORE=One-body integrals (h_pq) 
 !!  ERI_J=Lower triangular part of the J_pq matrix
 !!  ERI_K=Lower triangular part of the K_pq matrix
 !!  Vnn=Nuclear-nuclear rep. energy
@@ -53,7 +53,7 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K) 
+subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCORE,ERI_J,ERI_K) 
 !Arguments ------------------------------------
 !scalars
  integer,intent(inout)::iter
@@ -62,7 +62,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
  double precision,intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ),intent(in)::hCOREpp
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::hCORE
  double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
 !Local variables ------------------------------
 !scalars
@@ -112,12 +112,12 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
   endif
 
 30   icall1 = iWork(nfcall)
-  call calc_E_occ(RDMd,GAMMAs,Energy,hCOREpp,ERI_J,ERI_K)
+  call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
   icall=icall+1
   if (icall1 <= 0) iWork(toobig) = 1
   goto 20
 
-40   call calc_Grad_occ(RDMd,Grad_GAMMAs,hCOREpp,ERI_J,ERI_K)
+40   call calc_Grad_occ(RDMd,Grad_GAMMAs,hCORE,ERI_J,ERI_K)
   Work2(ig:ig+RDMd%Ngammas)=Grad_GAMMAs(1:RDMd%Ngammas)
   goto 20
 
@@ -140,8 +140,8 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
   eps= 1.0d-5; xtol= 1.0d-16; icall=0; iflag=0;
   allocate(Work(Nwork),diag(RDMd%Ngammas))
   do
-   call calc_E_occ(RDMd,GAMMAs,Energy,hCOREpp,ERI_J,ERI_K)
-   call calc_Grad_occ(RDMd,Grad_GAMMAs,hCOREpp,ERI_J,ERI_K)
+   call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
+   call calc_Grad_occ(RDMd,Grad_GAMMAs,hCORE,ERI_J,ERI_K)
    call LBFGS(RDMd%Ngammas,Mtosave,GAMMAs,Energy,GRAD_GAMMAs,diagco,diag,info_print,eps,xtol,Work,iflag)
    if(iflag.le.0) exit
     icall=icall+1
@@ -155,7 +155,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCOREpp,ERI_J,ERI_K)
  iter=iter+1
  if(iter>0) RDMd%GAMMAs_old=GAMMAs
 
- call calc_E_occ(RDMd,GAMMAs,Energy,hCOREpp,ERI_J,ERI_K)
+ call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
  write(*,'(a,f15.6,a,i6,a)') 'Occ. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
  write(*,'(a)') ' '
  

@@ -29,16 +29,13 @@ module m_integd
  type,public :: integ_t
 
 ! arrays 
- double precision,dimension(:),allocatable::hCOREpp,ERI_J,ERI_K
+ double precision,dimension(:),allocatable::ERI_J,ERI_K
  double precision,dimension(:,:),allocatable::hCORE
  double precision,dimension(:,:,:,:),allocatable::ERImol
 
  contains 
    procedure :: free => integ_free
    ! Destructor.
-
-   procedure :: htohpp => hcore_to_hcorepp
-   ! hCORE to hCOREpp.
 
    procedure :: eritoeriJK => eri_to_eriJK  
    ! ERImol to ERI_J and ERI_K.
@@ -82,7 +79,7 @@ subroutine integ_init(Integd,NBF_tot,NBF_occ)
 !************************************************************************
 
  NBF_ldiag=NBF_occ*(NBF_occ+1)/2
- allocate(Integd%hCOREpp(NBF_occ),Integd%ERI_J(NBF_ldiag),Integd%ERI_K(NBF_ldiag))
+ allocate(Integd%ERI_J(NBF_ldiag),Integd%ERI_K(NBF_ldiag))
  allocate(Integd%hCORE(NBF_tot,NBF_tot))
  allocate(Integd%ERImol(NBF_tot,NBF_tot,NBF_tot,NBF_tot))
 
@@ -117,48 +114,11 @@ subroutine integ_free(Integd)
 !************************************************************************
 
  deallocate(Integd%hCORE) 
- deallocate(Integd%hCOREpp) 
  deallocate(Integd%ERImol) 
  deallocate(Integd%ERI_J) 
  deallocate(Integd%ERI_K) 
 
 end subroutine integ_free
-!!***
-
-!!***
-!!****f* DoNOF/hcore_to_hcorepp
-!! NAME
-!! hcore_to_hcorepp
-!!
-!! FUNCTION
-!!  Get hCOREpp from hCORE 
-!!
-!! INPUTS
-!!
-!! OUTPUT
-!!
-!! PARENTS
-!!  
-!! CHILDREN
-!!
-!! SOURCE
-
-subroutine hcore_to_hcorepp(Integd,NBF_occ)
-!Arguments ------------------------------------
-!scalars
- integer,intent(in)::NBF_occ
- class(integ_t),intent(inout)::Integd
-!Local variables ------------------------------
-!scalars
- integer::iorb
-!arrays
-!************************************************************************
-
- do iorb=1,NBF_occ
-  Integd%hCOREpp(iorb)=Integd%hCORE(iorb,iorb)
- enddo
-
-end subroutine hcore_to_hcorepp
 !!***
 
 !!***
