@@ -60,6 +60,9 @@ module m_rdmd
    procedure :: print_orbs => print_orb_coefs
    ! Print orbital coefs to a formated file.
 
+   procedure :: print_gammas => print_gammas_old
+   ! Print GAMMAs_old indep./unconstrained variables.
+
  end type rdm_t
 
  public :: rdm_init     ! Main creation method.
@@ -279,6 +282,47 @@ integer::iorb,iorb1,iorb2,iunit=312
  close(iunit)
 
 end subroutine print_orb_coefs
+!!***
+
+!!***
+!!****f* DoNOF/print_gammas_old
+!! NAME
+!! print_gammas_old
+!!
+!! FUNCTION
+!!  Print the GAMMAs_old vector allocated in rdm_t to the binary file GAMMAS
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine print_gammas_old(RDMd)
+!Arguments ------------------------------------
+!scalars
+ class(rdm_t),intent(inout)::RDMd
+!arrays
+!Local variables ------------------------------
+!scalars
+integer::igamma,iunit=312
+!arrays
+
+!************************************************************************
+
+ ! Print the GAMMAS_old
+ open(unit=iunit,form='unformatted',file='GAMMAS')
+ do igamma=1,RDMd%Ngammas
+  write(iunit) igamma,RDMd%OCC(igamma)
+ enddo
+ write(iunit) 0,0.0d0
+ close(iunit)
+
+end subroutine print_gammas_old
 !!***
 
 end module m_rdmd

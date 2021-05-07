@@ -6,12 +6,6 @@
       DOUBLE PRECISION,DIMENSION(NBF,NBF)::COEF
       EXTERNAL::mo_ints
 C-----------------------------------------------------------------------
-      write(*,*) ' '
-      if(ICGMETHOD==1) then
-       write(*,*) 'Calling external module with CG'
-      else
-       write(*,*) 'Calling external module with LBFGS'
-      endif
       call run_noft(IPNOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ICGMETHOD,
      &   itermax,1,tolE,EN,COEF,mo_ints) 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

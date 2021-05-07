@@ -23,7 +23,7 @@ module m_elag
 !!private :: 
 !!***
 
- public :: build_elag,diag_ekt
+ public :: build_elag,diag_lambda_ekt
 !!***
 
 contains
@@ -80,9 +80,9 @@ subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
 end subroutine build_elag
 !!***
 
-!!****f* DoNOF/diag_ekt
+!!****f* DoNOF/diag_lambda_ekt
 !! NAME
-!! diag_ekt
+!! diag_lambda_ekt
 !!
 !! FUNCTION
 !!  Diagonalize the Lagrange multipliers Lambda matrix (produce either the 'canonical orbitals' or EKT). 
@@ -99,7 +99,7 @@ end subroutine build_elag
 !!
 !! SOURCE
 
-subroutine diag_ekt(RDMd,NO_COEF,ekt)
+subroutine diag_lambda_ekt(RDMd,NO_COEF,ekt)
 !Arguments ------------------------------------
 !scalars
  logical,optional::ekt
@@ -174,7 +174,7 @@ subroutine diag_ekt(RDMd,NO_COEF,ekt)
   
  deallocate(Eigvec,Work,Eigval,Eigval_occ)
 
-end subroutine diag_ekt
+end subroutine diag_lambda_ekt
 !!***
 
 end module m_elag

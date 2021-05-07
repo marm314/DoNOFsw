@@ -104,14 +104,15 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  Energy_old=Energy
 
  ! Orb. and occ. optimization
+ coef_file='TEMP_COEF'
  do
   ! Orb. optimization
   call opt_orb(RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
-  coef_file='TEMP_COEF'
   call RDMd%print_orbs(NO_COEF,coef_file)
 
   ! Occ. optimization
   call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K)
+  call RDMd%print_gammas()
 
   ! Check convergence
   if(abs(Energy-Energy_old)<tolE) then
@@ -131,10 +132,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call INTEGd%free()
 
  ! Print final diagonalized INTEGd%Lambdas values
- call diag_ekt(RDMd,NO_COEF)
+ call diag_lambda_ekt(RDMd,NO_COEF)
 
  ! Print final Extended Koopmans' Theorem (EKT) values
- call diag_ekt(RDMd,NO_COEF,ekt)
+ call diag_lambda_ekt(RDMd,NO_COEF,ekt)
 
  ! Print final occ. numbers
  write(*,'(a)') ' '
