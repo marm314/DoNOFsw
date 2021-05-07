@@ -239,7 +239,7 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
  endif
 !-----------------------------------------------------------------------
  deallocate(sqrt_occ,Dsqrt_occ_gamma,Docc_gamma)
-
+ 
 end subroutine gamma_to_2rdm
 
 !!***
@@ -304,6 +304,15 @@ subroutine dm2_hf(RDMd,Docc_gamma,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
    enddo
   enddo
  end if
+!-----------------------------------------------------------------------
+!                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
+!-----------------------------------------------------------------------
+ do iorb=1,RDMd%NBF_occ
+  DM2_J(iorb,iorb)=0.0d0
+  DM2_K(iorb,iorb)=0.0d0
+  DDM2_gamma_J(iorb,iorb,:)=0.0d0
+  DDM2_gamma_K(iorb,iorb,:)=0.0d0
+ enddo
 !-----------------------------------------------------------------------
 end subroutine dm2_hf
 !!***
@@ -400,6 +409,15 @@ subroutine dm2_pnof5(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
     enddo
    enddo
   enddo
+ enddo
+!-----------------------------------------------------------------------
+!                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
+!-----------------------------------------------------------------------
+ do iorb=1,RDMd%NBF_occ
+  DM2_J(iorb,iorb)=0.0d0
+  DM2_K(iorb,iorb)=0.0d0
+  DDM2_gamma_J(iorb,iorb,:)=0.0d0
+  DDM2_gamma_K(iorb,iorb,:)=0.0d0
  enddo
 !-----------------------------------------------------------------------
 end subroutine dm2_pnof5
@@ -529,6 +547,15 @@ subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
     enddo
    enddo
   enddo
+ enddo
+!-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
+!                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
+!-----------------------------------------------------------------------
+ do iorb=1,RDMd%NBF_occ
+  DM2_J(iorb,iorb)=0.0d0
+  DM2_K(iorb,iorb)=0.0d0
+  DDM2_gamma_J(iorb,iorb,:)=0.0d0
+  DDM2_gamma_K(iorb,iorb,:)=0.0d0
  enddo
 !-----------------------------------------------------------------------
 end subroutine dm2_pnof7

@@ -76,7 +76,7 @@ subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
  enddo 
 
  ! TODO 
- if(RDMd%Nsingleocc>0) write(*,'(a)') 'Error! The lambda matrix construction is not ready for Nsingleocc>0'
+ if(RDMd%Nsingleocc>0) write(*,'(a)') 'Error! The Lambda_pq matrix construction is not implemented for Nsingleocc>0'
 
  !RDMd%Lambdas=2.0d0*RDMd%Lambdas ! We only need half for 'alpha' orbs to define gradients
 
