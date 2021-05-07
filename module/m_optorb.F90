@@ -37,6 +37,7 @@ contains
 !!  Call the F-matrix method or Newton (Hessian) for orb optimization 
 !!
 !! INPUTS
+!!  iter=Number of global iteration
 !!  Vnn=Nuclear-nuclear rep. energy
 !!
 !! OUTPUT
@@ -51,9 +52,10 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints) 
+subroutine opt_orb(iter,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints) 
 !Arguments ------------------------------------
 !scalars
+ integer,intent(in)::iter
  double precision,intent(in)::Vnn
  double precision,intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
@@ -73,9 +75,10 @@ subroutine opt_orb(RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   icall=icall+1
   call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
   call build_elag(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
+    
 
 ! We allow at most 2000 evaluations of Energy and Gradient
-  if(icall.gt.0) exit ! MAU
+  if(icall.gt.0) exit ! MAU TODO
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
  

@@ -75,6 +75,9 @@ subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
   enddo
  enddo 
 
+ ! TODO 
+ if(RDMd%Nsingleocc>0) write(*,'(a)') 'Error! The lambda matrix construction is not ready for Nsingleocc>0'
+
  !RDMd%Lambdas=2.0d0*RDMd%Lambdas ! We only need half for 'alpha' orbs to define gradients
 
 end subroutine build_elag
@@ -153,14 +156,14 @@ subroutine diag_lambda_ekt(RDMd,NO_COEF,ekt)
  write(*,'(a)') ' '
  if(present(ekt)) then
   Eigval=-Eigval
-  write(*,'(a)') 'Final EKT ionization potentials'
+  write(*,'(a)') 'EKT ionization potentials'
  else
   coef_file='CANON_COEF'
   allocate(CANON_COEF(RDMd%NBF_tot,RDMd%NBF_tot))
   CANON_COEF=matmul(NO_COEF,Eigvec)
   call RDMd%print_orbs(CANON_COEF,coef_file)
   deallocate(CANON_COEF)
-  write(*,'(a)') 'Final canonical orbital eigenvalues'
+  write(*,'(a)') 'Canonical orbital eigenvalues'
  endif
 
  Eigval_occ(1:RDMd%NBF_occ)=Eigval(1:RDMd%NBF_occ)

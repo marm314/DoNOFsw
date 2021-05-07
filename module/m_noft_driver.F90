@@ -107,7 +107,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  coef_file='TEMP_COEF'
  do
   ! Orb. optimization
-  call opt_orb(RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
+  call opt_orb(iter,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   call RDMd%print_orbs(NO_COEF,coef_file)
 
   ! Occ. optimization
@@ -140,7 +140,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Print final occ. numbers
  write(*,'(a)') ' '
  RDMd%OCC(:)=2.0d0*RDMd%OCC(:)
- write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%OCC(:)),' final occ. numbers '
+ write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%OCC(:)),' occ. numbers '
  do iorb=1,(RDMd%NBF_occ/10)*10,10
   write(*,'(f12.6,9f11.6)') RDMd%OCC(iorb:iorb+9)
  enddo
