@@ -446,17 +446,6 @@ function occ_x_eri(RDMd,icase,iorb,OCC,ERI) result(E_occERI_iorb)
 E_occERI_iorb = 0.0d0
 select case(icase)
 !-----------------------------------------------------------------------
- case(-1)
-!-----------------------------------------------------------------------
-!     OCC*ERI. Why we have this guy? TODO 
-!-----------------------------------------------------------------------
-  do iorb1=1,iorb-1
-   E_occERI_iorb = E_occERI_iorb + OCC(iorb1)*ERI(iorb1+iorb*(iorb-1)/2)
-  enddo
-  do iorb1=iorb+1,RDMd%NBF_occ
-   E_occERI_iorb = E_occERI_iorb + OCC(iorb1)*ERI(iorb+iorb1*(iorb1-1)/2)
-  enddo
-!-----------------------------------------------------------------------
  case(0)
 !-----------------------------------------------------------------------
 !     OCC*ERI, Sum only for Nsingleocc
