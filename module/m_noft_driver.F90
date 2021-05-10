@@ -70,11 +70,11 @@ contains
 !! SOURCE
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,itermax,iprintdmn,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
 &  tolE,Vnn,NO_COEF,mo_ints)
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::INOF_in,Ista_in,imethocc,itermax,iprintdmn
+ integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
  double precision,intent(in)::Vnn,tolE
@@ -107,7 +107,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  coef_file='TEMP_COEF'
  do
   ! Orb. optimization
-  call opt_orb(iter,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
+  call opt_orb(iter,imethorb,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   call RDMd%print_orbs(NO_COEF,coef_file)
 
   ! Occ. optimization

@@ -4,6 +4,7 @@ all:
 	gfortran -c m_integd.F90
 	gfortran -c m_rdmd.F90
 	gfortran -c m_elag.F90
+	gfortran -c m_diagF.F90
 	gfortran -c m_gammatodm2.F90
 	gfortran -c m_e_grad_occ.F90
 	gfortran -c m_optocc.F90

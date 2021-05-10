@@ -9,6 +9,9 @@
 !!  m_noft_driver
 !!
 !! CHILDREN
+!!  m_elag
+!!  m_diagF
+!!  m_E_grad_occ
 !!
 !! SOURCE
 module m_optorb
@@ -16,6 +19,7 @@ module m_optorb
  use m_rdmd
  use m_integd
  use m_elag
+ use m_diagF
  use m_E_grad_occ
 
  implicit none
@@ -52,10 +56,10 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_orb(iter,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints) 
+subroutine opt_orb(iter,imethod,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints) 
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::iter
+ integer,intent(in)::iter,imethod
  double precision,intent(in)::Vnn
  double precision,intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
@@ -75,7 +79,9 @@ subroutine opt_orb(iter,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   icall=icall+1
   call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
   call build_elag(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
-    
+  if(imethod==1) then ! Build F matrix and use iterative diagonalization
+   call diagF_to_coef(icall,RDMd,NO_COEF)
+  endif
 
 ! We allow at most 2000 evaluations of Energy and Gradient
   if(icall.gt.0) exit ! MAU TODO

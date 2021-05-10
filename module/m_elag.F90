@@ -115,12 +115,12 @@ subroutine diag_lambda_ekt(RDMd,NO_COEF,ekt)
  double precision::sqrt_occ_iorb,sqrt_occ_iorb1,tol6=1d-6
 !arrays
  character(len=10)::coef_file
- double precision,dimension(:),allocatable::Eigval,Eigval_occ,Work
+ double precision,dimension(:),allocatable::Eigval,Eigval_nocc,Work
  double precision,dimension(:,:),allocatable::Eigvec,CANON_COEF
 !************************************************************************
 
  allocate(Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Eigval(RDMd%NBF_tot),Work(1))
- allocate(Eigval_occ(RDMd%NBF_occ))
+ allocate(Eigval_nocc(RDMd%NBF_occ))
  
  Eigvec=RDMd%Lambdas
 
@@ -144,7 +144,7 @@ subroutine diag_lambda_ekt(RDMd,NO_COEF,ekt)
 
  lwork=-1 
  call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,Eigval,Work,lwork,info)
- lwork= nint(Work(1))
+ lwork=nint(Work(1))
 
  if(info==0) then
   deallocate(Work)
@@ -166,16 +166,16 @@ subroutine diag_lambda_ekt(RDMd,NO_COEF,ekt)
   write(*,'(a)') 'Canonical orbital eigenvalues'
  endif
 
- Eigval_occ(1:RDMd%NBF_occ)=Eigval(1:RDMd%NBF_occ)
+ Eigval_nocc(1:RDMd%NBF_occ)=Eigval(1:RDMd%NBF_occ)
  do iorb=1,(RDMd%NBF_occ/10)*10,10
-  write(*,'(f12.6,9f11.6)') Eigval_occ(iorb:iorb+9)
+  write(*,'(f12.6,9f11.6)') Eigval_nocc(iorb:iorb+9)
  enddo
  iorb=(RDMd%NBF_occ/10)*10+1
- write(*,'(f12.6,*(f11.6))') Eigval_occ(iorb:)
+ write(*,'(f12.6,*(f11.6))') Eigval_nocc(iorb:)
  write(*,'(a)') ' '
 
   
- deallocate(Eigvec,Work,Eigval,Eigval_occ)
+ deallocate(Eigvec,Work,Eigval,Eigval_nocc)
 
 end subroutine diag_lambda_ekt
 !!***
