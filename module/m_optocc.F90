@@ -9,7 +9,7 @@
 !!  m_noft_driver
 !!
 !! CHILDREN
-!!  m_E_grad_occ
+!!  m_e_grad_occ
 !!
 !! SOURCE
 module m_optocc

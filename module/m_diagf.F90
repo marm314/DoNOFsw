@@ -1,6 +1,6 @@
-!!****m* DoNOF/m_diagF
+!!****m* DoNOF/m_diagf
 !! NAME
-!!  m_diagF
+!!  m_diagf
 !!
 !! FUNCTION
 !!  Module prepared to compute oorb optimization for a fixed OCCs and 2-RDM
@@ -11,7 +11,7 @@
 !! CHILDREN
 !!
 !! SOURCE
-module m_diagF
+module m_diagf
 
  use m_rdmd
  use m_elag
@@ -100,5 +100,5 @@ subroutine diagF_to_coef(icall,ELAGd,RDMd,NO_COEF)
 end subroutine diagF_to_coef
 !!***
 
-end module m_diagF
+end module m_diagf
 !!***

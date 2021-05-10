@@ -1,6 +1,6 @@
-!!****m* DoNOF/m_E_grad_occ
+!!****m* DoNOF/m_e_grad_occ
 !! NAME
-!!  m_E_grad_occ
+!!  m_e_grad_occ
 !!
 !! FUNCTION
 !!  Module prepared to compute energies from Gammas and gradients of the Energy w.r.t Gammas
@@ -13,13 +13,14 @@
 !!- - - - - - - - - - - - - - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 !!
 !! PARENTS
-!!  m_noft_driver
+!!  m_optocc
+!!  m_optorb
 !!
 !! CHILDREN
 !!  m_gammatodm2
 !!
 !! SOURCE
-module m_E_grad_occ
+module m_e_grad_occ
 
  use m_rdmd
  use m_gammatodm2
@@ -615,5 +616,5 @@ end select
 end function Docc_gamma_x_ERI
 !!***
 
-end module m_E_grad_occ 
+end module m_e_grad_occ 
 !!***

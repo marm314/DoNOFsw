@@ -13,10 +13,9 @@
 !!- - - - - - - - - - - - - - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
 !!
 !! PARENTS
-!!   m_noft_driver
+!!  m_e_grad_occ
 !!
 !! CHILDREN
-!!   m_E_grad_occ
 !!
 !! SOURCE
 

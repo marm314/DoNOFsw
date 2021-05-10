@@ -11,7 +11,7 @@
 !! CHILDREN
 !!  m_elag
 !!  m_diagF
-!!  m_E_grad_occ
+!!  m_e_grad_occ
 !!
 !! SOURCE
 module m_optorb
@@ -82,15 +82,14 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_C
   call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
   call ELAGd%build(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
   convLambda=lambda_conv(ELAGd,RDMd,tol_dif_Lambda)
-  !if(convLambda) exit  
-  !if(imethod==1) then ! Build F matrix for iterative diagonalization
-  ! call diagF_to_coef(icall,ELAGd,RDMd,NO_COEF)
-  !else                ! Use Newton method to compute new COEFs
-  ! 
-  !endif
+  if(convLambda) exit  
+  if(imethod==1) then ! Build F matrix for iterative diagonalization
+   call diagF_to_coef(icall,ELAGd,RDMd,NO_COEF)
+  else                ! Use Newton method to compute new COEFs
+   
+  endif
 ! We allow at most 2000 evaluations of Energy and Gradient
-  !if(icall.gt.2000) exit ! MAU
-  if(icall.gt.0) exit
+  if(icall.gt.2000) exit ! MAU
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
  
