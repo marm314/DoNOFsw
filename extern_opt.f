@@ -2,12 +2,12 @@
       USE PARCOM
       use m_noft_driver
       INTEGER::itermax=1000
-      DOUBLE PRECISION::tolE=1.0d-8
+      DOUBLE PRECISION::tolE=1.0d-8,tol_dif_Lambda=1.0d-4
       DOUBLE PRECISION,DIMENSION(NBF,NBF)::COEF
       EXTERNAL::mo_ints
 C-----------------------------------------------------------------------
       call run_noft(IPNOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ICGMETHOD,
-     &  1,itermax,1,tolE,EN,COEF,mo_ints) 
+     &  1,itermax,1,tolE,tol_dif_Lambda,EN,COEF,mo_ints) 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 

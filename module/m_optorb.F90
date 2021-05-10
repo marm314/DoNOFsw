@@ -24,7 +24,7 @@ module m_optorb
 
  implicit none
 
-!!private :: 
+ private :: lambda_conv
 !!***
 
  public :: opt_orb 
@@ -56,11 +56,11 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_orb(iter,imethod,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints) 
+subroutine opt_orb(iter,imethod,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo_ints) 
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::iter,imethod
- double precision,intent(in)::Vnn
+ double precision,intent(in)::Vnn,tol_dif_Lambda
  double precision,intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
  type(integ_t),intent(inout)::INTEGd
@@ -68,23 +68,27 @@ subroutine opt_orb(iter,imethod,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
  double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
+ logical::convLambda
  integer::icall
 !arrays
 !************************************************************************
 
- Energy=0.0d0
+ Energy=0.0d0; convLambda=.false.;
  
  icall=0
  do
   icall=icall+1
   call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
   call build_elag(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
-  if(imethod==1) then ! Build F matrix and use iterative diagonalization
+  convLambda=lambda_conv(RDMd,tol_dif_Lambda)
+  if(convLambda) exit  
+  if(imethod==1) then ! Build F matrix for iterative diagonalization
    call diagF_to_coef(icall,RDMd,NO_COEF)
+  else                ! Use Newton to compute the next method
+   
   endif
-
 ! We allow at most 2000 evaluations of Energy and Gradient
-  if(icall.gt.0) exit ! MAU TODO
+  if(icall.gt.2000) exit
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
  
@@ -96,6 +100,50 @@ subroutine opt_orb(iter,imethod,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
  if(icall.gt.2000) write(*,'(a)') 'Warning! Max. number of iterations reached in orb. optimization'
 
 end subroutine opt_orb
+!!***
+
+!!***
+!!****f* DoNOF/lambda_conv
+!! NAME
+!!  lambda_conv
+!!
+!! FUNCTION
+!!  Check if the Lambda matrix already fulfils the condition Lambda_pq-Lambda_qp^* <= tol_dif_lambda.
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+function lambda_conv(RDMd,tol_dif_Lambda) result(converg_lamb)
+!Arguments ------------------------------------
+!scalars
+ logical::converg_lamb
+ double precision,intent(in)::tol_dif_Lambda
+ type(rdm_t),intent(in)::RDMd
+!arrays
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1
+!arrays
+!************************************************************************
+
+ converg_lamb=.true.
+ 
+ do iorb=1,RDMd%NBF_tot
+  do iorb1=1,iorb-1
+   if(dabs( RDMd%Lambdas(iorb,iorb1)-RDMd%Lambdas(iorb1,iorb) )>=tol_dif_Lambda .and. converg_lamb) then
+    converg_lamb=.false.
+   endif
+  enddo
+ enddo
+
+end function lambda_conv
 !!***
 
 end module m_optorb
