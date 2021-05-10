@@ -20,7 +20,7 @@ module m_optorb
  use m_integd
  use m_elag
  use m_diagF
- use m_E_grad_occ
+ use m_e_grad_occ
 
  implicit none
 

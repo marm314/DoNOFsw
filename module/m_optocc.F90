@@ -17,7 +17,7 @@ module m_optocc
  use m_rdmd
  use m_cg
  use m_lbfgs
- use m_E_grad_occ
+ use m_e_grad_occ
 
  implicit none
 

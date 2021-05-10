@@ -5,6 +5,11 @@
 !! FUNCTION
 !!  Module to build the Lagrange multipliers Lambda 
 !!
+!! COPYRIGHT
+!! This file is distributed under the terms of the
+!! GNU General Public License, see http://www.gnu.org/copyleft/gpl.txt .
+!!
+!!
 !! PARENTS
 !!  m_optorb
 !!
