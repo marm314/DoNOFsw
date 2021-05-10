@@ -83,17 +83,20 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
- logical::ekt
+ logical::ekt,diagLpL=.true.
  integer::iorb,iter
  double precision::Energy,Energy_old
  type(rdm_t),target::RDMd
  type(integ_t),target::INTEGd
+ type(elag_t),target::ELAGd
 !arrays
  character(len=10)::coef_file
 !************************************************************************
 
+ 
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ)
+ call elag_init(ELAGd,RDMd%NBF_tot,diagLpL)
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
@@ -107,7 +110,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  coef_file='TEMP_COEF'
  do
   ! Orb. optimization
-  call opt_orb(iter,imethorb,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo_ints)
+  call opt_orb(iter,imethorb,ELAGd,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo_ints)
   call RDMd%print_orbs(NO_COEF,coef_file)
 
   ! Occ. optimization
@@ -132,10 +135,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call INTEGd%free()
 
  ! Print final diagonalized INTEGd%Lambdas values
- call diag_lambda_ekt(RDMd,NO_COEF)
+ call ELAGd%diag_lag(RDMd,NO_COEF)
 
  ! Print final Extended Koopmans' Theorem (EKT) values
- call diag_lambda_ekt(RDMd,NO_COEF,ekt)
+ call ELAGd%diag_lag(RDMd,NO_COEF,ekt)
 
  ! Print final occ. numbers
  write(*,'(a)') ' '
@@ -152,7 +155,8 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  coef_file='NO_COEF'
  call RDMd%print_orbs(NO_COEF,coef_file)
 
- ! Free all allocated RDMd arrays
+ ! Free all allocated RDMd and ELAGd arrays
+ call ELAGd%free() 
  call RDMd%free() 
 
 end subroutine run_noft

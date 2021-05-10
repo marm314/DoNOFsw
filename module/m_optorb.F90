@@ -56,12 +56,13 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_orb(iter,imethod,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo_ints) 
+subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo_ints) 
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::iter,imethod
  double precision,intent(in)::Vnn,tol_dif_Lambda
  double precision,intent(inout)::Energy
+ type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(inout)::RDMd
  type(integ_t),intent(inout)::INTEGd
 !arrays
@@ -79,16 +80,17 @@ subroutine opt_orb(iter,imethod,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo
  do
   icall=icall+1
   call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
-  call build_elag(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
-  convLambda=lambda_conv(RDMd,tol_dif_Lambda)
-  if(convLambda) exit  
-  if(imethod==1) then ! Build F matrix for iterative diagonalization
-   call diagF_to_coef(icall,RDMd,NO_COEF)
-  else                ! Use Newton to compute the next method
-   
-  endif
+  call ELAGd%build(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
+  convLambda=lambda_conv(ELAGd,RDMd,tol_dif_Lambda)
+  !if(convLambda) exit  
+  !if(imethod==1) then ! Build F matrix for iterative diagonalization
+  ! call diagF_to_coef(icall,ELAGd,RDMd,NO_COEF)
+  !else                ! Use Newton method to compute new COEFs
+  ! 
+  !endif
 ! We allow at most 2000 evaluations of Energy and Gradient
-  if(icall.gt.2000) exit
+  !if(icall.gt.2000) exit ! MAU
+  if(icall.gt.0) exit
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
  
@@ -120,11 +122,12 @@ end subroutine opt_orb
 !!
 !! SOURCE
 
-function lambda_conv(RDMd,tol_dif_Lambda) result(converg_lamb)
+function lambda_conv(ELAGd,RDMd,tol_dif_Lambda) result(converg_lamb)
 !Arguments ------------------------------------
 !scalars
  logical::converg_lamb
  double precision,intent(in)::tol_dif_Lambda
+ type(elag_t),intent(in)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays
 !Local variables ------------------------------
@@ -137,7 +140,7 @@ function lambda_conv(RDMd,tol_dif_Lambda) result(converg_lamb)
  
  do iorb=1,RDMd%NBF_tot
   do iorb1=1,iorb-1
-   if(dabs( RDMd%Lambdas(iorb,iorb1)-RDMd%Lambdas(iorb1,iorb) )>=tol_dif_Lambda .and. converg_lamb) then
+   if(dabs( ELAGd%Lambdas(iorb,iorb1)-ELAGd%Lambdas(iorb1,iorb) )>=tol_dif_Lambda .and. converg_lamb) then
     converg_lamb=.false.
    endif
   enddo

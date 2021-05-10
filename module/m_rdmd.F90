@@ -28,7 +28,6 @@ module m_rdmd
 
  type,public :: rdm_t
 
-  logical::diagLpL=.true.        ! For the diag. use (lambda+lambda)/2
   integer::INOF=7                ! Functional to use (5-> PNOF5, 7-> PNOF7)
   integer::Ista=1                ! Use PNOF7s version
   integer::Nfrozen               ! Number of frozen orbitals in the NOFT calc.
@@ -49,8 +48,6 @@ module m_rdmd
   double precision,allocatable,dimension(:)::DM2_J,DM2_K
   double precision,allocatable,dimension(:)::Docc_gamma
   double precision,allocatable,dimension(:)::DDM2_gamma_J,DDM2_gamma_K
-  double precision,allocatable,dimension(:)::Lambdas_diag ! Lambda_pp (Diag. part of the Lagrange multipliers matrix)
-  double precision,allocatable,dimension(:,:)::Lambdas    ! Lambda_pq (Lagrange multipliers matrix)
 
  contains 
    procedure :: free => rdm_free
@@ -132,8 +129,6 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
  allocate(RDMd%DDM2_gamma_K(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas)) 
  allocate(RDMd%GAMMAs_old(RDMd%Ngammas))
  allocate(RDMd%OCC(RDMd%NBF_occ))
- allocate(RDMd%Lambdas_diag(NBF_tot))
- allocate(RDMd%Lambdas(NBF_tot,NBF_tot))
 
 end subroutine rdm_init
 !!***
@@ -171,8 +166,6 @@ subroutine rdm_free(RDMd)
  deallocate(RDMd%Docc_gamma) 
  deallocate(RDMd%DDM2_gamma_J)
  deallocate(RDMd%DDM2_gamma_K) 
- deallocate(RDMd%Lambdas_diag) 
- deallocate(RDMd%Lambdas) 
 
 end subroutine rdm_free
 !!***

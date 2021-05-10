@@ -22,12 +22,118 @@ module m_elag
 
 !!private :: 
 !!***
+!!****t* m_rdmd/rdm_t
+!! NAME
+!! rdm_t
+!!
+!! FUNCTION
+!! Datatype storing noft quantities and arrays needed
+!!
+!! SOURCE
 
- public :: build_elag,diag_lambda_ekt
+ type,public :: elag_t
+
+  logical::diagLpL=.true.        ! For the diag. use (lambda+lambda)/2
+! arrays 
+  double precision,allocatable,dimension(:)::Lambdas_diag ! Lambda_pp (Diag. part of the Lagrange multipliers matrix)
+  double precision,allocatable,dimension(:,:)::Lambdas    ! Lambda_pq (Lagrange multipliers matrix)
+
+ contains 
+   procedure :: free => elag_free
+   ! Destructor.
+
+   procedure :: build => build_elag
+   ! Use integrals and the 1,2-RDM to build Lambdas matrix.
+
+   procedure :: diag_lag => diag_lambda_ekt
+   ! Diagonalize the matrix Lambdas (or divided by occ. numbers) to compute canonical orbs. or EKT.
+
+ end type elag_t
+
+ public :: elag_init 
 !!***
 
-contains
+CONTAINS  !==============================================================================
+
 !!***
+!!****f* DoNOF/rdm_init
+!! NAME
+!! rdm_init
+!!
+!! FUNCTION
+!!  Initialize the data type rdm_t 
+!!
+!! INPUTS
+!! INOF=PNOFi functional to use
+!! Ista=Use PNOF7 (Ista=0) or PNOF7s (Ista=1)
+!! NBF_tot=Number of total orbitals
+!! NBF_occ=Number of orbitals that are occupied
+!! Nfrozen=Number of frozen orbitals that remain with occ=2.0 
+!! Npairs=Number of electron pairs
+!! Ncoupled=Number of coupled orbitals per electron pair (it is then used as Ncoupled-1 inside this module, as the number
+!!             of coupled 'virtual' orbitals to a 'initially occupied' (HF) orbital)
+!! Nbeta_elect=Number of beta electrons (N/2 for spin compensated systems)
+!! Nalpha_elect=Number of beta electrons (N/2 for spin compensated systems)
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine elag_init(ELAGd,NBF_tot,diagLpL_in)
+!Arguments ------------------------------------
+!scalars
+ logical,intent(in)::diagLpL_in
+ integer,intent(in)::NBF_tot
+ type(elag_t),intent(inout)::ELAGd
+!Local variables ------------------------------
+!scalars
+!arrays
+!************************************************************************
+
+ ELAGd%diagLpL=diagLpL_in
+ allocate(ELAGd%Lambdas_diag(NBF_tot))
+ allocate(ELAGd%Lambdas(NBF_tot,NBF_tot)) 
+
+end subroutine elag_init
+!!***
+
+!!***
+!!****f* DoNOF/elag_free
+!! NAME
+!! elag_free
+!!
+!! FUNCTION
+!!  Free allocated arrays of the data type elag_t 
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine elag_free(ELAGd)
+!Arguments ------------------------------------
+!scalars
+ class(elag_t),intent(inout)::ELAGd
+!Local variables ------------------------------
+!scalars
+!arrays
+!************************************************************************
+
+ deallocate(ELAGd%Lambdas_diag) 
+ deallocate(ELAGd%Lambdas) 
+
+end subroutine elag_free
+!!***
+
 
 !!****f* DoNOF/build_elag
 !! NAME
@@ -41,7 +147,7 @@ contains
 !!  INTEGd=Object containg all integrals
 !!
 !! OUTPUT
-!!  RDMd%Lambdas=Matrix build with the Lagrange multipliers Lambda_pq
+!!  ELAGd%Lambdas=Matrix build with the Lagrange multipliers Lambda_pq
 !!
 !! PARENTS
 !!  
@@ -49,9 +155,10 @@ contains
 !!
 !! SOURCE
 
-subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
+subroutine build_elag(ELAGd,RDMd,INTEGd,DM2_J,DM2_K)
 !Arguments ------------------------------------
 !scalars
+ class(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(inout)::RDMd
  type(integ_t),intent(in)::INTEGd
 !arrays
@@ -62,15 +169,15 @@ subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
 !arrays
 !************************************************************************
 
- RDMd%Lambdas=0.0d0
+ ELAGd%Lambdas=0.0d0
 
  do iorb=1,RDMd%NBF_occ
-  RDMd%Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                        ! Init: Lambda_pq = n_p hCORE_qp
-  RDMd%Lambdas(iorb,:)=RDMd%Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
+  ELAGd%Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                         ! Init: Lambda_pq = n_p hCORE_qp
+  ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
   do iorb1=1,RDMd%NBF_occ
    if(iorb/=iorb1) then
-    RDMd%Lambdas(iorb,:)=RDMd%Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1
-    RDMd%Lambdas(iorb,:)=RDMd%Lambdas(iorb,:)-DM2_K(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb,iorb1) ! any<->iorb1,iorb1<->iorb
+    ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1
+    ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)-DM2_K(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb,iorb1) ! any<->iorb1,iorb1<->iorb
    endif
   enddo
  enddo 
@@ -78,7 +185,7 @@ subroutine build_elag(RDMd,INTEGd,DM2_J,DM2_K)
  ! TODO 
  if(RDMd%Nsingleocc>0) write(*,'(a)') 'Error! The Lambda_pq matrix construction is not implemented for Nsingleocc>0'
 
- !RDMd%Lambdas=2.0d0*RDMd%Lambdas ! We only need half for 'alpha' orbs to define gradients
+ !ELAGd%Lambdas=2.0d0*ELAGd%Lambdas ! We only need half for 'alpha' orbs to define gradients
 
 end subroutine build_elag
 !!***
@@ -91,6 +198,7 @@ end subroutine build_elag
 !!  Diagonalize the Lagrange multipliers Lambda matrix (produce either the 'canonical orbitals' or EKT). 
 !!
 !! INPUTS
+!!  ELAGd%Lambdas=Matrix containing the Lagrange multipliers Lambda_pq
 !!  RDMd=Object containg all required variables whose arrays are properly updated
 !!  INTEGd=Object containg all integrals
 !!
@@ -102,10 +210,11 @@ end subroutine build_elag
 !!
 !! SOURCE
 
-subroutine diag_lambda_ekt(RDMd,NO_COEF,ekt)
+subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
 !Arguments ------------------------------------
 !scalars
  logical,optional::ekt
+ class(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays
  double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::NO_COEF
@@ -122,7 +231,7 @@ subroutine diag_lambda_ekt(RDMd,NO_COEF,ekt)
  allocate(Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Eigval(RDMd%NBF_tot),Work(1))
  allocate(Eigval_nocc(RDMd%NBF_occ))
  
- Eigvec=RDMd%Lambdas
+ Eigvec=ELAGd%Lambdas
 
  if(present(ekt)) then
   do iorb=1,RDMd%NBF_tot
