@@ -100,10 +100,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
- iter=0
+ iter=-1
  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
  call INTEGd%eritoeriJK(RDMd%NBF_occ)
- call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K)
+ call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K) ! Also iter=iter+1
  Energy_old=Energy
 
  ! Orb. and occ. optimization
@@ -113,8 +113,8 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
   call opt_orb(iter,imethorb,ELAGd,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo_ints)
   call RDMd%print_orbs(NO_COEF,coef_file)
 
-  ! Occ. optimization (also does iter=iter+1)
-  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K)
+  ! Occ. optimization
+  call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K) ! Also iter=iter+1
   call RDMd%print_gammas()
 
   ! Check convergence
@@ -154,6 +154,11 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Print final nat. orb. coef.
  coef_file='NO_COEF'
  call RDMd%print_orbs(NO_COEF,coef_file)
+ 
+ ! Print final Energy
+ write(*,'(a)') ' '
+ write(*,'(a,f15.6,a,i6,a)') 'Final NOF energy= ',Energy+Vnn,' after ',iter,' global iter.'
+ write(*,'(a)') ' '
 
  ! Free all allocated RDMd and ELAGd arrays
  call ELAGd%free() 
