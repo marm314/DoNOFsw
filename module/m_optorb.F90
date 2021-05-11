@@ -82,11 +82,11 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_C
  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
  do
   call ELAGd%build(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
+  call lambda_conv(ELAGd,RDMd,tol_dif_Lambda,convLambda,sumdiff,maxdiff)
+  if(convLambda) exit ! The NO_COEF and RDMs are already the solution =)
   if(imethod==1) then ! Build F matrix for iterative diagonalization
-   call lambda_conv(ELAGd,RDMd,tol_dif_Lambda,convLambda,sumdiff,maxdiff)
-   if(convLambda) exit ! The NO_COEF and RDMs are already the solution =)
    call diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) ! Build new NO_COEF and set icall=icall+1
-   if((iter==0).and.ELAGd%diagLpL_done) exit  ! We did Diag[(Lambda+Lambda)/2]. -> Do only one icall iteration before the occ. opt.
+   if((iter==0).and.ELAGd%diagLpL_done) exit  ! We did Diag[(Lambda_pq + Lambda_qp*)/2]. -> Do only one icall iteration before the occ. opt.
   else                ! Use Newton method to compute new COEFs
    
   endif

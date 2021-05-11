@@ -91,7 +91,7 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
 
  ! Shall we do DIIS? Use maxdiff to decide... 
 
- ! Prepare F_pq diagonalization and diagonalize it
+ ! Prepare F_pq diagonalization (stored as Eigvec) and diagonalize it to produce the rot. matrix
  lwork=-1
  call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,ELAGd%F_diag,Work,lwork,info)
  lwork=nint(Work(1))
