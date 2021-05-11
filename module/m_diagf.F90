@@ -35,8 +35,12 @@ contains
 !!  Build the F-matrix, diagonalize it and update the NO_COEF
 !!
 !! INPUTS
+!!  iter=Number of global iteration 
+!!  icall=Number of call from opt_orb subroutine
 !!
 !! OUTPUT
+!!  NO_COEF=Updated Nat. orb. coefs.
+!!  ELAGd%F_diag=Update the diag elements of the F_pq matrix 
 !!
 !! PARENTS
 !!  
@@ -44,10 +48,12 @@ contains
 !!
 !! SOURCE
 
-subroutine diagF_to_coef(icall,ELAGd,RDMd,NO_COEF) 
+subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) 
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::icall
+ integer,intent(in)::iter
+ integer,intent(inout)::icall
+ double precision,intent(in)::maxdiff
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays
@@ -62,7 +68,8 @@ subroutine diagF_to_coef(icall,ELAGd,RDMd,NO_COEF)
  
  allocate(New_NO_COEF(RDMd%NBF_tot,RDMd%NBF_tot),Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Work(1))
 
- if((icall==1).and.ELAGd%diagLpL) then
+ if((icall==0.and.iter==0).and.ELAGd%diagLpL) then
+  ELAGd%diagLpL_done=.true. 
   ELAGd%diagLpL=.false. 
   do iorb=1,RDMd%NBF_tot 
    Eigvec(iorb,iorb)=ELAGd%Lambdas(iorb,iorb)
@@ -73,25 +80,30 @@ subroutine diagF_to_coef(icall,ELAGd,RDMd,NO_COEF)
   enddo  
  else
   do iorb=1,RDMd%NBF_tot 
-   Eigvec(iorb,iorb)=ELAGd%Lambdas_diag(iorb)
+   Eigvec(iorb,iorb)=ELAGd%F_diag(iorb)
    do iorb1=1,iorb-1
     Eigvec(iorb,iorb1)=ELAGd%Lambdas(iorb,iorb1)-ELAGd%Lambdas(iorb1,iorb)
     Eigvec(iorb1,iorb)=Eigvec(iorb,iorb1)
    enddo
   enddo  
-  ! Scale or sth TODO
+  ! Scaling in here !! 
  endif
 
- lwork=-1
- call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,ELAGd%Lambdas_diag,Work,lwork,info)
- lwork=nint(Work(1))
+ ! Shall we do DIIS? 
 
+ ! Prepare F_pq diagonalization and diagonalize it
+ lwork=-1
+ call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,ELAGd%F_diag,Work,lwork,info)
+ lwork=nint(Work(1))
  if(info==0) then
   deallocate(Work)
   allocate(Work(lwork))
-  call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,ELAGd%Lambdas_diag,Work,lwork,info)
+  ELAGd%F_diag=0.0d0
+  call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,ELAGd%F_diag,Work,lwork,info)
  endif
 
+ ! Update the NO_COEF
+ icall=icall+1
  New_NO_COEF=matmul(NO_COEF,Eigvec)
  NO_COEF(:,:)=New_NO_COEF(:,:)
 

@@ -39,8 +39,9 @@ module m_elag
  type,public :: elag_t
 
   logical::diagLpL=.true.        ! For the diag. use (lambda+lambda)/2
+  logical::diagLpL_done=.false.  ! Did we use use (lambda+lambda)/2?
 ! arrays 
-  double precision,allocatable,dimension(:)::Lambdas_diag ! Lambda_pp (Diag. part of the Lagrange multipliers matrix)
+  double precision,allocatable,dimension(:)::F_diag       ! F_pp (Diag. part of the F matrix)
   double precision,allocatable,dimension(:,:)::Lambdas    ! Lambda_pq (Lagrange multipliers matrix)
 
  contains 
@@ -92,7 +93,7 @@ subroutine elag_init(ELAGd,NBF_tot,diagLpL_in)
 !************************************************************************
 
  ELAGd%diagLpL=diagLpL_in
- allocate(ELAGd%Lambdas_diag(NBF_tot))
+ allocate(ELAGd%F_diag(NBF_tot))
  allocate(ELAGd%Lambdas(NBF_tot,NBF_tot)) 
 
 end subroutine elag_init
@@ -125,7 +126,7 @@ subroutine elag_free(ELAGd)
 !arrays
 !************************************************************************
 
- deallocate(ELAGd%Lambdas_diag) 
+ deallocate(ELAGd%F_diag) 
  deallocate(ELAGd%Lambdas) 
 
 end subroutine elag_free
