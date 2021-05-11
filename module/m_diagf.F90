@@ -89,7 +89,7 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
   ! Scaling in here !! 
  endif
 
- ! Shall we do DIIS? 
+ ! Shall we do DIIS? Use maxdiff to decide... 
 
  ! Prepare F_pq diagonalization and diagonalize it
  lwork=-1
