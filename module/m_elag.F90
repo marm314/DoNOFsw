@@ -61,24 +61,16 @@ module m_elag
 CONTAINS  !==============================================================================
 
 !!***
-!!****f* DoNOF/rdm_init
+!!****f* DoNOF/elag_init
 !! NAME
-!! rdm_init
+!! elag_init
 !!
 !! FUNCTION
-!!  Initialize the data type rdm_t 
+!!  Initialize the data type elag_t 
 !!
 !! INPUTS
-!! INOF=PNOFi functional to use
-!! Ista=Use PNOF7 (Ista=0) or PNOF7s (Ista=1)
 !! NBF_tot=Number of total orbitals
-!! NBF_occ=Number of orbitals that are occupied
-!! Nfrozen=Number of frozen orbitals that remain with occ=2.0 
-!! Npairs=Number of electron pairs
-!! Ncoupled=Number of coupled orbitals per electron pair (it is then used as Ncoupled-1 inside this module, as the number
-!!             of coupled 'virtual' orbitals to a 'initially occupied' (HF) orbital)
-!! Nbeta_elect=Number of beta electrons (N/2 for spin compensated systems)
-!! Nalpha_elect=Number of beta electrons (N/2 for spin compensated systems)
+!! diagLpL_in=Diagonalize 0.5 (Lambda+Lambda) for the first iteration?
 !!
 !! OUTPUT
 !!
@@ -171,6 +163,7 @@ subroutine build_elag(ELAGd,RDMd,INTEGd,DM2_J,DM2_K)
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1
+ double precision::tol10=1.0d-10
 !arrays
 !************************************************************************
 
@@ -186,11 +179,16 @@ subroutine build_elag(ELAGd,RDMd,INTEGd,DM2_J,DM2_K)
    endif
   enddo
  enddo 
+ !ELAGd%Lambdas=2.0d0*ELAGd%Lambdas ! We only need half for 'alpha' orbs to define gradients
 
  ! TODO 
  if(RDMd%Nsingleocc>0) write(*,'(a)') 'Error! The Lambda_pq matrix construction is not implemented for Nsingleocc>0'
 
- !ELAGd%Lambdas=2.0d0*ELAGd%Lambdas ! We only need half for 'alpha' orbs to define gradients
+ do iorb=1,RDMd%NBF_tot
+  do iorb1=1,RDMd%NBF_tot
+   if(dabs(ELAGd%Lambdas(iorb,iorb1))<tol10) ELAGd%Lambdas(iorb,iorb1)=0.0d0
+  enddo
+ enddo 
 
 end subroutine build_elag
 !!***
