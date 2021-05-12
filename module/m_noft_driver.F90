@@ -71,10 +71,10 @@ contains
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,tolE,Vnn,NO_COEF,mo_ints)
+&  itolLambda,ndiis,tolE,Vnn,NO_COEF,mo_ints)
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda
+ integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
  double precision,intent(in)::Vnn,tolE
@@ -96,7 +96,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ)
- call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda)
+ call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis)
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
@@ -110,6 +110,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  coef_file='TEMP_COEF'
  do
   ! Orb. optimization
+  call ELAGd%clean_diis()
   call opt_orb(iter,imethorb,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   call RDMd%print_orbs(NO_COEF,coef_file)
 

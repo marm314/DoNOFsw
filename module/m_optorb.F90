@@ -76,38 +76,45 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
 !************************************************************************
 
  Energy=0.0d0; convLambda=.false.;
- if(imethod==1.and.iter==0) then
+ if((imethod==1).and.(iter==0)) then
   ELAGd%sumdiff_old=0.0d0
  endif
  
  icall=0
  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
  do
+  ! Build Lambda matrix
   call ELAGd%build(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
+ 
+  ! Check if these NO_COEF with the RDMs are already the solution =)
   call lambda_conv(ELAGd,RDMd,convLambda,sumdiff,maxdiff)
-  if(convLambda) then ! The NO_COEF and RDMs are already the solution =)
+  if(convLambda) then 
    exit
   else
-   if(imethod==1.and.icall==0) then ! Adjust MaxScaling for the rest of orb. icall iter.
-    if(iter>2.and.iter>ELAGd%itscale.and.(sumdiff>ELAGd%sumdiff_old)) then ! Parameters chosen empirically (experience) to
+   if(imethod==1.and.icall==0) then                                        ! F method: adjust MaxScaling for the rest of orb. icall iterations
+    if(iter>2.and.iter>ELAGd%itscale.and.(sumdiff>ELAGd%sumdiff_old)) then ! Parameters chosen empirically (i.e. experience) to
      ELAGd%itscale=iter+10                                                 ! ensure convergence. Maybe we can set them as input variables?
      ELAGd%MaxScaling=ELAGd%MaxScaling+1
      if(ELAGd%MaxScaling>ELAGd%itolLambda) then
-      ELAGd%MaxScaling=2                                                   ! More empirical parameters =(
+      ELAGd%MaxScaling=2                                                   ! One more empirical/experience parameter =(
      endif
     endif
     ELAGd%sumdiff_old=sumdiff
    endif
   endif
+
+  ! Update NO_COEF
   if(imethod==1) then ! Build F matrix for iterative diagonalization
    call diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) ! Build new NO_COEF and set icall=icall+1
    if((iter==0).and.ELAGd%diagLpL_done) exit  ! We did Diag[(Lambda_pq + Lambda_qp*)/2]. -> Do only one icall iteration before the occ. opt.
   else                ! Use Newton method to compute new COEFs
    
   endif
-! Build all integrals in the new NO_COEF basis
+
+  ! Build all integrals in the new NO_COEF basis
   call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol) 
-! We allow at most 50 evaluations of Energy and Gradient
+
+  ! We allow at most 50 evaluations of Energy and Gradient
   if(icall>50) exit 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo

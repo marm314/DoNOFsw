@@ -72,8 +72,8 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCORE,ERI_J,ERI_K)
  double precision::eps,xtol,tolgamma=1.0d-6
 !arrays
  integer,dimension(2)::info_print
- integer,dimension(:),allocatable::iWork
- double precision,dimension(:),allocatable::GAMMAs,Grad_GAMMAs,diag,Work,Work2
+ integer,allocatable,dimension(:)::iWork
+ double precision,allocatable,dimension(:)::GAMMAs,Grad_GAMMAs,diag,Work,Work2
 !************************************************************************
 
  Energy=0.0d0

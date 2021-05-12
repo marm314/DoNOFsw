@@ -14045,11 +14045,6 @@ C-----------------------------------------------------------------------
       ELSE
        MAXLP=MAXLOOP
       ENDIF
-      write(*,*) 'MAU'
-      write(*,*) 'ITCALL',ITCALL
-      write(*,*) 'ITLIM ',ITLIM
-      write(*,*) 'NZEROS',NZEROS
-      write(*,*) 'MAXLP ',MAXLP
 C-----------------------------------------------------------------------
       ILOOP=0
       IDIIS=0
@@ -14494,7 +14489,6 @@ C-----------------------------------------------------------------------
 C     Generalized Fock Matrix (FMIUG)
 C-----------------------------------------------------------------------
       IF(itcall==1.AND.INPUTFMIUG==0)THEN          ! only for itcall==1
-      write(*,*) 'MAU2 HERE',ITCALL
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        DO IQ=1,NOPTORB
         DO JQ=1,IQ-1
@@ -14506,7 +14500,6 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       ELSE
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-      write(*,*) 'MAU3 HERE',ITCALL
        DO IQ=1,NOPTORB
         DO JQ=1,IQ-1
          FMIUG(IQ,JQ)=ELAG(IQ,JQ)-ELAG(JQ,IQ)              ! Nondiagonal 
@@ -14550,7 +14543,6 @@ C FFMIUG_DIIS
 C
       INTEGER,ALLOCATABLE,DIMENSION(:)::IPIV
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::A
-      write(*,*) 'MAU4 HERE2'
 C-----------------------------------------------------------------------
       IDIIS = IDIIS+1
       FK(IDIIS,1:NUM,1:NUM) = FMIUG(1:NUM,1:NUM)

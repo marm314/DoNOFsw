@@ -18,7 +18,7 @@ module m_diagf
 
  implicit none
 
- private :: scale_F
+ private :: scale_F,diis_F,traceF
 !!***
 
  public :: diagF_to_coef
@@ -61,16 +61,17 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,lwork,info
+ double precision::thresholddiis
 !arrays
- double precision,dimension(:),allocatable::Work
- double precision,dimension(:,:),allocatable::Eigvec,New_NO_COEF
+ double precision,allocatable,dimension(:)::Work
+ double precision,allocatable,dimension(:,:)::Eigvec,New_NO_COEF
 !************************************************************************
  
+ thresholddiis=1.0d1**(-ELAGd%itoldiis)
  allocate(New_NO_COEF(RDMd%NBF_tot,RDMd%NBF_tot),Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Work(1))
 
- if((icall==0.and.iter==0).and.ELAGd%diagLpL) then
+ if((icall==0.and.iter==0).and.(ELAGd%diagLpL.and.(.not.ELAGd%diagLpL_done))) then
   ELAGd%diagLpL_done=.true. 
-  ELAGd%diagLpL=.false. 
   do iorb=1,RDMd%NBF_tot 
    Eigvec(iorb,iorb)=ELAGd%Lambdas(iorb,iorb)
    do iorb1=1,iorb-1
@@ -89,7 +90,10 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
   enddo  
  endif
 
- ! Shall we do DIIS? Use maxdiff to decide... 
+ ! Decide whether to do DIIS before diagonalizing
+ if(maxdiff<thresholddiis.and.ELAGd%ndiis>0) then
+  call diis_F(RDMd,ELAGd,Eigvec)
+ endif 
 
  ! Prepare F_pq diagonalization (stored as Eigvec) and diagonalize it to produce the rot. matrix
  lwork=-1
@@ -146,11 +150,114 @@ subroutine scale_F(MaxScaling,Fpq)
 !************************************************************************
  do iscale=1,MaxScaling
   Abs_Fpq=dabs(Fpq)
-  if(Abs_Fpq>10.0d0**(9-iscale).and.Abs_Fpq<10.0d0**(10-iscale)) then
+  if(Abs_Fpq>1.0d1**(9-iscale).and.Abs_Fpq<1.0d1**(10-iscale)) then
    Fpq=0.1d0*Fpq
   endif
  enddo 
 end subroutine scale_F
+!!***
+
+!!***
+!!****f* DoNOF/diis_F
+!! NAME
+!!  diis_F
+!!
+!! FUNCTION
+!!  Use DIIS on the F-matrix before diagonalizing it
+!!
+!! INPUTS
+!!  RDMd=Density matrix descriptor
+!!  ELAGd=Langragian descriptor
+!!
+!! OUTPUT
+!!  Eigvec=F matrix on input, DIIS F matrix on output
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine diis_F(RDMd,ELAGd,Eigvec) 
+!Arguments ------------------------------------
+!scalars
+ type(elag_t),intent(inout)::ELAGd
+ type(rdm_t),intent(in)::RDMd
+!arrays
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::Eigvec
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1,idiis1,idiisp1,info
+!arrays
+ integer,allocatable,dimension(:)::IPIV
+!************************************************************************
+ ELAGd%idiis=ELAGd%idiis+1 
+ ELAGd%F_DIIS(ELAGd%idiis,:,:)=Eigvec(:,:)
+ idiisp1=ELAGd%idiis+1
+ do idiis1=1,ELAGd%idiis
+  ELAGd%DIIS_mat(idiis1,ELAGd%idiis) = traceF(RDMd,ELAGd,idiis1)
+  ELAGd%DIIS_mat(ELAGd%idiis,idiis1) = ELAGd%DIIS_mat(idiis1,ELAGd%idiis)
+  ELAGd%DIIS_mat(idiis1,idiisp1) = -1.0d0
+  ELAGd%DIIS_mat(idiisp1,idiis1) = -1.0d0
+ enddo
+ ELAGd%DIIS_mat(idiisp1,idiisp1) = 0.0d0
+ if(ELAGd%idiis>ELAGd%ndiis) then
+  allocate(IPIV(ELAGd%ndiis_array))
+  IPIV=0
+  ELAGd%Coef_DIIS=0.0d0
+  ELAGd%Coef_DIIS(ELAGd%ndiis_array) = -1.0d0
+  call DGESV(ELAGd%ndiis_array,1,ELAGd%DIIS_mat,ELAGd%ndiis_array,IPIV,ELAGd%Coef_DIIS,ELAGd%ndiis_array,info)
+  deallocate(IPIV)
+  do iorb=1,RDMd%NBF_tot
+   do iorb1=1,iorb-1
+    Eigvec(iorb,iorb1)=sum(ELAGd%Coef_DIIS(1:ELAGd%ndiis_array-1)*ELAGd%F_DIIS(1:ELAGd%ndiis_array-1,iorb,iorb1))
+    Eigvec(iorb1,iorb)=Eigvec(iorb,iorb1)
+   enddo
+  enddo
+  call ELAGd%clean_diis()
+ endif
+
+end subroutine diis_F
+!!***
+
+!!***
+!!****f* DoNOF/traceF
+!! NAME
+!!  traceF
+!!
+!! FUNCTION
+!!  Multiply F matrices to produce DIIS matrix elements.
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+function traceF(RDMd,ELAGd,idiis_in) result(traceFF)
+!Arguments ------------------------------------
+!scalars
+ integer::idiis_in
+ double precision::traceFF
+ type(elag_t),intent(in)::ELAGd
+ type(rdm_t),intent(in)::RDMd
+!arrays
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1
+!arrays
+!************************************************************************
+traceFF = 0.0d0
+ do iorb=1,RDMd%NBF_tot
+  do iorb1=1,iorb-1
+   traceFF=traceFF+ELAGd%F_DIIS(idiis_in,iorb,iorb1)*ELAGd%F_DIIS(ELAGd%idiis,iorb1,iorb)
+  enddo
+ enddo 
+end function traceF
 !!***
 
 end module m_diagf

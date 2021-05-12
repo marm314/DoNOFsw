@@ -29,9 +29,9 @@ module m_integd
  type,public :: integ_t
 
 ! arrays 
- double precision,dimension(:),allocatable::ERI_J,ERI_K
- double precision,dimension(:,:),allocatable::hCORE
- double precision,dimension(:,:,:,:),allocatable::ERImol
+ double precision,allocatable,dimension(:)::ERI_J,ERI_K
+ double precision,allocatable,dimension(:,:)::hCORE
+ double precision,allocatable,dimension(:,:,:,:)::ERImol
 
  contains 
    procedure :: free => integ_free

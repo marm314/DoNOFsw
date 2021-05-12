@@ -38,15 +38,22 @@ module m_elag
 
  type,public :: elag_t
 
-  logical::diagLpL=.true.        ! For the diag. use (lambda+lambda)/2
+  logical::diagLpL=.true.        ! Do the diag. using (lambda+lambda)/2?
   logical::diagLpL_done=.false.  ! Did we use use (lambda+lambda)/2?
   integer::MaxScaling=0          ! Max scaling reductions employed to avoid divergence of diag[F]
   integer::itscale=1             ! Above this number of iterations we do MaxScaling=MaxScaling+1
   integer::itolLambda=4          ! Integer used to define 10**-itolLambda as threshold of Lambda_pq-Lambda_qp* convergence
+  integer::itoldiis=3            ! Integer used to define 10**-itoldiis as threshold of DIIS trigger
+  integer::idiis=0               ! Current DIIS iteration
+  integer::ndiis=5               ! The number of iterations required to apply DIIS is ndiis+1
+  integer::ndiis_array           ! Size of the arrays used in DIIS (ndiis+2)
   double precision::sumdiff_old  ! Old value of sum_pq |F_pq|  for p/=q 
 ! arrays 
   double precision,allocatable,dimension(:)::F_diag       ! F_pp (Diag. part of the F matrix)
+  double precision,allocatable,dimension(:)::Coef_DIIS    ! DIIS coefs. used to build linear comb. of F matrices
   double precision,allocatable,dimension(:,:)::Lambdas    ! Lambda_pq (Lagrange multipliers matrix)
+  double precision,allocatable,dimension(:,:)::DIIS_mat   ! DIIS matrix used to solve the system of eqs. DIIS_MAT*Coef_DIIS = (0 0 ... 0 1) 
+  double precision,allocatable,dimension(:,:,:)::F_DIIS   ! F matrices used by DIIS
 
  contains 
    procedure :: free => elag_free
@@ -57,6 +64,9 @@ module m_elag
 
    procedure :: diag_lag => diag_lambda_ekt
    ! Diagonalize the matrix Lambdas (or divided by occ. numbers) to compute canonical orbs. or EKT.
+
+   procedure :: clean_diis => wipeout_diis
+   ! Set to ZERO all arrays employed by DIIS.
 
  end type elag_t
 
@@ -86,11 +96,11 @@ CONTAINS  !=====================================================================
 !!
 !! SOURCE
 
-subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in)
+subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in)
 !Arguments ------------------------------------
 !scalars
  logical,intent(in)::diagLpL_in
- integer,intent(in)::NBF_tot,itolLambda_in
+ integer,intent(in)::NBF_tot,itolLambda_in,ndiis_in
  type(elag_t),intent(inout)::ELAGd
 !Local variables ------------------------------
 !scalars
@@ -99,9 +109,16 @@ subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in)
 
  ELAGd%itolLambda=itolLambda_in
  ELAGd%diagLpL=diagLpL_in
+ ELAGd%ndiis=ndiis_in
+ ELAGd%ndiis_array=ELAGd%ndiis+2
  allocate(ELAGd%F_diag(NBF_tot))
  allocate(ELAGd%Lambdas(NBF_tot,NBF_tot)) 
-
+ if(ELAGd%ndiis>0) then
+  allocate(ELAGd%Coef_DIIS(ELAGd%ndiis_array))
+  allocate(ELAGd%F_DIIS(ELAGd%ndiis_array,NBF_tot,NBF_tot))
+  allocate(ELAGd%DIIS_mat(ELAGd%ndiis_array,ELAGd%ndiis_array)) 
+ endif 
+ 
 end subroutine elag_init
 !!***
 
@@ -134,10 +151,14 @@ subroutine elag_free(ELAGd)
 
  deallocate(ELAGd%F_diag) 
  deallocate(ELAGd%Lambdas) 
+ if(ELAGd%ndiis>0) then
+  deallocate(ELAGd%Coef_DIIS)
+  deallocate(ELAGd%F_DIIS)
+  deallocate(ELAGd%DIIS_mat) 
+ endif 
 
 end subroutine elag_free
 !!***
-
 
 !!****f* DoNOF/build_elag
 !! NAME
@@ -234,8 +255,8 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
  double precision::sqrt_occ_iorb,sqrt_occ_iorb1,tol6=1d-6
 !arrays
  character(len=10)::coef_file
- double precision,dimension(:),allocatable::Eigval,Eigval_nocc,Work
- double precision,dimension(:,:),allocatable::Eigvec,CANON_COEF
+ double precision,allocatable,dimension(:)::Eigval,Eigval_nocc,Work
+ double precision,allocatable,dimension(:,:)::Eigvec,CANON_COEF
 !************************************************************************
 
  allocate(Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Eigval(RDMd%NBF_tot),Work(1))
@@ -297,6 +318,43 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
  deallocate(Eigvec,Work,Eigval,Eigval_nocc)
 
 end subroutine diag_lambda_ekt
+!!***
+
+!!****f* DoNOF/wipeout_diis
+!! NAME
+!! wipeout_diis
+!!
+!! FUNCTION
+!!  Build the Lagrange multipliers Lambda matrix. Nothe that the electron rep. integrals are given in DoNOF format
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine wipeout_diis(ELAGd)
+!Arguments ------------------------------------
+!scalars
+ class(elag_t),intent(inout)::ELAGd
+!arrays
+!Local variables ------------------------------
+!scalars
+!arrays
+!************************************************************************
+
+ ELAGd%idiis=0
+ if(ELAGd%ndiis>0) then
+  ELAGd%Coef_DIIS=0.0d0
+  ELAGd%F_DIIS=0.0d0
+  ELAGd%DIIS_mat=0.0d0
+ endif 
+
+end subroutine wipeout_diis
 !!***
 
 end module m_elag
