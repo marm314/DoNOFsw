@@ -107,7 +107,6 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   ! Update NO_COEF
   if(imethod==1) then ! Build F matrix for iterative diagonalization
    call diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) ! Build new NO_COEF and set icall=icall+1
-   if((iter==0).and.ELAGd%diagLpL_done) exit  ! We did Diag[(Lambda_pq + Lambda_qp*)/2]. -> Do only one icall iteration before the occ. opt.
   else                ! Use Newton method to compute new COEFs
    
   endif
@@ -116,7 +115,12 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol) 
   call INTEGd%eritoeriJK(RDMd%NBF_occ)
   call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K,nogamma=nogamma)
-  
+ 
+  ! Check if we did Diag[(Lambda_pq + Lambda_qp*)/2] for F method  
+  if((imethod==1.and.iter==0).and.ELAGd%diagLpL_done) then ! For F method if we did Diag[(Lambda_pq + Lambda_qp*)/2].
+   exit                                                    ! -> Do only one icall iteration before the occ. opt.
+  endif
+
   ! Check if iter. and new NO_COEF (with the RDMs) are not changing the Energy anymore
   if((icall>1).and.(dabs(Energy_old-Energy)<ELAGd%tolE)) then ! The energy is not changing anymore
    exit
