@@ -69,19 +69,20 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
  double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
- logical::convLambda
+ logical::convLambda,nogamma
  integer::icall
- double precision::sumdiff,maxdiff
+ double precision::sumdiff,maxdiff,Energy_old
 !arrays
 !************************************************************************
 
- Energy=0.0d0; convLambda=.false.;
+ Energy=0.0d0; convLambda=.false.;nogamma=.true.;
  if((imethod==1).and.(iter==0)) then
   ELAGd%sumdiff_old=0.0d0
  endif
  
  icall=0
  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
+ call INTEGd%eritoeriJK(RDMd%NBF_occ)
  do
   ! Build Lambda matrix
   call ELAGd%build(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
@@ -111,17 +112,24 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
    
   endif
 
-  ! Build all integrals in the new NO_COEF basis
+  ! Build all integrals in the new NO_COEF basis (including arrays for ERI_J and ERI_K)
   call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol) 
+  call INTEGd%eritoeriJK(RDMd%NBF_occ)
+  call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K,nogamma=nogamma)
+  
+  ! Check if iter. and new NO_COEF (with the RDMs) are not changing the Energy anymore
+  if((icall>1).and.(dabs(Energy_old-Energy)<ELAGd%tolE)) then ! The energy is not changing anymore
+   exit
+  endif
+  Energy_old=Energy
 
   ! We allow at most 50 evaluations of Energy and Gradient
   if(icall>50) exit 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
  
- ! Build ERI_J and ERI_K in NO_COEF basis before the occ. optimization 
- call INTEGd%eritoeriJK(RDMd%NBF_occ)
- call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K)
+ ! Calc. the final Energy using fixed RDMs and the new NO_COEF basis (before going back to occ. optimization)
+ call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K,nogamma=nogamma)
  write(*,'(a,f15.6,a,i6,a)') 'Orb. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
  
  if(icall>50) write(*,'(a)') 'Warning! Max. number of iterations (50) reached in orb. optimization'

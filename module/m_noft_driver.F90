@@ -71,13 +71,13 @@ contains
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE,Vnn,NO_COEF,mo_ints)
+&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,mo_ints)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
- double precision,intent(in)::Vnn,tolE
+ double precision,intent(in)::Vnn,tolE_in
  external::mo_ints
 !arrays
  double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
@@ -96,7 +96,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ)
- call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis)
+ call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,tolE_in)
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
@@ -119,7 +119,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
   call RDMd%print_gammas()
 
   ! Check convergence
-  if(abs(Energy-Energy_old)<tolE) then
+  if(abs(Energy-Energy_old)<ELAGd%tolE) then
    Energy_old=Energy
    exit
   endif
@@ -139,7 +139,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call ELAGd%diag_lag(RDMd,NO_COEF)
 
  ! Print final Extended Koopmans' Theorem (EKT) values
- call ELAGd%diag_lag(RDMd,NO_COEF,ekt)
+ call ELAGd%diag_lag(RDMd,NO_COEF,ekt=ekt)
 
  ! Print final occ. numbers
  write(*,'(a)') ' '

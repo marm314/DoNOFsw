@@ -49,6 +49,7 @@ contains
 !!  hCORE=One-body integrals (h_pq) we only use the diag part (h_pp)
 !!  ERI_J=Lower triangular part of the J_pq matrix
 !!  ERI_K=Lower triangular part of the K_pq matrix
+!!  nogamma=Do not build OCC, DM2_J, DM2_K, etc from GAMMAs (use the stored ones).
 !!
 !! OUTPUT
 !!  Energy=Energy computed from the occs (actually from gammas)
@@ -59,9 +60,10 @@ contains
 !!
 !! SOURCE
 
-subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K) 
+subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K,nogamma) 
 !Arguments ------------------------------------
 !scalars
+ logical,optional,intent(in)::nogamma
  double precision,intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
 !arrays
@@ -73,8 +75,10 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
  integer::iorb,iorb1,ipair
 !arrays
 !************************************************************************
- 
- call gamma_to_2rdm(RDMd,GAMMAs)
+
+ if(.not.present(nogamma)) then 
+  call gamma_to_2rdm(RDMd,GAMMAs)
+ endif
  Energy=0.0d0
  if(RDMd%Nsingleocc==0) then
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -

@@ -48,6 +48,7 @@ module m_elag
   integer::ndiis=5               ! The number of iterations required to apply DIIS is ndiis+1
   integer::ndiis_array           ! Size of the arrays used in DIIS (ndiis+2)
   double precision::sumdiff_old  ! Old value of sum_pq |F_pq|  for p/=q 
+  double precision::tolE         ! Tolerance that will be imposed in Energy convergence
 ! arrays 
   double precision,allocatable,dimension(:)::F_diag       ! F_pp (Diag. part of the F matrix)
   double precision,allocatable,dimension(:)::Coef_DIIS    ! DIIS coefs. used to build linear comb. of F matrices
@@ -96,11 +97,12 @@ CONTAINS  !=====================================================================
 !!
 !! SOURCE
 
-subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in)
+subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in,tolE_in)
 !Arguments ------------------------------------
 !scalars
  logical,intent(in)::diagLpL_in
  integer,intent(in)::NBF_tot,itolLambda_in,ndiis_in
+ double precision,intent(in)::tolE_in
  type(elag_t),intent(inout)::ELAGd
 !Local variables ------------------------------
 !scalars
@@ -111,6 +113,7 @@ subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in)
  ELAGd%diagLpL=diagLpL_in
  ELAGd%ndiis=ndiis_in
  ELAGd%ndiis_array=ELAGd%ndiis+2
+ ELAGd%tolE=tolE_in
  allocate(ELAGd%F_diag(NBF_tot))
  allocate(ELAGd%Lambdas(NBF_tot,NBF_tot)) 
  if(ELAGd%ndiis>0) then
@@ -244,7 +247,7 @@ end subroutine build_elag
 subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
 !Arguments ------------------------------------
 !scalars
- logical,optional::ekt
+ logical,optional,intent(in)::ekt
  class(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays
