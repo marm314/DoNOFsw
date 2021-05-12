@@ -18,7 +18,7 @@ module m_diagf
 
  implicit none
 
-!!private :: 
+ private :: scale_F
 !!***
 
  public :: diagF_to_coef
@@ -83,10 +83,10 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
    Eigvec(iorb,iorb)=ELAGd%F_diag(iorb)
    do iorb1=1,iorb-1
     Eigvec(iorb,iorb1)=ELAGd%Lambdas(iorb,iorb1)-ELAGd%Lambdas(iorb1,iorb)
-    Eigvec(iorb1,iorb)=Eigvec(iorb,iorb1)
+    call scale_F(ELAGd%MaxScaling+9,Eigvec(iorb,iorb1)) ! Scale the Fpq element to avoid divergence
+    Eigvec(iorb1,iorb)=Eigvec(iorb,iorb1)               ! Fpq=Fqp
    enddo
   enddo  
-  ! Scaling in here !! 
  endif
 
  ! Shall we do DIIS? Use maxdiff to decide... 
@@ -110,6 +110,47 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
  deallocate(New_NO_COEF,Eigvec,Work)
 
 end subroutine diagF_to_coef
+!!***
+
+!!***
+!!****f* DoNOF/scale_F
+!! NAME
+!!  scale_F
+!!
+!! FUNCTION
+!!  Scale the F-matrix element
+!!
+!! INPUTS
+!!  MaxScaling=Number of zeros used to scale F
+!!
+!! OUTPUT
+!!  Fpq=Scaled F_pq matrix element
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine scale_F(MaxScaling,Fpq) 
+!Arguments ------------------------------------
+!scalars
+ integer,intent(in)::MaxScaling
+ double precision,intent(inout)::Fpq
+!arrays
+!Local variables ------------------------------
+!scalars
+ integer::iscale
+!arrays
+ double precision::Abs_Fpq
+!************************************************************************
+ do iscale=1,MaxScaling
+  Abs_Fpq=dabs(Fpq)
+  if(Abs_Fpq>10.0d0**(9-iscale).and.Abs_Fpq<10.0d0**(10-iscale)) then
+   Fpq=0.1d0*Fpq
+  endif
+ enddo 
+end subroutine scale_F
 !!***
 
 end module m_diagf

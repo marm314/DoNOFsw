@@ -44,7 +44,6 @@ contains
 !!  iter=Number of global iteration 
 !!  imethod=Method to use 1 -> F diag. 
 !!  Vnn=Nuclear-nuclear rep. energy
-!!  tol_dif_Lambda=Tolerance used to consider that F_pq is diagonal in the NO_COEF basis
 !!  mo_ints=External subroutine that computes the hCORE and ERI integrals
 !!
 !! OUTPUT
@@ -57,11 +56,11 @@ contains
 !!
 !! SOURCE
 
-subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo_ints) 
+subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints) 
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::iter,imethod
- double precision,intent(in)::Vnn,tol_dif_Lambda
+ double precision,intent(in)::Vnn
  double precision,intent(inout)::Energy
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(inout)::RDMd
@@ -77,13 +76,29 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_C
 !************************************************************************
 
  Energy=0.0d0; convLambda=.false.;
+ if(imethod==1.and.iter==0) then
+  ELAGd%sumdiff_old=0.0d0
+ endif
  
  icall=0
  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
  do
   call ELAGd%build(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
-  call lambda_conv(ELAGd,RDMd,tol_dif_Lambda,convLambda,sumdiff,maxdiff)
-  if(convLambda) exit ! The NO_COEF and RDMs are already the solution =)
+  call lambda_conv(ELAGd,RDMd,convLambda,sumdiff,maxdiff)
+  if(convLambda) then ! The NO_COEF and RDMs are already the solution =)
+   exit
+  else
+   if(imethod==1.and.icall==0) then ! Adjust MaxScaling for the rest of orb. icall iter.
+    if(iter>2.and.iter>ELAGd%itscale.and.(sumdiff>ELAGd%sumdiff_old)) then ! Parameters chosen empirically (experience) to
+     ELAGd%itscale=iter+10                                                 ! ensure convergence. Maybe we can set them as input variables?
+     ELAGd%MaxScaling=ELAGd%MaxScaling+1
+     if(ELAGd%MaxScaling>ELAGd%itolLambda) then
+      ELAGd%MaxScaling=2                                                   ! More empirical parameters =(
+     endif
+    endif
+    ELAGd%sumdiff_old=sumdiff
+   endif
+  endif
   if(imethod==1) then ! Build F matrix for iterative diagonalization
    call diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) ! Build new NO_COEF and set icall=icall+1
    if((iter==0).and.ELAGd%diagLpL_done) exit  ! We did Diag[(Lambda_pq + Lambda_qp*)/2]. -> Do only one icall iteration before the occ. opt.
@@ -125,11 +140,10 @@ end subroutine opt_orb
 !!
 !! SOURCE
 
-subroutine lambda_conv(ELAGd,RDMd,tol_dif_Lambda,converg_lamb,sumdiff,maxdiff)
+subroutine lambda_conv(ELAGd,RDMd,converg_lamb,sumdiff,maxdiff)
 !Arguments ------------------------------------
 !scalars
  logical,intent(inout)::converg_lamb
- double precision,intent(in)::tol_dif_Lambda
  double precision,intent(inout)::sumdiff,maxdiff
  type(elag_t),intent(in)::ELAGd
  type(rdm_t),intent(in)::RDMd
@@ -137,10 +151,11 @@ subroutine lambda_conv(ELAGd,RDMd,tol_dif_Lambda,converg_lamb,sumdiff,maxdiff)
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1
- double precision::diff
+ double precision::diff,tol_dif_Lambda
 !arrays
 !************************************************************************
 
+ tol_dif_Lambda=1.0d1**(-ELAGd%itolLambda)
  converg_lamb=.true.; sumdiff=0.0d0; maxdiff=0.0d0;
  
  do iorb=1,RDMd%NBF_tot

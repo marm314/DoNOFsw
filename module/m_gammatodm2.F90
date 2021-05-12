@@ -90,10 +90,10 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  do igamma=1,RDMd%Npairs
   iorb1 = RDMd%Nfrozen+igamma
-  RDMd%occ(iorb1) = DCOS(GAMMAs(igamma))
+  RDMd%occ(iorb1) = dcos(GAMMAs(igamma))
   RDMd%occ(iorb1) = 0.5d0 + 0.5d0*RDMd%occ(iorb1)*RDMd%occ(iorb1)
-  Docc_gamma0(iorb1) = -0.5d0*DSIN(2.0d0*GAMMAs(igamma))
-  sqrt_occ(iorb1) = DSQRT(RDMd%occ(iorb1))
+  Docc_gamma0(iorb1) = -0.5d0*dsin(2.0d0*GAMMAs(igamma))
+  sqrt_occ(iorb1) = dsqrt(RDMd%occ(iorb1))
   Dsqrt_occ_gamma0(iorb1) = 0.5d0*Docc_gamma0(iorb1)/sqrt_occ(iorb1)
  enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -105,7 +105,7 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
    mult = RDMd%Nalpha_elect - RDMd%Nbeta_elect
    RDMd%occ(iorb1)  = 0.5d0*mult/RDMd%Nsingleocc
    Docc_gamma0(iorb1) = 0.0d0
-   sqrt_occ(iorb1) = DSQRT(RDMd%occ(iorb1))
+   sqrt_occ(iorb1) = dsqrt(RDMd%occ(iorb1))
    Dsqrt_occ_gamma0(iorb1) = 0.0d0
   enddo
  endif
@@ -119,11 +119,11 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
    Docc_gamma(iorb,igamma) = Docc_gamma0(iorb)
    Dsqrt_occ_gamma(iorb,igamma) = Dsqrt_occ_gamma0(iorb)
    iorb1 = RDMd%Nalpha_elect+RDMd%Npairs-igamma+1  ! iorb1=RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-igamma)+RDMd%Ncoupled with RDMd%Ncoupled=1
-   sqrt_occ(iorb1) = DSIN(GAMMAs(igamma))*DSQRT(0.5d0)
-   Dsqrt_occ_gamma0(iorb1) = DCOS(GAMMAs(igamma))*DSQRT(0.5d0)
+   sqrt_occ(iorb1) = dsin(GAMMAs(igamma))*dsqrt(0.5d0)
+   Dsqrt_occ_gamma0(iorb1) = dcos(GAMMAs(igamma))*dsqrt(0.5d0)
    Dsqrt_occ_gamma(iorb1,igamma) = Dsqrt_occ_gamma0(iorb1)
    RDMd%occ(iorb1) = sqrt_occ(iorb1)*sqrt_occ(iorb1)
-   Docc_gamma0(iorb1) = 0.5d0*DSIN(2.0d0*GAMMAs(igamma))
+   Docc_gamma0(iorb1) = 0.5d0*dsin(2.0d0*GAMMAs(igamma))
    Docc_gamma(iorb1,igamma) = Docc_gamma0(iorb1)
   enddo
  else                            ! PNOFi(Nc): Extended PNOF (RDMd%Ncoupled>1)
@@ -142,12 +142,12 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
     iorb4 = (RDMd%Ncoupled-1)*(igamma1-1)+iorb3                           ! iorb4=1,RDMd%Npairs*(RDMd%Ncoupled-1)
     igamma = RDMd%Npairs+iorb4                                            ! igamma=RDMd%Npairs+1,RDMd%Npairs*RDMd%Ncoupled
     iorb5 = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-igamma1)+iorb3   ! iorb5=RDMd%Nalpha_elect+1,RDMd%Nalpha_elect+RDMd%Ncoupled*RDMd%Npairs-1
-    sqrt_occ_orb = DSIN(GAMMAs(igamma))
+    sqrt_occ_orb = dsin(GAMMAs(igamma))
     occ_orb = sqrt_occ_orb*sqrt_occ_orb
-    Docc_gamma0(iorb5) = DSIN(2.0d0*GAMMAs(igamma))
-    Dsqrt_occ_gamma0(iorb5) = DCOS(GAMMAs(igamma))
+    Docc_gamma0(iorb5) = dsin(2.0d0*GAMMAs(igamma))
+    Dsqrt_occ_gamma0(iorb5) = dcos(GAMMAs(igamma))
     RDMd%occ(iorb5) =  hole(iorb4)*occ_orb
-    sqrt_hole_orb = DSQRT(hole(iorb4))
+    sqrt_hole_orb = dsqrt(hole(iorb4))
     sqrt_occ(iorb5) = sqrt_hole_orb*sqrt_occ_orb
     Docc_gamma(iorb5,igamma1) = Dhole_gamma(iorb4,igamma1)*occ_orb
     if(sqrt_hole_orb>0.0d0) then
@@ -185,12 +185,12 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
 !- - - - iorb4 = iorb2 - last occ  - - - - - - - - - - - - - -
    igamma = RDMd%Npairs+iorb2               ! igamma=RDMd%Npairs+igamma1*(RDMd%Ncoupled-1)
    iorb5 = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-igamma1)+RDMd%Ncoupled
-   sqrt_occ_orb = DCOS(GAMMAs(igamma))
+   sqrt_occ_orb = dcos(GAMMAs(igamma))
    hole_orb = sqrt_occ_orb*sqrt_occ_orb 
-   Docc_gamma0(iorb5)  = -DSIN(2.0d0*GAMMAs(igamma))
-   Dsqrt_occ_gamma0(iorb5) = -DSIN(GAMMAs(igamma))
+   Docc_gamma0(iorb5)  = -dsin(2.0d0*GAMMAs(igamma))
+   Dsqrt_occ_gamma0(iorb5) = -dsin(GAMMAs(igamma))
    RDMd%occ(iorb5) = hole(iorb2)*hole_orb
-   SQRTorb = DSQRT(hole(iorb2))
+   SQRTorb = dsqrt(hole(iorb2))
    sqrt_occ(iorb5)= SQRTorb*sqrt_occ_orb
    Docc_gamma(iorb5,igamma1) = Dhole_gamma(iorb2,igamma1)*hole_orb
    if(SQRTorb>0.0d0) then
@@ -474,7 +474,7 @@ subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
 !      FIs = (Np*Hp)^1/2
 !- - - - - - - - - - - - - - - - - - - - - - - - - - -
   do iorb=RDMd%Nfrozen+1,RDMd%NBF_occ
-   FIs(iorb) = DSQRT( RDMd%occ(iorb)*(1.0d0-RDMd%occ(iorb)) )
+   FIs(iorb) = dsqrt( RDMd%occ(iorb)*(1.0d0-RDMd%occ(iorb)) )
    if(FIs(iorb)>1.0d-20) then
     do igamma=1,RDMd%Ngammas
      DFIs(iorb,igamma) = (0.5d0-RDMd%occ(iorb))*Docc_gamma(iorb,igamma)/FIs(iorb)

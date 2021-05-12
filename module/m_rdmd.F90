@@ -44,7 +44,7 @@ module m_rdmd
   integer::Ngammas               ! Number of gammas (independet variables used in occ optimization procedure)
   double precision::Sums
 ! arrays 
-  double precision,allocatable,dimension(:)::OCC
+  double precision,allocatable,dimension(:)::occ
   double precision,allocatable,dimension(:)::GAMMAs_old
   double precision,allocatable,dimension(:)::DM2_J,DM2_K
   double precision,allocatable,dimension(:)::Docc_gamma
@@ -129,7 +129,7 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
  allocate(RDMd%DDM2_gamma_J(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas))
  allocate(RDMd%DDM2_gamma_K(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas)) 
  allocate(RDMd%GAMMAs_old(RDMd%Ngammas))
- allocate(RDMd%OCC(RDMd%NBF_occ))
+ allocate(RDMd%occ(RDMd%NBF_occ))
 
 end subroutine rdm_init
 !!***
@@ -162,7 +162,7 @@ subroutine rdm_free(RDMd)
 !************************************************************************
 
  deallocate(RDMd%GAMMAs_old)
- deallocate(RDMd%OCC)
+ deallocate(RDMd%occ)
  deallocate(RDMd%DM2_J,RDMd%DM2_K) 
  deallocate(RDMd%Docc_gamma) 
  deallocate(RDMd%DDM2_gamma_J)
@@ -208,7 +208,7 @@ double precision::tol8=1.0d-8
  ! TODO: Missing terms for Nsingleocc>0 !
  open(unit=iunit,form='unformatted',file='DM2')
  do iorb=1,RDMd%NBF_occ
-  if(dabs(RDMd%OCC(iorb))>tol8) write(iunit) iorb,iorb,iorb,iorb,RDMd%OCC(iorb)
+  if(dabs(RDMd%occ(iorb))>tol8) write(iunit) iorb,iorb,iorb,iorb,RDMd%occ(iorb)
   do iorb1=1,iorb-1
    if(dabs(DM2_J(iorb,iorb1))>tol8) then
      write(iunit) iorb,iorb1,iorb,iorb1,DM2_J(iorb,iorb1)  
@@ -227,7 +227,7 @@ double precision::tol8=1.0d-8
  ! Print the 1-RDM
  open(unit=iunit,form='unformatted',file='DM1')
  do iorb=1,RDMd%NBF_occ
-  if(dabs(RDMd%OCC(iorb))>tol8) write(iunit) iorb,iorb,2.0d0*RDMd%OCC(iorb)
+  if(dabs(RDMd%occ(iorb))>tol8) write(iunit) iorb,iorb,2.0d0*RDMd%occ(iorb)
  enddo
  write(iunit) 0,0,0.0d0
  close(iunit)
@@ -316,7 +316,7 @@ integer::igamma,iunit=312
  ! Print the GAMMAS_old
  open(unit=iunit,form='unformatted',file='GAMMAS')
  do igamma=1,RDMd%Ngammas
-  write(iunit) igamma,RDMd%OCC(igamma)
+  write(iunit) igamma,RDMd%occ(igamma)
  enddo
  write(iunit) 0,0.0d0
  close(iunit)

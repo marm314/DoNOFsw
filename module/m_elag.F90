@@ -40,6 +40,10 @@ module m_elag
 
   logical::diagLpL=.true.        ! For the diag. use (lambda+lambda)/2
   logical::diagLpL_done=.false.  ! Did we use use (lambda+lambda)/2?
+  integer::MaxScaling=0          ! Max scaling reductions employed to avoid divergence of diag[F]
+  integer::itscale=1             ! Above this number of iterations we do MaxScaling=MaxScaling+1
+  integer::itolLambda=4          ! Integer used to define 10**-itolLambda as threshold of Lambda_pq-Lambda_qp* convergence
+  double precision::sumdiff_old  ! Old value of sum_pq |F_pq|  for p/=q 
 ! arrays 
   double precision,allocatable,dimension(:)::F_diag       ! F_pp (Diag. part of the F matrix)
   double precision,allocatable,dimension(:,:)::Lambdas    ! Lambda_pq (Lagrange multipliers matrix)
@@ -72,6 +76,7 @@ CONTAINS  !=====================================================================
 !! INPUTS
 !! NBF_tot=Number of total orbitals
 !! diagLpL_in=Diagonalize 0.5 (Lambda+Lambda) for the first iteration?
+!! itolLambda=Used as 10**-itolLambda to check for Lambda_pq-Lambda_qp* convergence
 !!
 !! OUTPUT
 !!
@@ -81,17 +86,18 @@ CONTAINS  !=====================================================================
 !!
 !! SOURCE
 
-subroutine elag_init(ELAGd,NBF_tot,diagLpL_in)
+subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in)
 !Arguments ------------------------------------
 !scalars
  logical,intent(in)::diagLpL_in
- integer,intent(in)::NBF_tot
+ integer,intent(in)::NBF_tot,itolLambda_in
  type(elag_t),intent(inout)::ELAGd
 !Local variables ------------------------------
 !scalars
 !arrays
 !************************************************************************
 
+ ELAGd%itolLambda=itolLambda_in
  ELAGd%diagLpL=diagLpL_in
  allocate(ELAGd%F_diag(NBF_tot))
  allocate(ELAGd%Lambdas(NBF_tot,NBF_tot)) 
@@ -171,8 +177,8 @@ subroutine build_elag(ELAGd,RDMd,INTEGd,DM2_J,DM2_K)
  ELAGd%Lambdas=0.0d0
 
  do iorb=1,RDMd%NBF_occ
-  ELAGd%Lambdas(iorb,:)=RDMd%OCC(iorb)*INTEGd%hCORE(:,iorb)                                         ! Init: Lambda_pq = n_p hCORE_qp
-  ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)+RDMd%OCC(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
+  ELAGd%Lambdas(iorb,:)=RDMd%occ(iorb)*INTEGd%hCORE(:,iorb)                                         ! Init: Lambda_pq = n_p hCORE_qp
+  ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)+RDMd%occ(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
   do iorb1=1,RDMd%NBF_occ
    if(iorb/=iorb1) then
     ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1
@@ -241,9 +247,9 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
   do iorb=1,RDMd%NBF_tot
    do iorb1=1,RDMd%NBF_tot
     if(iorb<=RDMd%NBF_occ.and.iorb1<=RDMd%NBF_occ) then
-     sqrt_occ_iorb =DSQRT(RDMd%OCC(iorb))
-     sqrt_occ_iorb1=DSQRT(RDMd%OCC(iorb1))
-     if((DABS(sqrt_occ_iorb)>tol6).and.(DABS(sqrt_occ_iorb1)>tol6)) then
+     sqrt_occ_iorb =dsqrt(RDMd%occ(iorb))
+     sqrt_occ_iorb1=dsqrt(RDMd%occ(iorb1))
+     if((dabs(sqrt_occ_iorb)>tol6).and.(dabs(sqrt_occ_iorb1)>tol6)) then
       Eigvec(iorb,iorb1)=Eigvec(iorb,iorb1)/(sqrt_occ_iorb*sqrt_occ_iorb1)
      else
       Eigvec(iorb,iorb1)=0.0d0

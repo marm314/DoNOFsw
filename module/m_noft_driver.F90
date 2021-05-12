@@ -71,13 +71,13 @@ contains
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  tolE,tol_dif_Lambda,Vnn,NO_COEF,mo_ints)
+&  itolLambda,tolE,Vnn,NO_COEF,mo_ints)
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn
+ integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
- double precision,intent(in)::Vnn,tolE,tol_dif_Lambda
+ double precision,intent(in)::Vnn,tolE
  external::mo_ints
 !arrays
  double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
@@ -96,7 +96,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ)
- call elag_init(ELAGd,RDMd%NBF_tot,diagLpL)
+ call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda)
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
@@ -110,7 +110,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  coef_file='TEMP_COEF'
  do
   ! Orb. optimization
-  call opt_orb(iter,imethorb,ELAGd,RDMd,INTEGd,tol_dif_Lambda,Vnn,Energy,NO_COEF,mo_ints)
+  call opt_orb(iter,imethorb,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   call RDMd%print_orbs(NO_COEF,coef_file)
 
   ! Occ. optimization
@@ -142,13 +142,13 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  ! Print final occ. numbers
  write(*,'(a)') ' '
- RDMd%OCC(:)=2.0d0*RDMd%OCC(:)
- write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%OCC(:)),' occ. numbers '
+ RDMd%occ(:)=2.0d0*RDMd%occ(:)
+ write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%occ(:)),' occ. numbers '
  do iorb=1,(RDMd%NBF_occ/10)*10,10
-  write(*,'(f12.6,9f11.6)') RDMd%OCC(iorb:iorb+9)
+  write(*,'(f12.6,9f11.6)') RDMd%occ(iorb:iorb+9)
  enddo
  iorb=(RDMd%NBF_occ/10)*10+1 
- write(*,'(f12.6,*(f11.6))') RDMd%OCC(iorb:) 
+ write(*,'(f12.6,*(f11.6))') RDMd%occ(iorb:) 
  write(*,'(a)') ' '
 
  ! Print final nat. orb. coef.
