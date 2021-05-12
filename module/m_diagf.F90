@@ -3,7 +3,7 @@
 !!  m_diagf
 !!
 !! FUNCTION
-!!  Module prepared to compute oorb optimization for a fixed OCCs and 2-RDM
+!!  Module prepared to compute orb optimization using the F diag method as in DoNOF
 !!
 !! PARENTS
 !!  m_optorb

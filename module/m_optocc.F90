@@ -10,6 +10,8 @@
 !!
 !! CHILDREN
 !!  m_e_grad_occ
+!!  m_cg
+!!  m_lbfgs
 !!
 !! SOURCE
 module m_optocc

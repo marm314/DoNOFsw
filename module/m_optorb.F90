@@ -3,14 +3,14 @@
 !!  m_optorb
 !!
 !! FUNCTION
-!!  Module prepared to compute oorb optimization for a fixed OCCs and 2-RDM
+!!  Module prepared to compute orb optimization for a fixed set of OCCs and 2-RDM
 !!
 !! PARENTS
 !!  m_noft_driver
 !!
 !! CHILDREN
 !!  m_elag
-!!  m_diagF
+!!  m_diagf
 !!  m_e_grad_occ
 !!
 !! SOURCE
@@ -19,7 +19,7 @@ module m_optorb
  use m_rdmd
  use m_integd
  use m_elag
- use m_diagF
+ use m_diagf
  use m_e_grad_occ
 
  implicit none
