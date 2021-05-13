@@ -129,7 +129,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCORE,ERI_J,ERI_K)
 30  icall1 = iWork(nfcall)
    call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
    icall=icall+1
-   if(icall>2000) goto 60
+   if(icall==2000) goto 60
    if(icall1<=0) iWork(toobig) = 1
    goto 20
 
@@ -162,7 +162,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCORE,ERI_J,ERI_K)
     if(iflag<=0) exit
     icall=icall+1
 !  We allow at most 2000 evaluations of Energy and Gradient
-    if(icall>2000) exit
+    if(icall==2000) exit
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
    enddo
    deallocate(Work,diag)
@@ -173,9 +173,10 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCORE,ERI_J,ERI_K)
  RDMd%GAMMAs_old=GAMMAs
  call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
  write(*,'(a,f15.6,a,i6,a)') 'Occ. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
+ write(*,'(a,i6)') 'Number of global iter. ',iter
  write(*,'(a)') ' '
  
- if(icall>2000) write(*,'(a)') 'Warning! Max. number of iterations (2000) reached in occ. optimization'
+ if(icall==2000) write(*,'(a)') 'Warning! Max. number of iterations (2000) reached in occ. optimization'
 
  deallocate(GAMMAs,Grad_GAMMAs)
 

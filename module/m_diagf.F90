@@ -64,7 +64,7 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
  double precision::thresholddiis
 !arrays
  double precision,allocatable,dimension(:)::Work
- double precision,allocatable,dimension(:,:)::Eigvec,New_NO_COEF
+ double precision,allocatable,dimension(:,:)::Eigvec,New_NO_COEF ! Eigvec is initailly the F matrix
 !************************************************************************
  
  thresholddiis=1.0d1**(-ELAGd%itoldiis)
@@ -83,7 +83,7 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
   do iorb=1,RDMd%NBF_tot 
    Eigvec(iorb,iorb)=ELAGd%F_diag(iorb)
    do iorb1=1,iorb-1
-    Eigvec(iorb,iorb1)=ELAGd%Lambdas(iorb,iorb1)-ELAGd%Lambdas(iorb1,iorb)
+    Eigvec(iorb,iorb1)=ELAGd%Lambdas(iorb1,iorb)-ELAGd%Lambdas(iorb,iorb1)
     call scale_F(ELAGd%MaxScaling+9,Eigvec(iorb,iorb1)) ! Scale the Fpq element to avoid divergence
     Eigvec(iorb1,iorb)=Eigvec(iorb,iorb1)               ! Fpq=Fqp
    enddo

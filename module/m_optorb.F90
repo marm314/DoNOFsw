@@ -71,7 +71,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
 !scalars
  logical::convLambda,nogamma
  integer::icall
- double precision::sumdiff,maxdiff,Energy_old
+ double precision::sumdiff,maxdiff,Ediff,Energy_old
 !arrays
 !************************************************************************
 
@@ -108,7 +108,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   if(imethod==1) then ! Build F matrix for iterative diagonalization
    call diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) ! Build new NO_COEF and set icall=icall+1
   else                ! Use Newton method to compute new COEFs
-   
+   ! TODO   
   endif
 
   ! Build all integrals in the new NO_COEF basis (including arrays for ERI_J and ERI_K)
@@ -125,18 +125,23 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   if((icall>1).and.(dabs(Energy_old-Energy)<ELAGd%tolE)) then ! The energy is not changing anymore
    exit
   endif
+  Ediff=Energy_old-Energy
   Energy_old=Energy
 
-  ! We allow at most 50 evaluations of Energy and Gradient
-  if(icall>50) exit 
+  ! We allow at most 30 evaluations of Energy and Gradient
+  if(icall==30) exit 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
  
  ! Calc. the final Energy using fixed RDMs and the new NO_COEF basis (before going back to occ. optimization)
  call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K,nogamma=nogamma)
  write(*,'(a,f15.6,a,i6,a)') 'Orb. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
+ if(imethod==1.and.iter>0) then
+  write(*,'(a,f15.6)') 'Max. [Lambda_pq - Lambda_qp*]= ',maxdiff
+  write(*,'(a,f15.6)') 'Energy difference=',Ediff
+ endif
  
- if(icall>50) write(*,'(a)') 'Warning! Max. number of iterations (50) reached in orb. optimization'
+ !if(icall==30) write(*,'(a)') 'Warning! Max. number of iterations (30) reached in orb. optimization'
 
 end subroutine opt_orb
 !!***
