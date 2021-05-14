@@ -6,8 +6,8 @@
 !!  Module prepared to perform all procedures required for occ. and orbital optmization  
 !!
 !!- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!!  Nfrozen |            Npairs_p_sing     |              Nvirt                               = NBF               
-!!  Nfrozen |         Npairs + Nsingleocc  |     Ncoupled*Npairs                   + Nempty   = NBF               
+!!  Nfrozen |            Npairs_p_sing     |              Nvirt                               = NBF
+!!  Nfrozen |         Npairs + Nsingleocc  |     Ncoupled*Npairs                   + Nempty   = NBF
 !!                           | Nsingleocc  |   NBF_occ - Npairs_p_sing - Nfrozen   | Nempty   = NBF
 !!                           Nbeta         Nalpha                                  NBF_occ
 !!- - - - - - - - - - - - - - -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
@@ -29,7 +29,7 @@ module m_noft_driver
 
  implicit none
 
-!! private :: 
+ private :: read_restart
 !!***
 
  public :: run_noft
@@ -101,7 +101,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ)
  call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,imethorb,tolE_in)
 
- ! Check for the presence of restart files. If they are available, read them 
+ ! Check for the presence of restart files. If they are available, read them
+ if(present(restart)) then
+  call read_restart(RDMd,ELAGd,NO_COEF)
+ endif
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
@@ -112,7 +115,6 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  Energy_old=Energy
 
  ! Orb. and occ. optimization
- coef_file='TEMP_COEF'
  do
   ! Orb. optimization
   call ELAGd%clean_diis()
@@ -120,7 +122,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
   if(imethorb==1) then ! For F diag method, print F_pp elements after each global iteration
    call ELAGd%print_Fdiag(RDMd%NBF_tot)
   endif
-  call RDMd%print_orbs(NO_COEF,coef_file)
+  call RDMd%print_orbs_bin(NO_COEF)
 
   ! Occ. optimization
   call opt_occ(iter,imethocc,RDMd,Vnn,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K) ! Also iter=iter+1
@@ -163,6 +165,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Print final nat. orb. coef.
  coef_file='NO_COEF'
  call RDMd%print_orbs(NO_COEF,coef_file)
+ call RDMd%print_orbs_bin(NO_COEF)
  
  ! Print final Energy
  write(*,'(a)') ' '
@@ -174,6 +177,118 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call RDMd%free() 
 
 end subroutine run_noft
+!!***
+
+!!***
+!!****f* DoNOF/read_restart
+!! NAME
+!!  read_restart
+!!
+!! FUNCTION
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine read_restart(RDMd,ELAGd,NO_COEF)
+!Arguments ------------------------------------
+!scalars
+ type(elag_t),intent(inout)::ELAGd
+ type(rdm_t),intent(inout)::RDMd
+!arrays
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
+!Local variables ------------------------------
+!scalars
+ integer::iunit,istat,intvar,intvar1,icount
+ double precision::doubvar
+ double precision,allocatable,dimension(:)::GAMMAS_in
+ double precision,allocatable,dimension(:,:)::NO_COEF_in
+!arrays
+!************************************************************************
+
+ ! Read NO_COEF for guess
+ allocate(NO_COEF_in(RDMd%NBF_tot,RDMd%NBF_tot))
+ open(unit=iunit,form='unformatted',file='NO_COEF_BIN',iostat=istat,status='old')
+ icount=0
+ if(istat==0) then
+  do
+   read(iunit,iostat=istat) intvar,intvar1,doubvar
+   if(istat/=0) then
+    exit
+   endif
+   if(((intvar/=0).and.(intvar1/=0)).and.intvar*intvar1<=RDMd%NBF_tot*RDMd%NBF_tot) then
+    NO_COEF_in(intvar,intvar1)=doubvar
+    icount=icount+1
+   else
+    exit
+   endif
+  enddo
+ endif
+ if(icount==RDMd%NBF_tot*RDMd%NBF_tot) then
+  NO_COEF(:,:)=NO_COEF_in(:,:)
+  write(*,'(a)') 'NO coefs. read from checkpoint file'
+ endif
+ close(iunit)
+ deallocate(NO_COEF_in)
+
+ ! Read GAMMAs indep. parameters used to compute occs.
+ allocate(GAMMAS_in(RDMd%Ngammas))
+ open(unit=iunit,form='unformatted',file='GAMMAS',iostat=istat,status='old')
+ icount=0
+ if(istat==0) then
+  do 
+   read(iunit,iostat=istat) intvar,doubvar
+   if(istat/=0) then
+    exit
+   endif
+   if((intvar/=0).and.intvar<=RDMd%Ngammas) then
+    GAMMAs_in(intvar)=doubvar
+    icount=icount+1
+   else
+    exit
+   endif
+  enddo
+ endif
+ if(icount==RDMd%Ngammas) then
+  RDMd%GAMMAs_old(:)=GAMMAS_in(:)
+  RDMd%GAMMAs_nread=.false.
+  write(*,'(a)') 'GAMMAs (indep. variables) read from checkpoint file'
+ endif
+ close(iunit)
+ deallocate(GAMMAS_in)
+
+ ! Read diag. part of F matrix
+ if(ELAGd%ndiis>0.and.ELAGd%imethod==1) then
+  open(unit=iunit,form='unformatted',file='F_DIAG',iostat=istat,status='old')
+  icount=0
+  if(istat==0) then
+   do 
+    read(iunit,iostat=istat) intvar,doubvar
+    if(istat/=0) then
+     exit
+    endif
+    if((intvar/=0).and.intvar<=RDMd%NBF_tot) then
+     ELAGd%F_diag(intvar)=doubvar
+     icount=icount+1
+    else
+     exit
+    endif
+   enddo
+  endif
+  if(icount==RDMd%NBF_tot) then
+   ELAGd%diagLpL=.false.
+   write(*,'(a)') 'F_pp elements read from checkpoint file'
+  endif
+  close(iunit)
+ endif
+
+end subroutine read_restart
 !!***
 
 end module m_noft_driver

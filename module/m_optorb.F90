@@ -75,7 +75,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
 !arrays
 !************************************************************************
 
- Energy=0.0d0; Energy_old=0.0d0; convLambda=.false.;nogamma=.true.; 
+ Energy=0.0d0; Energy_old=0.0d0; convLambda=.false.;nogamma=.true.;
  if((imethod==1).and.(iter==0)) then
   ELAGd%sumdiff_old=0.0d0
  endif
@@ -89,7 +89,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
  
   ! Check if these NO_COEF with the RDMs are already the solution =)
   call lambda_conv(ELAGd,RDMd,convLambda,sumdiff,maxdiff)
-  if(convLambda) then 
+  if(convLambda) then
    exit
   else
    if(imethod==1.and.icall==0) then                                        ! F method: adjust MaxScaling for the rest of orb. icall iterations
@@ -107,12 +107,12 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   ! Update NO_COEF
   if(imethod==1) then ! Build F matrix for iterative diagonalization
    call diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) ! Build new NO_COEF and set icall=icall+1
-  else                ! Use Newton method to compute new COEFs
-   ! TODO   
+  else                ! Use Newton method to produce new COEFs
+   ! TODO
   endif
 
   ! Build all integrals in the new NO_COEF basis (including arrays for ERI_J and ERI_K)
-  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol) 
+  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
   call INTEGd%eritoeriJK(RDMd%NBF_occ)
   call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K,nogamma=nogamma)
  
@@ -121,7 +121,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
    exit                                                    ! -> Do only one icall iteration before the occ. opt.
   endif
 
-  ! Check if for this icall using the new NO_COEF (and fixed RDMs) the Energy is still changing
+  ! For this icall using the new NO_COEF (and fixed RDMs). Is the Energy still changing?
   Ediff=Energy_old-Energy
   if((icall>1).and.(dabs(Ediff)<ELAGd%tolE)) then ! The energy is not changing anymore
    exit
@@ -129,7 +129,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   Energy_old=Energy
 
   ! We allow at most 30 generations of new NO_COEF updates (and integrals)
-  if(icall==30) exit 
+  if(icall==30) exit
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
  

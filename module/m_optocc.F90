@@ -81,7 +81,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCORE,ERI_J,ERI_K)
  Energy=0.0d0
  allocate(GAMMAs(RDMd%Ngammas),Grad_GAMMAs(RDMd%Ngammas))
  Grad_GAMMAs=0.0d0
- if(iter==-1.and.RDMd%GAMMAs_nread) then 
+ if((iter==-1).and.RDMd%GAMMAs_nread) then 
   GAMMAs=0.785398163       ! Perturbed occ. numbers (i.e pi/4) -> occ(i<Fermi level) = 0.75
  else
   GAMMAs=RDMd%GAMMAs_old   ! Read from previous run

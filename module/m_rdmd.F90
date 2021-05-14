@@ -60,6 +60,9 @@ module m_rdmd
    procedure :: print_orbs => print_orb_coefs
    ! Print orbital coefs to a formated file.
 
+   procedure :: print_orbs_bin => print_orb_coefs_bin
+   ! Print orbital coefs to an unformated file.
+
    procedure :: print_gammas => print_gammas_old
    ! Print GAMMAs_old indep./unconstrained variables.
 
@@ -264,7 +267,7 @@ subroutine print_orb_coefs(RDMd,COEF,name_file)
  double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::COEF
 !Local variables ------------------------------
 !scalars
-integer::iorb,iorb1,iorb2,iunit=312
+integer::iorb,iorb1,iunit=312
 !arrays
 
 !************************************************************************
@@ -281,6 +284,51 @@ integer::iorb,iorb1,iorb2,iunit=312
  close(iunit)
 
 end subroutine print_orb_coefs
+!!***
+
+!!***
+!!****f* DoNOF/print_orb_coefs_bin
+!! NAME
+!! print_orb_coefs_bin
+!!
+!! FUNCTION
+!!  Print the orbital coefficients to the unformatted NO_COEF_BIN file
+!!
+!! INPUTS
+!!  COEF=Orbital coefs.
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine print_orb_coefs_bin(RDMd,COEF)
+!Arguments ------------------------------------
+!scalars
+ class(rdm_t),intent(in)::RDMd
+!arrays
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::COEF
+!Local variables ------------------------------
+!scalars
+integer::iorb,iorb1,iunit=312
+!arrays
+
+!************************************************************************
+
+ ! Print the orb. coefs
+ open(unit=iunit,form='unformatted',file='NO_COEF_BIN')
+ do iorb=1,RDMd%NBF_tot
+  do iorb1=1,RDMd%NBF_tot
+   write(iunit) iorb,iorb1,COEF(iorb,iorb1)
+  enddo
+ enddo
+ write(iunit) 0,0,0.0d0
+ close(iunit)
+
+end subroutine print_orb_coefs_bin
 !!***
 
 !!***
@@ -316,7 +364,7 @@ integer::igamma,iunit=312
  ! Print the GAMMAS_old
  open(unit=iunit,form='unformatted',file='GAMMAS')
  do igamma=1,RDMd%Ngammas
-  write(iunit) igamma,RDMd%occ(igamma)
+  write(iunit) igamma,RDMd%GAMMAs_old(igamma)
  enddo
  write(iunit) 0,0.0d0
  close(iunit)
