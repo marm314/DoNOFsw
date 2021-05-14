@@ -116,12 +116,12 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   call INTEGd%eritoeriJK(RDMd%NBF_occ)
   call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K,nogamma=nogamma)
  
-  ! Check if we did Diag[(Lambda_pq + Lambda_qp*)/2] for F method  
+  ! Check if we did Diag[(Lambda_pq + Lambda_qp*)/2] for F method (first iteration)
   if((imethod==1.and.iter==0).and.ELAGd%diagLpL_done) then ! For F method if we did Diag[(Lambda_pq + Lambda_qp*)/2].
    exit                                                    ! -> Do only one icall iteration before the occ. opt.
   endif
 
-  ! Check if in this icall with new NO_COEF (and fixed RDMs), the Energy is still changing
+  ! Check if for this icall using the new NO_COEF (and fixed RDMs) the Energy is still changing
   Ediff=Energy_old-Energy
   if((icall>1).and.(dabs(Ediff)<ELAGd%tolE)) then ! The energy is not changing anymore
    exit
@@ -138,7 +138,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
  write(*,'(a,f15.6,a,i6,a)') 'Orb. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
  if(imethod==1.and.iter>0) then
   write(*,'(a,f15.6)') 'Max. [Lambda_pq - Lambda_qp*]= ',maxdiff
-  write(*,'(a,f15.6)') 'Energy difference=',Ediff
+  write(*,'(a,f17.8)') 'Energy difference orb. opt.=',Ediff
  endif
  
  !if(icall==30) write(*,'(a)') 'Warning! Max. number of iterations (30) reached in orb. optimization'
@@ -184,7 +184,7 @@ subroutine lambda_conv(ELAGd,RDMd,converg_lamb,sumdiff,maxdiff)
  
  do iorb=1,RDMd%NBF_tot
   do iorb1=1,RDMd%NBF_tot
-   diff=dabs( ELAGd%Lambdas(iorb,iorb1)-ELAGd%Lambdas(iorb1,iorb) )
+   diff=dabs(ELAGd%Lambdas(iorb1,iorb)-ELAGd%Lambdas(iorb,iorb1))
    sumdiff=sumdiff+diff
    if((diff>=tol_dif_Lambda) .and. converg_lamb) then
     converg_lamb=.false.
