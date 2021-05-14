@@ -40,6 +40,7 @@ module m_elag
 
   logical::diagLpL=.true.        ! Do the diag. using (lambda+lambda)/2?
   logical::diagLpL_done=.false.  ! Did we use use (lambda+lambda)/2?
+  integer::imethod=1             ! Method used for optimization (1-> Diag F matrix)
   integer::MaxScaling=0          ! Max scaling reductions employed to avoid divergence of diag[F]
   integer::itscale=1             ! Above this number of iterations we do MaxScaling=MaxScaling+1
   integer::itolLambda=4          ! Integer used to define 10**-itolLambda as threshold of Lambda_pq-Lambda_qp* convergence
@@ -69,6 +70,9 @@ module m_elag
    procedure :: clean_diis => wipeout_diis
    ! Set to ZERO all arrays employed by DIIS.
 
+   procedure :: print_Fdiag => print_F_diag
+   ! Print the F_diag vector to un unformated file.
+
  end type elag_t
 
  public :: elag_init 
@@ -97,11 +101,11 @@ CONTAINS  !=====================================================================
 !!
 !! SOURCE
 
-subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in,tolE_in)
+subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in,imethod_in,tolE_in)
 !Arguments ------------------------------------
 !scalars
  logical,intent(in)::diagLpL_in
- integer,intent(in)::NBF_tot,itolLambda_in,ndiis_in
+ integer,intent(in)::NBF_tot,itolLambda_in,ndiis_in,imethod_in
  double precision,intent(in)::tolE_in
  type(elag_t),intent(inout)::ELAGd
 !Local variables ------------------------------
@@ -109,6 +113,7 @@ subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in,tolE_in)
 !arrays
 !************************************************************************
 
+ ELAGd%imethod=imethod_in
  ELAGd%itolLambda=itolLambda_in
  ELAGd%diagLpL=diagLpL_in
  ELAGd%ndiis=ndiis_in
@@ -116,7 +121,7 @@ subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in,tolE_in)
  ELAGd%tolE=tolE_in
  allocate(ELAGd%F_diag(NBF_tot))
  allocate(ELAGd%Lambdas(NBF_tot,NBF_tot)) 
- if(ELAGd%ndiis>0) then
+ if(ELAGd%ndiis>0.and.ELAGd%imethod==1) then
   allocate(ELAGd%Coef_DIIS(ELAGd%ndiis_array))
   allocate(ELAGd%F_DIIS(ELAGd%ndiis_array,NBF_tot,NBF_tot))
   allocate(ELAGd%DIIS_mat(ELAGd%ndiis_array,ELAGd%ndiis_array)) 
@@ -154,7 +159,7 @@ subroutine elag_free(ELAGd)
 
  deallocate(ELAGd%F_diag) 
  deallocate(ELAGd%Lambdas) 
- if(ELAGd%ndiis>0) then
+ if(ELAGd%ndiis>0.and.ELAGd%imethod==1) then
   deallocate(ELAGd%Coef_DIIS)
   deallocate(ELAGd%F_DIIS)
   deallocate(ELAGd%DIIS_mat) 
@@ -358,6 +363,49 @@ subroutine wipeout_diis(ELAGd)
  endif 
 
 end subroutine wipeout_diis
+!!***
+
+!!***
+!!****f* DoNOF/print_F_diag
+!! NAME
+!! print_F_diag
+!!
+!! FUNCTION
+!!  Print the diagonal elements of the F matrix to a file (used by restart)
+!!
+!! INPUTS
+!!  NBF_tot=Size of the F diag. array
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine print_F_diag(ELAGd,NBF_tot)
+!Arguments ------------------------------------
+!scalars
+ class(elag_t),intent(in)::ELAGd
+ integer,intent(in)::NBF_tot
+!arrays
+!Local variables ------------------------------
+!scalars
+integer::iorb,iunit=312
+!arrays
+
+!************************************************************************
+
+ ! Print F_diag vector
+ open(unit=iunit,form='unformatted',file='F_DIAG')
+ do iorb=1,NBF_tot
+  write(iunit) iorb,ELAGd%F_diag(iorb)
+ enddo
+ write(iunit) 0,0.0d0
+ close(iunit)
+
+end subroutine print_F_diag
 !!***
 
 end module m_elag

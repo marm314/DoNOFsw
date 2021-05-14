@@ -75,7 +75,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
 !arrays
 !************************************************************************
 
- Energy=0.0d0; convLambda=.false.;nogamma=.true.;
+ Energy=0.0d0; Energy_old=0.0d0; convLambda=.false.;nogamma=.true.; 
  if((imethod==1).and.(iter==0)) then
   ELAGd%sumdiff_old=0.0d0
  endif
@@ -121,19 +121,19 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
    exit                                                    ! -> Do only one icall iteration before the occ. opt.
   endif
 
-  ! Check if iter. and new NO_COEF (with the RDMs) are not changing the Energy anymore
-  if((icall>1).and.(dabs(Energy_old-Energy)<ELAGd%tolE)) then ! The energy is not changing anymore
+  ! Check if in this icall with new NO_COEF (and fixed RDMs), the Energy is still changing
+  Ediff=Energy_old-Energy
+  if((icall>1).and.(dabs(Ediff)<ELAGd%tolE)) then ! The energy is not changing anymore
    exit
   endif
-  Ediff=Energy_old-Energy
   Energy_old=Energy
 
-  ! We allow at most 30 evaluations of Energy and Gradient
+  ! We allow at most 30 generations of new NO_COEF updates (and integrals)
   if(icall==30) exit 
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --       
  enddo
  
- ! Calc. the final Energy using fixed RDMs and the new NO_COEF basis (before going back to occ. optimization)
+ ! Calc. the final Energy using fixed RDMs and the new NO_COEF (before going back to occ. optimization)
  call calc_E_occ(RDMd,RDMd%GAMMAs_old,Energy,INTEGd%hCORE,INTEGd%ERI_J,INTEGd%ERI_K,nogamma=nogamma)
  write(*,'(a,f15.6,a,i6,a)') 'Orb. optimized energy= ',Energy+Vnn,' after ',icall,' iter.'
  if(imethod==1.and.iter>0) then

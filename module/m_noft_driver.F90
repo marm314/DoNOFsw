@@ -71,9 +71,10 @@ contains
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,mo_ints)
+&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,mo_ints,restart)
 !Arguments ------------------------------------
 !scalars
+ logical,optional,intent(in)::restart
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
@@ -83,7 +84,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
- logical::ekt,diagLpL=.true.
+ logical::ekt,diagLpL
  integer::iorb,iter
  double precision::Energy,Energy_old
  type(rdm_t),target::RDMd
@@ -93,10 +94,14 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  character(len=10)::coef_file
 !************************************************************************
 
- 
+ diagLpL=.true.;
+
+ ! Initialize RDMd, INTEGd, and ELAGd objects.
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ)
- call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,tolE_in)
+ call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,imethorb,tolE_in)
+
+ ! Check for the presence of restart files. If they are available, read them 
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
  write(*,'(a)') ' '
@@ -112,6 +117,9 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
   ! Orb. optimization
   call ELAGd%clean_diis()
   call opt_orb(iter,imethorb,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
+  if(imethorb==1) then ! For F diag method, print F_pp elements after each global iteration
+   call ELAGd%print_Fdiag(RDMd%NBF_tot)
+  endif
   call RDMd%print_orbs(NO_COEF,coef_file)
 
   ! Occ. optimization
