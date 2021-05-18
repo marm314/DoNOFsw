@@ -243,12 +243,13 @@ end subroutine build_elag
 !!
 !! SOURCE
 
-subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
+subroutine diag_lambda_ekt(ELAGd,RDMd,INTEGd,NO_COEF,ekt)
 !Arguments ------------------------------------
 !scalars
  logical,optional,intent(in)::ekt
  class(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(in)::RDMd
+ type(integ_t),intent(in)::INTEGd
 !arrays
  double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::NO_COEF
 !Local variables ------------------------------
@@ -258,7 +259,7 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
 !arrays
  character(len=10)::coef_file
  double precision,allocatable,dimension(:)::Eigval,Eigval_nocc,Work
- double precision,allocatable,dimension(:,:)::Eigvec,CANON_COEF
+ double precision,allocatable,dimension(:,:)::Eigvec,CANON_COEF,DYSON_COEF
 !************************************************************************
 
  allocate(Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Eigval(RDMd%NBF_tot),Work(1))
@@ -284,20 +285,25 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
   enddo
  endif
 
+ ! Diagonalize
  lwork=-1 
  call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,Eigval,Work,lwork,info)
  lwork=nint(Work(1))
-
  if(info==0) then
   deallocate(Work)
   allocate(Work(lwork)) 
   call DSYEV('V','L',RDMd%NBF_tot,Eigvec,RDMd%NBF_tot,Eigval,Work,lwork,info)
  endif
 
- ! Print final eigenvalues
+ ! Print final eigenvalues and orbs.
  write(*,'(a)') ' '
  if(present(ekt)) then
   Eigval=-Eigval
+  coef_file='DYSON_COEF'
+  allocate(DYSON_COEF(RDMd%NBF_tot,RDMd%NBF_tot))
+  ! TODO
+  call RDMd%print_orbs(DYSON_COEF,coef_file)
+  deallocate(DYSON_COEF)
   write(*,'(a)') 'EKT ionization potentials'
  else
   coef_file='CANON_COEF'
@@ -315,7 +321,6 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,NO_COEF,ekt)
  iorb=(RDMd%NBF_occ/10)*10+1
  write(*,'(f12.6,*(f11.6))') Eigval_nocc(iorb:)
  write(*,'(a)') ' '
-
   
  deallocate(Eigvec,Work,Eigval,Eigval_nocc)
 

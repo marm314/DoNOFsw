@@ -145,14 +145,11 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  if(iprintdmn==1) call RDMd%print_dmn(RDMd%DM2_J,RDMd%DM2_K) 
 
- ! Free all allocated INTEGd arrays
- call INTEGd%free()
-
  ! Print final diagonalized INTEGd%Lambdas values
- call ELAGd%diag_lag(RDMd,NO_COEF)
+ call ELAGd%diag_lag(RDMd,INTEGd,NO_COEF)
 
  ! Print final Extended Koopmans' Theorem (EKT) values
- if(RDMd%Nsingleocc==0) call ELAGd%diag_lag(RDMd,NO_COEF,ekt=ekt)
+ if(RDMd%Nsingleocc==0) call ELAGd%diag_lag(RDMd,INTEGd,NO_COEF,ekt=ekt)
 
  ! Print final occ. numbers
  write(*,'(a)') ' '
@@ -175,8 +172,9 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a,f15.6,a,i6,a)') 'Final NOF energy= ',Energy+Vnn,' after ',iter,' global iter.'
  write(*,'(a)') ' '
 
- ! Free all allocated RDMd and ELAGd arrays
+ ! Free all allocated RDMd, INTEGd, and ELAGd arrays
  call ELAGd%free() 
+ call INTEGd%free()
  call RDMd%free() 
 
 end subroutine run_noft
