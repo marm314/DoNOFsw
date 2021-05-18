@@ -81,7 +81,8 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  double precision,intent(in)::Vnn,tolE_in
  external::mo_ints
 !arrays
- double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF,Overlap_in
+ double precision,dimension(NBF_tot_in,NBF_tot_in),intent(in)::Overlap_in
+ double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
  logical::ekt,diagLpL
