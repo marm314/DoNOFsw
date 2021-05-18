@@ -1,5 +1,6 @@
       SUBROUTINE EXTERN_OPT(COEF)
       USE PARCOM
+      USE PARCOM2
       use m_noft_driver
       LOGICAL::LRESTART
       INTEGER::itermax=1000
@@ -8,7 +9,8 @@
       EXTERNAL::mo_ints
 C-----------------------------------------------------------------------
       call run_noft(IPNOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ICGMETHOD,
-     &  1,itermax,1,NTHRESHL,NDIIS,tolE,EN,COEF,mo_ints,LRESTART) 
+     &  1,itermax,1,NTHRESHL,NDIIS,tolE,EN,COEF,OVERLAP2,
+     &  mo_ints,LRESTART) 
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 

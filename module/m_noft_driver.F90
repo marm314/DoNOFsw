@@ -71,7 +71,7 @@ contains
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,mo_ints,restart)
+&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,Overlap_in,mo_ints,restart)
 !Arguments ------------------------------------
 !scalars
  logical,optional,intent(in)::restart
@@ -81,7 +81,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  double precision,intent(in)::Vnn,tolE_in
  external::mo_ints
 !arrays
- double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
+ double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF,Overlap_in
 !Local variables ------------------------------
 !scalars
  logical::ekt,diagLpL
@@ -98,7 +98,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  ! Initialize RDMd, INTEGd, and ELAGd objects.
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
- call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ)
+ call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ,Overlap_in)
  call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,imethorb,tolE_in)
 
  ! Check for the presence of restart files. If they are available, read them
@@ -151,7 +151,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call ELAGd%diag_lag(RDMd,NO_COEF)
 
  ! Print final Extended Koopmans' Theorem (EKT) values
- call ELAGd%diag_lag(RDMd,NO_COEF,ekt=ekt)
+ if(RDMd%Nsingleocc==0) call ELAGd%diag_lag(RDMd,NO_COEF,ekt=ekt)
 
  ! Print final occ. numbers
  write(*,'(a)') ' '

@@ -30,7 +30,7 @@ module m_integd
 
 ! arrays 
  double precision,allocatable,dimension(:)::ERI_J,ERI_K
- double precision,allocatable,dimension(:,:)::hCORE
+ double precision,allocatable,dimension(:,:)::hCORE,Overlap
  double precision,allocatable,dimension(:,:,:,:)::ERImol
 
  contains 
@@ -58,6 +58,7 @@ CONTAINS  !=====================================================================
 !! INPUTS
 !! NBF_tot=Number of total orbitals
 !! NBF_occ=Number of orbitals that are occupied
+!! Overlap_in=S_ao overlap matrix in atomic orbs.
 !!
 !! OUTPUT
 !!
@@ -67,11 +68,12 @@ CONTAINS  !=====================================================================
 !!
 !! SOURCE
 
-subroutine integ_init(Integd,NBF_tot,NBF_occ)
+subroutine integ_init(Integd,NBF_tot,NBF_occ,Overlap_in)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::NBF_tot,NBF_occ
  type(integ_t),intent(inout)::Integd
+ double precision,dimension(NBF_tot,NBF_tot),intent(in)::Overlap_in
 !Local variables ------------------------------
 !scalars
  integer::NBF_ldiag
@@ -80,8 +82,9 @@ subroutine integ_init(Integd,NBF_tot,NBF_occ)
 
  NBF_ldiag=NBF_occ*(NBF_occ+1)/2
  allocate(Integd%ERI_J(NBF_ldiag),Integd%ERI_K(NBF_ldiag))
- allocate(Integd%hCORE(NBF_tot,NBF_tot))
+ allocate(Integd%hCORE(NBF_tot,NBF_tot),Integd%Overlap(NBF_tot,NBF_tot))
  allocate(Integd%ERImol(NBF_tot,NBF_tot,NBF_tot,NBF_tot))
+ Integd%Overlap=Overlap_in
 
 end subroutine integ_init
 !!***
@@ -114,6 +117,7 @@ subroutine integ_free(Integd)
 !************************************************************************
 
  deallocate(Integd%hCORE) 
+ deallocate(Integd%Overlap) 
  deallocate(Integd%ERImol) 
  deallocate(Integd%ERI_J) 
  deallocate(Integd%ERI_K) 

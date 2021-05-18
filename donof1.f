@@ -310,7 +310,7 @@ C PARCOM2
       MODULE PARCOM2
       INTEGER,ALLOCATABLE,DIMENSION(:)::IJKL
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:)::XIJKL
-      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::AHCORE2
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::AHCORE2,OVERLAP2
       END MODULE PARCOM2
 
 C RUNNOFHEADER
@@ -700,6 +700,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C     Square Matrices AHCORE, OVERLAP
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       ALLOCATE(AHCORE(NBF,NBF),AHCORE2(NBF,NBF),OVERLAP(NBF,NBF))
+      ALLOCATE(OVERLAP2(NBF,NBF))
       CALL CPYTSQ(H,AHCORE,NBF)
       CALL CPYTSQ(S,OVERLAP,NBF)            
       DEALLOCATE(H,S)
@@ -728,7 +729,7 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
      &            NVAL,DQOInt,NINTEG,NREC,IBUF,BUF,NINTEGt,IDONTW,
      &            GRADS,IRUNTYP,DIPS,XINTS,IPRINTOPT)
       DEALLOCATE(AHCORE,OVERLAP,CHF,EiHF,DIPN,QUADN,OCTUN,DQOInt,AUX)
-      DEALLOCATE(AHCORE2)
+      DEALLOCATE(AHCORE2,OVERLAP2)
       DEALLOCATE(IBUF,BUF,XINTS)
       NOPTCGMPI = NOPTCG
 #ifdef MPI
@@ -1020,6 +1021,7 @@ C      MBPT Perturbative Corrections
 C      External optimization (i.e. using a module)
        IF(EXTERN) THEN
         AHCORE2=AHCORE
+        OVERLAP2=OVERLAP
         CALL EXTERN_OPT(COEF)
        ENDIF
 C      SC2-MCPT (Hartree-Fock Partition)
@@ -1087,6 +1089,7 @@ C       MBPT Perturbative Corrections
 C      External optimization (i.e. using a module)
         IF(EXTERN) THEN
          AHCORE2=AHCORE
+         OVERLAP2=OVERLAP
          CALL EXTERN_OPT(COEF)
         ENDIF
 C       SC2-MCPT (Hartree-Fock Partition)
