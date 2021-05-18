@@ -73,20 +73,20 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
  if((icall==0.and.iter==0).and.(ELAGd%diagLpL.and.(.not.ELAGd%diagLpL_done))) then
   ELAGd%diagLpL_done=.true. 
   do iorb=1,RDMd%NBF_tot 
-   Eigvec(iorb,iorb)=ELAGd%Lambdas(iorb,iorb)
    do iorb1=1,iorb-1
     Eigvec(iorb,iorb1)=0.5d0*(ELAGd%Lambdas(iorb,iorb1)+ELAGd%Lambdas(iorb1,iorb))
     Eigvec(iorb1,iorb)=Eigvec(iorb,iorb1)
    enddo
-  enddo  
+   Eigvec(iorb,iorb)=ELAGd%Lambdas(iorb,iorb)
+  enddo
  else
   do iorb=1,RDMd%NBF_tot 
-   Eigvec(iorb,iorb)=ELAGd%F_diag(iorb)
    do iorb1=1,iorb-1
     Eigvec(iorb,iorb1)=ELAGd%Lambdas(iorb1,iorb)-ELAGd%Lambdas(iorb,iorb1)
     call scale_F(ELAGd%MaxScaling+9,Eigvec(iorb,iorb1)) ! Scale the Fpq element to avoid divergence
     Eigvec(iorb1,iorb)=Eigvec(iorb,iorb1)               ! Fpq=Fqp
    enddo
+   Eigvec(iorb,iorb)=ELAGd%F_diag(iorb)
   enddo  
  endif
 
@@ -107,9 +107,11 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
  endif
 
  ! Update the NO_COEF
- icall=icall+1
  New_NO_COEF=matmul(NO_COEF,Eigvec)
- NO_COEF(:,:)=New_NO_COEF(:,:)
+ NO_COEF=New_NO_COEF
+
+ ! Increase icall (iterator accumulator)
+ icall=icall+1
 
  deallocate(New_NO_COEF,Eigvec,Work)
 

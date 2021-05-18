@@ -49,10 +49,10 @@ C-----------------------------------------------------------------------
 !      DOUBLE PRECISION,DIMENSION(NBF5,NBF5)::CJ12,CK12
 !      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::G
 !      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:,:)::QD
-!C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !      ALLOCATE (G(NBF,NBF5),QD(NBF,NBF,NBF))
 !      CALL ENERGY1r(AHCORE2,IJKL,XIJKL,QD,COEF,RO,CJ12,CK12,ELAG,
 !     &              DIPN,ADIPx,ADIPy,ADIPz,G)
 !      DEALLOCATE(G,QD)
-!C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !      END SUBROUTINE elag_extern

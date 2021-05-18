@@ -220,12 +220,6 @@ subroutine build_elag(ELAGd,RDMd,INTEGd,DM2_J,DM2_K)
  ! TODO 
  if(RDMd%Nsingleocc>0) write(*,'(a)') 'Error! The Lambda_pq matrix construction is not implemented for Nsingleocc>0'
 
- do iorb=1,RDMd%NBF_tot
-  do iorb1=1,RDMd%NBF_tot
-   if(dabs(ELAGd%Lambdas(iorb,iorb1))<tol10) ELAGd%Lambdas(iorb,iorb1)=0.0d0
-  enddo
- enddo 
-
 end subroutine build_elag
 !!***
 

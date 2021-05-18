@@ -13980,7 +13980,7 @@ C ORBOPTr
       DOUBLE PRECISION,DIMENSION(3)::DIPN
       DOUBLE PRECISION,DIMENSION(NBF,NBF)::ADIPx,ADIPy,ADIPz
       DOUBLE PRECISION,DIMENSION(NBF,NBF,NBF)::QD
-      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:)::EVA,TEMP,CFM
+      DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:)::EVA,TEMP,CFM,WORK
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:)::FMIUG,W,COEFNEW,BFM,G
       DOUBLE PRECISION,ALLOCATABLE,DIMENSION(:,:,:)::FK
       INTEGER::IPRINTOPT
@@ -14037,8 +14037,10 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C-----------------------------------------------------------------------
 C                       START SCF-ITERATION CYCLE
 C-----------------------------------------------------------------------
-      ALLOCATE(FMIUG(NOPTORB,NOPTORB),W(NOPTORB,NOPTORB),EVA(NOPTORB))
-      ALLOCATE(TEMP(NOPTORB),FK(MAXLOOP,NOPTORB,NOPTORB))
+      !ALLOCATE(FMIUG(NOPTORB,NOPTORB),W(NOPTORB,NOPTORB),EVA(NOPTORB))
+      ALLOCATE(FMIUG(NOPTORB,NOPTORB))
+      !ALLOCATE(TEMP(NOPTORB),FK(MAXLOOP,NOPTORB,NOPTORB))
+      ALLOCATE(FK(MAXLOOP,NOPTORB,NOPTORB))
       ALLOCATE(COEFNEW(NBF,NBF),BFM(MAXLOOP+1,MAXLOOP+1),CFM(MAXLOOP+1))
       IF(ITCALL==1.and.INPUTFMIUG==0)THEN
        MAXLP=1
@@ -14072,18 +14074,31 @@ C      W - EIGENVECTORS, EVA - EIGENVALUES IN ALGEBRAIC DESCENDING ORDER
 C      HOUSEHOLDER METHOD
 C      NOTE: ONLY LOWER TRIANGLE IS USED + THIS IS DESTROYED !!!
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       CALL DIAG(NOPTORB,FMIUG,W,EVA,TEMP)
+       lwork=-1
+       allocate(work(1))
+       call DSYEV('V','L',NBF,FMIUG,NBF,FMIUG0,Work,lwork,info)
+       lwork=nint(Work(1))
+       if(info==0) then
+       deallocate(Work)
+       allocate(Work(lwork))
+       FMIUG0=0.0d0
+       call DSYEV('V','L',NBF,FMIUG,NBF,FMIUG0,Work,lwork,info)
+       endif
+       deallocate(Work)
+       !W=FMIUG
+       !CALL DIAG(NOPTORB,FMIUG,W,EVA,TEMP)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C      Move EVA -> FMIUG0
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       DO I=1,NOPTORB
-        FMIUG0(I) = EVA(I)
-       ENDDO
+       !DO I=1,NOPTORB
+       ! FMIUG0(I) = EVA(I)
+       !ENDDO
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C      New Coefficients (COEFNEW=COEF*W), Move COEFNEW -> COEF
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-       COEFNEW = COEF                     ! initial values for coefnew 
-       CALL COEFW1(NBF,NOPTORB,COEFNEW,COEF,W)
+       !COEFNEW = COEF                     ! initial values for coefnew 
+       !CALL COEFW1(NBF,NOPTORB,COEFNEW,COEF,W)
+       COEFNEW=matmul(COEF,FMIUG)
        COEF = COEFNEW
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C      Calculate Dj(miu,niu), Jj(miu,niu), Kj(miu,niu) (j=1,nbf)
@@ -14103,7 +14118,8 @@ C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 C      Check for energy convergent solution
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
        IF( DABS(DIF_EELEC2) < THRESHEC )THEN
-        DEALLOCATE (COEFNEW,FMIUG,W,EVA,TEMP)
+        !DEALLOCATE (COEFNEW,FMIUG,EVA)
+        DEALLOCATE (COEFNEW,FMIUG)
         DIF_EELEC=EELEC-EELEC_OLD
         EELEC_OLD=EELEC
         IF(IPRINTOPT==1)WRITE(6,2)ITCALL,EELEC,EELEC+EN,DIF_EELEC,DUMEL
@@ -14118,7 +14134,8 @@ C     Itermediate Output of the external iteration
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       DIF_EELEC=EELEC-EELEC_OLD
       EELEC_OLD=EELEC
-      DEALLOCATE (COEFNEW,FMIUG,W,EVA,TEMP,CFM,BFM,FK,G)
+      !DEALLOCATE (COEFNEW,FMIUG,W,EVA,TEMP,CFM,BFM,FK,G)
+      DEALLOCATE (COEFNEW,FMIUG,CFM,BFM,FK,G)
       IF(IPRINTOPT==1)WRITE(6,2)ITCALL,EELEC,EELEC+EN,DIF_EELEC,DUMEL
       RETURN
 C-----------------------------------------------------------------------
