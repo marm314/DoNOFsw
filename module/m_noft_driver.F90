@@ -103,7 +103,9 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  ! Check for the presence of restart files. If they are available, read them
  if(present(restart)) then
+  write(*,'(a)') ' '
   call read_restart(RDMd,ELAGd,NO_COEF)
+  write(*,'(a)') ' '
  endif
 
  ! Occ optimization using guess orbs. (HF, CORE, etc).
