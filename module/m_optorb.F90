@@ -90,6 +90,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   ! Check if these NO_COEF with the RDMs are already the solution =)
   call lambda_conv(ELAGd,RDMd,convLambda,sumdiff,maxdiff)
   if(convLambda) then
+   write(*,'(a)') 'Lambda_pq - Lambda_qp* converged for the Hemiticty of Lambda'
    exit
   else
    if(imethod==1.and.icall==0) then                                        ! F method: adjust MaxScaling for the rest of orb. icall iterations
@@ -124,6 +125,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
   ! For this icall using the new NO_COEF (and fixed RDMs). Is the Energy still changing?
   Ediff=Energy_old-Energy
   if((icall>1).and.(dabs(Ediff)<ELAGd%tolE)) then ! The energy is not changing anymore
+   write(*,'(a)') 'Lambda_pq - Lambda_qp* converged for small energy differences'
    exit
   endif
   Energy_old=Energy
