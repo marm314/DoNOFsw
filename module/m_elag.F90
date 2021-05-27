@@ -73,6 +73,9 @@ module m_elag
    procedure :: print_Fdiag => print_F_diag
    ! Print the F_diag vector to un unformated file.
 
+   procedure :: dyson_orb => dyson_orbs
+   ! Compute Dyson orbs. after EKT diagonalization.
+
  end type elag_t
 
  public :: elag_init 
@@ -259,7 +262,7 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,INTEGd,NO_COEF,ekt)
 !arrays
  character(len=10)::coef_file
  double precision,allocatable,dimension(:)::Eigval,Eigval_nocc,Work
- double precision,allocatable,dimension(:,:)::Eigvec,CANON_COEF,DYSON_COEF
+ double precision,allocatable,dimension(:,:)::Eigvec,CANON_COEF
 !************************************************************************
 
  allocate(Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Eigval(RDMd%NBF_tot),Work(1))
@@ -299,11 +302,7 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,INTEGd,NO_COEF,ekt)
  write(*,'(a)') ' '
  if(present(ekt)) then
   Eigval=-Eigval
-  coef_file='DYSON_COEF'
-  allocate(DYSON_COEF(RDMd%NBF_tot,RDMd%NBF_tot))
-  ! TODO
-  call RDMd%print_orbs(DYSON_COEF,coef_file)
-  deallocate(DYSON_COEF)
+  call ELAGd%dyson_orb(RDMd,INTEGd,Eigvec,NO_COEF)
   write(*,'(a)') 'EKT ionization potentials'
  else
   coef_file='CANON_COEF'
@@ -325,6 +324,84 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,INTEGd,NO_COEF,ekt)
  deallocate(Eigvec,Work,Eigval,Eigval_nocc)
 
 end subroutine diag_lambda_ekt
+!!***
+
+!!****f* DoNOF/dyson_orbs
+!! NAME
+!!  dyson_orbs   
+!!
+!! FUNCTION
+!!  Compute Dyson orbitals and corrected occ numbers. 
+!!
+!! INPUTS
+!!  RDMd=Object containg all required variables about sizes
+!!  INTEGd=Object containg all integrals
+!!  Eigvec=Eigenvectos obtaing from EKT diag.
+!!  NO_COEF=Nat. orb. coefs
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine dyson_orbs(ELAGd,RDMd,INTEGd,Eigvec,NO_COEF)
+!Arguments ------------------------------------
+!scalars
+ class(elag_t),intent(in)::ELAGd
+ type(rdm_t),intent(in)::RDMd
+ type(integ_t),intent(in)::INTEGd
+!arrays
+ double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::Eigvec,NO_COEF
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1,iorb2
+!arrays
+ character(len=10)::coef_file
+ double precision,allocatable,dimension(:)::DYSON_OCC
+ double precision,allocatable,dimension(:,:)::DYSON_COEF
+!************************************************************************
+ allocate(DYSON_COEF(RDMd%NBF_tot,RDMd%NBF_tot),DYSON_OCC(RDMd%NBF_occ))
+ DYSON_COEF=0.0d0; DYSON_OCC=0.0d0;
+ ! Unnormalized DYSON_COEF
+ do iorb=1,RDMd%NBF_tot
+  do iorb1=1,RDMd%NBF_occ
+   DYSON_COEF(iorb,iorb1)=0.0d0
+   do iorb2=1,RDMd%NBF_occ
+    DYSON_COEF(iorb,iorb1)=DYSON_COEF(iorb,iorb1)+dsqrt(RDMd%occ(iorb2))*NO_COEF(iorb,iorb2)*Eigvec(iorb2,iorb1)
+   enddo
+  enddo
+ enddo 
+ ! Occ numbers of DYSON_COEF
+ do iorb=1,RDMd%NBF_occ
+  DYSON_OCC(iorb)=0.0d0
+  do iorb1=1,RDMd%NBF_tot
+   DYSON_OCC(iorb)=DYSON_OCC(iorb)+DYSON_COEF(iorb1,iorb)*sum(INTEGd%Overlap(iorb1,:)*DYSON_COEF(:,iorb))
+  enddo
+ enddo
+ ! Normalized DYSON_COEF
+ do iorb=1,RDMd%NBF_occ
+  do iorb1=1,RDMd%NBF_tot
+   DYSON_COEF(iorb1,iorb)=DYSON_COEF(iorb1,iorb)/dsqrt(DYSON_OCC(iorb))
+  enddo
+ enddo
+ ! Print DYSON_COEF
+ coef_file='DYSON_COEF'
+ call RDMd%print_orbs(DYSON_COEF,coef_file)
+ ! Print DYSON occ. numbers
+ DYSON_OCC(:)=2.0d0*DYSON_OCC(:)
+ write(*,'(a,f10.5,a)') 'Dyson occ ',sum(DYSON_OCC(:)),' occ. numbers '
+ do iorb=1,(RDMd%NBF_occ/10)*10,10
+  write(*,'(f12.6,9f11.6)') DYSON_OCC(iorb:iorb+9)
+ enddo
+ iorb=(RDMd%NBF_occ/10)*10+1
+ write(*,'(f12.6,*(f11.6))') DYSON_OCC(iorb:)
+ ! Deallocate arrays
+ deallocate(DYSON_COEF,DYSON_OCC)
+
+end subroutine dyson_orbs
 !!***
 
 !!****f* DoNOF/wipeout_diis
