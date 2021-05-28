@@ -88,35 +88,35 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K,nogamma)
   if(RDMd%Ncoupled==1) then     ! Perfect Pairing (Ncoupled=1)
    do iorb=1,RDMd%Nfrozen
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
-    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
-    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
     iorb = RDMd%Nalpha_elect+RDMd%Npairs-ipair+1
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
-    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   else                  ! Extended PNOF (Ncoupled>1)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    do iorb=1,RDMd%Nfrozen
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
-    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
-    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
     do iorb1=1,RDMd%Ncoupled-1
      iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+iorb1
      Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )           &
-     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
     enddo
     iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+RDMd%Ncoupled
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
-    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
+    &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   endif
@@ -130,17 +130,17 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K,nogamma)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    do iorb=1,RDMd%Nfrozen
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
-    &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
+    &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
-    &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
+    &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
     iorb = RDMd%Nalpha_elect+RDMd%Npairs-ipair+1
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
-    &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)     &
+    &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_K)
    enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -154,23 +154,23 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K,nogamma)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    do iorb=1,RDMd%Nfrozen
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
-    &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
+    &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
-    &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
+    &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
     do iorb1=1,RDMd%Ncoupled-1
      iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+iorb1
      Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )        &
-     &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)    &
+     &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)    &
      &      + 2.0d0*occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_K)
     enddo
     iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+RDMd%Ncoupled
     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
-    &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) - dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)     &
+    &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_K)
    enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
@@ -235,12 +235,12 @@ subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K)
      Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
     &         * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                            &
     &         + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-    &         - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+    &         + Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
      iorb = RDMd%Nalpha_elect+RDMd%Npairs-ipair+1
      Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
     &         * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                            &
     &         + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-    &         - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+    &         + Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
     enddo
    enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -252,19 +252,19 @@ subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K)
      Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
      &        * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                            &
      &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-     &        - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+     &        + Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
      do iorb1=1,RDMd%Ncoupled-1
       iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+iorb1
       Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)              &
      &         * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                           &
      &         + 2.0d0 * (Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-     &         - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+     &         + Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
      enddo
      iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+RDMd%Ncoupled
      Grad(igamma) = Grad(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
      &        * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                            &
      &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-     &        - Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
+     &        + Ddm2_gamma_x_ERI(RDMd,0,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K) )
     enddo
    enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -283,16 +283,16 @@ subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K)
      GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
      &        * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                            &
      &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-     &        -           Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+     &        +           Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
      &        + 2.0d0 *   Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
-     &        -           Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+     &        +           Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_K)
      iorb = RDMd%Nalpha_elect+RDMd%Npairs-ipair+1
      GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
      &        * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                            &
      &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-     &        -           Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+     &        +           Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
      &        + 2.0d0 *   Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
-     &        -           Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+     &        +           Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
     enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
    enddo
@@ -305,25 +305,25 @@ subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K)
      GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
      &        * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                            &
      &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-     &        -          Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))         &
+     &        +          Ddm2_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))         &
      &        + 2.0d0 *   Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
-     &        -           Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+     &        +           Docc_gamma_x_ERI(RDMd,1,iorb,igamma,RDMd%Docc_gamma,ERI_K)
      do iorb1=1,RDMd%Ncoupled-1
       iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+iorb1
       GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)              &
       &        * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                           &
       &        + 2.0d0 * (Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-      &        -          Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+      &        +          Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
       &        + 2.0d0 *  Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
-      &        -          Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+      &        +          Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
      enddo
      iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+RDMd%Ncoupled
      GRAD(igamma) = GRAD(igamma) + RDMd%Docc_gamma(iorb+(igamma-1)*RDMd%NBF_occ)               &
      &        * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )                            &
      &        + 2.0d0 * ( Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_J,ERI_J)         &
-     &        -           Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
+     &        +           Ddm2_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%DDM2_gamma_K,ERI_K))        &
      &        + 2.0d0 *   Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_J)           &
-     &        -           Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
+     &        +           Docc_gamma_x_ERI(RDMd,2,iorb,igamma,RDMd%Docc_gamma,ERI_K)
     enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -          
    enddo

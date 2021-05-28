@@ -232,8 +232,8 @@ double precision::tol8=1.0d-8
      write(iunit) iorb1,iorb,iorb1,iorb,DM2_J(iorb,iorb1)  
    endif
    if(dabs(DM2_K(iorb,iorb1))>tol8) then
-    write(iunit) iorb,iorb1,iorb1,iorb,-DM2_K(iorb,iorb1)
-    write(iunit) iorb1,iorb,iorb,iorb1,-DM2_K(iorb,iorb1)
+    write(iunit) iorb,iorb1,iorb1,iorb,DM2_K(iorb,iorb1)
+    write(iunit) iorb1,iorb,iorb,iorb1,DM2_K(iorb,iorb1)
    endif
   enddo
  enddo
