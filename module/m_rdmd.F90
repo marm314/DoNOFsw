@@ -111,6 +111,7 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
  type(rdm_t),intent(inout)::RDMd
 !Local variables ------------------------------
 !scalars
+ double precision::totMEM
 !arrays
 !************************************************************************
 
@@ -127,6 +128,19 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
  RDMd%Npairs_p_sing=RDMd%Npairs+RDMd%Nsingleocc 
  RDMd%NBF_ldiag=RDMd%NBF_occ*(RDMd%NBF_occ+1)/2
  RDMd%Ngammas=RDMd%Ncoupled*RDMd%Npairs
+ ! Calculate memory needed
+ totMEM=2*RDMd%NBF_occ*RDMd%NBF_occ+RDMd%NBF_occ*RDMd%Ngammas+2*RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas
+ totMEM=totMEM+RDMd%Ngammas+RDMd%NBF_occ
+ totMEM=8*totMEM       ! Bytes
+ totMEM=totMEM*1.0d-6  ! Bytes to Mb  
+ if(totMEM>1.0d3) then     ! Mb to Gb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing RDMd object   ',totMEM*1.0d-3,' Gb'
+ elseif(totMEM<1.0d0) then ! Mb to Kb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing RDMd object   ',totMEM*1.0d3,' Kb'
+ else                      ! Mb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing RDMd object   ',totMEM,' Mb'
+ endif 
+ ! Allocate arrays
  allocate(RDMd%DM2_J(RDMd%NBF_occ*RDMd%NBF_occ),RDMd%DM2_K(RDMd%NBF_occ*RDMd%NBF_occ)) 
  allocate(RDMd%Docc_gamma(RDMd%NBF_occ*RDMd%Ngammas)) 
  allocate(RDMd%DDM2_gamma_J(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas))

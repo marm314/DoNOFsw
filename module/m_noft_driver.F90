@@ -97,6 +97,18 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  diagLpL=.true.;
 
+ ! Write Header
+ write(*,'(a)') ' '
+ write(*,'(a)') ' -------------------------------------------'
+ write(*,'(a)') ' Entering RUN-NOF module for NOFT calcs.'
+ write(*,'(a)') ' '
+ write(*,'(a)') ' Developed by: Dr. M. Rodriguez-Mayorga '
+ write(*,'(a)') ' '
+ write(*,'(a)') '  First version: VU Amsterdam 2021 '
+ write(*,'(a)') ' '
+ write(*,'(a)') ' -------------------------------------------'
+ write(*,'(a)') ' '
+
  ! Initialize RDMd, INTEGd, and ELAGd objects.
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ,Overlap_in)
@@ -176,6 +188,30 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call ELAGd%free() 
  call INTEGd%free()
  call RDMd%free() 
+
+ ! Write Footer
+ write(*,'(a)') ' '
+ write(*,'(a)') ' -------------------------------------------'
+ write(*,'(a)') ' '
+ write(*,'(a)') ' Normal termination of RUN-NOF module.'
+ write(*,'(a)') ' '
+ write(*,'(a)') '   |                   | '
+ write(*,'(a)') '   |                   | '
+ write(*,'(a)') '   |                   | '
+ write(*,'(a)') '   |        <^>        | '
+ write(*,'(a)') '   ||===I||(-@-)||I===|| '
+ write(*,'(a)') '   |        \_/        | '
+ write(*,'(a)') '   |                   | '
+ write(*,'(a)') '   |                   | '
+ write(*,'(a)') '   |                   | '
+ write(*,'(a)') '   |                   | '
+ write(*,'(a)') '   |                   | '
+ write(*,'(a)') ' '
+ write(*,'(a)') ' "Your feeble skills are no match for the '
+ write(*,'(a)') ' power of the dark side." Emperor Palpatine '
+ write(*,'(a)') ' '
+ write(*,'(a)') ' -------------------------------------------'
+ write(*,'(a)') ' '
 
 end subroutine run_noft
 !!***

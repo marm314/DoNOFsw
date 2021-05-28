@@ -113,6 +113,7 @@ subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in,imethod_in,
  type(elag_t),intent(inout)::ELAGd
 !Local variables ------------------------------
 !scalars
+ double precision::totMEM
 !arrays
 !************************************************************************
 
@@ -122,6 +123,21 @@ subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in,imethod_in,
  ELAGd%ndiis=ndiis_in
  ELAGd%ndiis_array=ELAGd%ndiis+2
  ELAGd%tolE=tolE_in
+ ! Calculate memory needed
+ totMEM=NBF_tot+2*NBF_tot*NBF_tot
+ if(ELAGd%ndiis>0.and.ELAGd%imethod==1) then
+  totMEM=totMEM+ELAGd%ndiis_array+ELAGd%ndiis_array*NBF_tot*NBF_tot+ELAGd%ndiis_array*ELAGd%ndiis_array
+ endif
+ totMEM=8*totMEM       ! Bytes
+ totMEM=totMEM*1.0d-6  ! Bytes to Mb  
+ if(totMEM>1.0d3) then     ! Mb to Gb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing ELAGd object  ',totMEM*1.0d-3,' Gb'
+ elseif(totMEM<1.0d0) then ! Mb to Kb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing ELAGd object  ',totMEM*1.0d3,' Kb'
+ else                      ! Mb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing ELAGd object  ',totMEM,' Mb'
+ endif
+ ! Allocate arrays
  allocate(ELAGd%F_diag(NBF_tot))
  allocate(ELAGd%Lambdas(NBF_tot,NBF_tot)) 
  if(ELAGd%ndiis>0.and.ELAGd%imethod==1) then

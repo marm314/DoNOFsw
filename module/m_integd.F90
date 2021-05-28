@@ -77,10 +77,23 @@ subroutine integ_init(Integd,NBF_tot,NBF_occ,Overlap_in)
 !Local variables ------------------------------
 !scalars
  integer::NBF_ldiag
+ double precision::totMEM
 !arrays
 !************************************************************************
 
  NBF_ldiag=NBF_occ*(NBF_occ+1)/2
+ ! Calculate memory needed
+ totMEM=2*NBF_ldiag+2*NBF_tot*NBF_tot+NBF_tot*NBF_tot*NBF_tot*NBF_tot
+ totMEM=8*totMEM       ! Bytes
+ totMEM=totMEM*1.0d-6  ! Bytes to Mb  
+ if(totMEM>1.0d3) then     ! Mb to Gb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing INTEGd object ',totMEM*1.0d-3,' Gb'
+ elseif(totMEM<1.0d0) then ! Mb to Kb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing INTEGd object ',totMEM*1.0d3,' Kb'
+ else                      ! Mb
+  write(*,'(a,f10.3,a)') 'Mem. required for storing INTEGd object ',totMEM,' Mb'
+ endif
+ ! Allocate arrays
  allocate(Integd%ERI_J(NBF_ldiag),Integd%ERI_K(NBF_ldiag))
  allocate(Integd%hCORE(NBF_tot,NBF_tot),Integd%Overlap(NBF_tot,NBF_tot))
  allocate(Integd%ERImol(NBF_tot,NBF_tot,NBF_tot,NBF_tot))
