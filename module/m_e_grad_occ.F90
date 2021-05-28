@@ -87,35 +87,42 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K,nogamma)
 !-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- --
   if(RDMd%Ncoupled==1) then     ! Perfect Pairing (Ncoupled=1)
    do iorb=1,RDMd%Nfrozen
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                         &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                                  &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                         &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                                  &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
     iorb = RDMd%Nalpha_elect+RDMd%Npairs-ipair+1
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                         &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                                  &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   else                  ! Extended PNOF (Ncoupled>1)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    do iorb=1,RDMd%Nfrozen
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                         &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                                  &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                         &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                                  &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
     do iorb1=1,RDMd%Ncoupled-1
      iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+iorb1
-     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )           &
+     Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                        &
+     &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                                 &
      &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
     enddo
     iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+RDMd%Ncoupled
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )            &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                         &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                                  &
     &      + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,0,iorb,RDMd%DM2_K,ERI_K)
    enddo
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -129,17 +136,20 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K,nogamma)
   if(RDMd%Ncoupled==1) then       ! PNOFi(1): Perfect Pairing (Ncoupled=1)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    do iorb=1,RDMd%Nfrozen
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                      &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                               &
     &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                      &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                               &
     &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
     iorb = RDMd%Nalpha_elect+RDMd%Npairs-ipair+1
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                      &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                               &
     &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_K)
    enddo
@@ -153,23 +163,27 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K,nogamma)
   else                  ! PNOFi(Nc): Extended PNOF (Ncoupled>1)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
    do iorb=1,RDMd%Nfrozen
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                      &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                               &
     &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
    enddo
    do ipair=1,RDMd%Npairs
     iorb = RDMd%Nfrozen+ipair
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                      &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                               &
     &      + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,1,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,1,iorb,RDMd%occ,ERI_K)
     do iorb1=1,RDMd%Ncoupled-1
      iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+iorb1
-     Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )        &
+     Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                     &
+     &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                              &
      &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)    &
      &      + 2.0d0*occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_K)
     enddo
     iorb = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-ipair)+RDMd%Ncoupled
-    Energy = Energy + RDMd%occ(iorb) * ( 2.0d0*hCORE(iorb,iorb) + ERI_J(iorb*(iorb+1)/2) )         &
+    Energy = Energy + RDMd%occ(iorb) * 2.0d0*hCORE(iorb,iorb)                                      &
+    &      + RDMd%occ(iorb) * ERI_J(iorb*(iorb+1)/2)                                               &
     &      + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_J,ERI_J) + dm2_x_eri(RDMd,2,iorb,RDMd%DM2_K,ERI_K)     &
     &      + 2.0d0*occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_J) - occ_x_eri(RDMd,2,iorb,RDMd%occ,ERI_K)
    enddo
