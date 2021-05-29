@@ -307,6 +307,7 @@ subroutine dm2_hf(RDMd,Docc_gamma,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
 !                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
 !-----------------------------------------------------------------------
  do iorb=1,RDMd%NBF_occ
+  RDMd%DM2_IIII(iorb)=RDMd%occ(iorb)*RDMd%occ(iorb)
   DM2_J(iorb,iorb)=0.0d0
   DM2_K(iorb,iorb)=0.0d0
   DDM2_gamma_J(iorb,iorb,:)=0.0d0
@@ -413,6 +414,7 @@ subroutine dm2_pnof5(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
 !                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
 !-----------------------------------------------------------------------
  do iorb=1,RDMd%NBF_occ
+  RDMd%DM2_IIII(iorb)=RDMd%occ(iorb)
   DM2_J(iorb,iorb)=0.0d0
   DM2_K(iorb,iorb)=0.0d0
   DDM2_gamma_J(iorb,iorb,:)=0.0d0
@@ -551,6 +553,7 @@ subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
 !                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
 !-----------------------------------------------------------------------
  do iorb=1,RDMd%NBF_occ
+  RDMd%DM2_IIII(iorb)=RDMd%occ(iorb)
   DM2_J(iorb,iorb)=0.0d0
   DM2_K(iorb,iorb)=0.0d0
   DDM2_gamma_J(iorb,iorb,:)=0.0d0
