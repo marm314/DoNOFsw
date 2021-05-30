@@ -25,7 +25,7 @@ module m_gammatodm2
 
  implicit none
 
- private :: dm2_hf,dm2_pnof5,dm2_pnof7
+ private :: dm2_hf,dm2_mbb,dm2_pnof5,dm2_pnof7
 !!***
 
  public :: gamma_to_2rdm
@@ -228,11 +228,17 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
 !- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
  RDMd%Docc_gamma=reshape(Docc_gamma,(/RDMd%NBF_occ*RDMd%Ngammas/))
  if(RDMd%INOF==0) then
-  call dm2_hf(RDMd,RDMd%Docc_gamma,RDMd%DM2_J,RDMd%DM2_K,RDMd%DDM2_gamma_J,RDMd%DDM2_gamma_K)
+  call dm2_hf(RDMd,RDMd%Docc_gamma,RDMd%DM2_IIII,RDMd%DM2_J,RDMd%DM2_K,&
+  & RDMd%DDM2_gamma_J,RDMd%DDM2_gamma_K)
+ elseif(RDMd%INOF==-1) then
+  call dm2_mbb(RDMd,RDMd%Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,RDMd%DM2_IIII,RDMd%DM2_J,RDMd%DM2_K,&
+  & RDMd%DDM2_gamma_J,RDMd%DDM2_gamma_K)
  elseif(RDMd%INOF==5) then
-  call dm2_pnof5(RDMd,RDMd%Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,RDMd%DM2_J,RDMd%DM2_K,RDMd%DDM2_gamma_J,RDMd%DDM2_gamma_K)
+  call dm2_pnof5(RDMd,RDMd%Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,RDMd%DM2_IIII,RDMd%DM2_J,RDMd%DM2_K,&
+  & RDMd%DDM2_gamma_J,RDMd%DDM2_gamma_K)
  else if(RDMd%INOF==7) then
-  call dm2_pnof7(RDMd,RDMd%Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,RDMd%DM2_J,RDMd%DM2_K,RDMd%DDM2_gamma_J,RDMd%DDM2_gamma_K)
+  call dm2_pnof7(RDMd,RDMd%Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,RDMd%DM2_IIII,RDMd%DM2_J,RDMd%DM2_K,&
+  & RDMd%DDM2_gamma_J,RDMd%DDM2_gamma_K)
  else
   ! Nth
  endif
@@ -256,6 +262,7 @@ end subroutine gamma_to_2rdm
 !! Dsqrt_occ_gamma=Matrix with the derivative of sqrt(occ numbers) vs gamma
 !!
 !! OUTPUT
+!! DM2_IIII=DM2 same orb elements
 !! DM2_J=DM2 elements that use J integrals 
 !! DM2_K=DM2 elements that use K integrals 
 !! DDM2_gamma_J=Derivative of the DM2 elements w.r.t. gamma that use J integrals 
@@ -267,12 +274,13 @@ end subroutine gamma_to_2rdm
 !!
 !! SOURCE
 
-subroutine dm2_hf(RDMd,Docc_gamma,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
+subroutine dm2_hf(RDMd,Docc_gamma,DM2_IIII,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
 !Arguments ------------------------------------
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
  double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Docc_gamma
+ double precision,dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
  double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
  double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
 !Local variables ------------------------------
@@ -307,14 +315,94 @@ subroutine dm2_hf(RDMd,Docc_gamma,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
 !                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
 !-----------------------------------------------------------------------
  do iorb=1,RDMd%NBF_occ
-  RDMd%DM2_IIII(iorb)=RDMd%occ(iorb)*RDMd%occ(iorb)
+  DM2_IIII(iorb)=RDMd%occ(iorb)*RDMd%occ(iorb)
   DM2_J(iorb,iorb)=0.0d0
   DM2_K(iorb,iorb)=0.0d0
+  RDMd%Dfni_ni(iorb)=2.0d0*RDMd%occ(iorb)
   DDM2_gamma_J(iorb,iorb,:)=0.0d0
   DDM2_gamma_K(iorb,iorb,:)=0.0d0
  enddo
 !-----------------------------------------------------------------------
 end subroutine dm2_hf
+!!***
+
+!!***
+!!****f* DoNOF/dm2_mbb
+!! NAME
+!! dm2_mbb
+!!
+!! FUNCTION
+!!  Build from the occ numbers and its derivatives the 2-RDM elements and its derivatives w.r.t. gamma for MBB
+!!
+!! INPUTS
+!! sqrt_occ=Square root of the occupancies of the frozen + active orbitals
+!! Docc_gamma=Matrix with the derivative of occ numbers vs gamma
+!! Dsqrt_occ_gamma=Matrix with the derivative of sqrt(occ numbers) vs gamma
+!!
+!! OUTPUT
+!! DM2_IIII=DM2 same orb elements
+!! DM2_J=DM2 elements that use J integrals 
+!! DM2_K=DM2 elements that use K integrals 
+!! DDM2_gamma_J=Derivative of the DM2 elements w.r.t. gamma that use J integrals 
+!! DDM2_gamma_K=Derivative of the DM2 elements w.r.t. gamma that use K integrals
+!!
+!! PARENTS
+!!
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine dm2_mbb(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_IIII,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
+!Arguments ------------------------------------
+!scalars
+ type(rdm_t),intent(inout)::RDMd
+!arrays
+ double precision,dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
+ double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
+ double precision,dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
+ double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
+ double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,igamma
+!arrays
+!************************************************************************
+
+!     DM2_Jpq = 2NpNq, DM2_Kpq = -NpNq [ DDM2_Jpqk = 2DNpk*Nq, DDM2_Kpq = -DNpk*Nq ] 
+ do iorb=1,RDMd%NBF_occ
+  do iorb1=1,RDMd%NBF_occ
+   DM2_J(iorb,iorb1) = 2.0d0*RDMd%occ(iorb)*RDMd%occ(iorb1)
+   DM2_K(iorb,iorb1) = -sqrt_occ(iorb)*sqrt_occ(iorb1)
+   do igamma=1,RDMd%Ngammas
+    DDM2_gamma_J(iorb,iorb1,igamma) = 2.0d0*Docc_gamma(iorb,igamma)*RDMd%occ(iorb1)
+    DDM2_gamma_K(iorb,iorb1,igamma) = -Dsqrt_occ_gamma(iorb,igamma)*sqrt_occ(iorb1)
+   enddo
+  enddo
+ enddo
+!- - - - - - - - - - - - - - - - - - - - - - - -              
+ if(RDMd%Nsingleocc>1) then
+  do iorb=RDMd%Nbeta_elect+1,RDMd%Nalpha_elect
+   do iorb1=RDMd%Nbeta_elect+1,RDMd%Nalpha_elect
+    DM2_K(iorb,iorb1) = -2.0d0*sqrt_occ(iorb)*sqrt_occ(iorb1)
+    do igamma=1,RDMd%Ngammas
+     DDM2_gamma_K(iorb,iorb1,igamma) = -2.0d0*Dsqrt_occ_gamma(iorb,igamma)*sqrt_occ(iorb1)
+    enddo
+   enddo
+  enddo
+ end if
+!-----------------------------------------------------------------------
+!                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
+!-----------------------------------------------------------------------
+ do iorb=1,RDMd%NBF_occ
+  DM2_IIII(iorb)=RDMd%occ(iorb)*RDMd%occ(iorb)-RDMd%occ(iorb)
+  DM2_J(iorb,iorb)=0.0d0
+  DM2_K(iorb,iorb)=0.0d0
+  RDMd%Dfni_ni(iorb)=2.0d0*RDMd%occ(iorb)-1.0d0
+  DDM2_gamma_J(iorb,iorb,:)=0.0d0
+  DDM2_gamma_K(iorb,iorb,:)=0.0d0
+ enddo
+!-----------------------------------------------------------------------
+end subroutine dm2_mbb
 !!***
 
 !!****f* DoNOF/dm2_pnof5
@@ -331,6 +419,7 @@ end subroutine dm2_hf
 !! Dsqrt_occ_gamma=Matrix with the derivative of sqrt(occ numbers) vs gamma
 !!
 !! OUTPUT
+!! DM2_IIII=DM2 same orb elements
 !! DM2_J=DM2 elements that use J integrals 
 !! DM2_K=DM2 elements that use K integrals 
 !! DDM2_gamma_J=Derivative of the DM2 elements w.r.t. gamma that use J integrals 
@@ -342,13 +431,14 @@ end subroutine dm2_hf
 !!
 !! SOURCE
 
-subroutine dm2_pnof5(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
+subroutine dm2_pnof5(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_IIII,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
 !Arguments ------------------------------------
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
  double precision,dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
  double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
+ double precision,dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
  double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
  double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
 !Local variables ------------------------------
@@ -414,9 +504,10 @@ subroutine dm2_pnof5(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
 !                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
 !-----------------------------------------------------------------------
  do iorb=1,RDMd%NBF_occ
-  RDMd%DM2_IIII(iorb)=RDMd%occ(iorb)
+  DM2_IIII(iorb)=RDMd%occ(iorb)
   DM2_J(iorb,iorb)=0.0d0
   DM2_K(iorb,iorb)=0.0d0
+  RDMd%Dfni_ni(iorb)=1.0d0
   DDM2_gamma_J(iorb,iorb,:)=0.0d0
   DDM2_gamma_K(iorb,iorb,:)=0.0d0
  enddo
@@ -438,6 +529,7 @@ end subroutine dm2_pnof5
 !! Dsqrt_occ_gamma=Matrix with the derivative of sqrt(occ numbers) vs gamma
 !!
 !! OUTPUT
+!! DM2_IIII=DM2 same orb elements
 !! DM2_J=DM2 elements that use J integrals 
 !! DM2_K=DM2 elements that use K integrals 
 !! DDM2_gamma_J=Derivative of the DM2 elements w.r.t. gamma that use J integrals 
@@ -449,13 +541,14 @@ end subroutine dm2_pnof5
 !!
 !! SOURCE
 
-subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
+subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_IIII,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K)
 !Arguments ------------------------------------
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
  double precision,dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
  double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
+ double precision,dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
  double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
  double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
 !Local variables ------------------------------
@@ -553,9 +646,10 @@ subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_J,DM2_K,DDM2_g
 !                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
 !-----------------------------------------------------------------------
  do iorb=1,RDMd%NBF_occ
-  RDMd%DM2_IIII(iorb)=RDMd%occ(iorb)
+  DM2_IIII(iorb)=RDMd%occ(iorb)
   DM2_J(iorb,iorb)=0.0d0
   DM2_K(iorb,iorb)=0.0d0
+  RDMd%Dfni_ni(iorb)=1.0d0
   DDM2_gamma_J(iorb,iorb,:)=0.0d0
   DDM2_gamma_K(iorb,iorb,:)=0.0d0
  enddo

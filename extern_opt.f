@@ -8,9 +8,6 @@
       DOUBLE PRECISION,DIMENSION(NBF,NBF)::COEF
       EXTERNAL::mo_ints
 C-----------------------------------------------------------------------
-!      call run_noft(0,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ICGMETHOD,
-!     &  1,itermax,1,NTHRESHL,NDIIS,tolE,EN,COEF,OVERLAP2,
-!     &  mo_ints,LRESTART) 
       call run_noft(IPNOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ICGMETHOD,
      &  1,itermax,1,NTHRESHL,NDIIS,tolE,EN,COEF,OVERLAP2,
      &  mo_ints,LRESTART) 

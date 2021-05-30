@@ -226,7 +226,7 @@ subroutine build_elag(ELAGd,RDMd,INTEGd,DM2_J,DM2_K)
 
  do iorb=1,RDMd%NBF_occ
   ELAGd%Lambdas(iorb,:)=RDMd%occ(iorb)*INTEGd%hCORE(:,iorb)                                         ! Init: Lambda_pq = n_p hCORE_qp
-  ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)+RDMd%occ(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)        ! any<->iorb,iorb<->iorb
+  ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)+RDMd%DM2_IIII(iorb)*INTEGd%ERImol(:,iorb,iorb,iorb)   ! any<->iorb,iorb<->iorb
   do iorb1=1,RDMd%NBF_occ
    if(iorb/=iorb1) then
     ELAGd%Lambdas(iorb,:)=ELAGd%Lambdas(iorb,:)+DM2_J(iorb,iorb1)*INTEGd%ERImol(:,iorb1,iorb1,iorb) ! any<->iorb,iorb1<->iorb1

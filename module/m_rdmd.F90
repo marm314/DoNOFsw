@@ -47,7 +47,7 @@ module m_rdmd
   double precision,allocatable,dimension(:)::occ
   double precision,allocatable,dimension(:)::GAMMAs_old
   double precision,allocatable,dimension(:)::DM2_J,DM2_K,DM2_IIII
-  double precision,allocatable,dimension(:)::Docc_gamma
+  double precision,allocatable,dimension(:)::Docc_gamma,Dfni_ni
   double precision,allocatable,dimension(:)::DDM2_gamma_J,DDM2_gamma_K
 
  contains 
@@ -130,7 +130,7 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
  RDMd%Ngammas=RDMd%Ncoupled*RDMd%Npairs
  ! Calculate memory needed
  totMEM=2*RDMd%NBF_occ*RDMd%NBF_occ+RDMd%NBF_occ*RDMd%Ngammas+2*RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas
- totMEM=totMEM+RDMd%Ngammas+2*RDMd%NBF_occ
+ totMEM=totMEM+RDMd%Ngammas+3*RDMd%NBF_occ
  totMEM=8*totMEM       ! Bytes
  totMEM=totMEM*1.0d-6  ! Bytes to Mb  
  if(totMEM>1.0d3) then     ! Mb to Gb
@@ -146,7 +146,7 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
  allocate(RDMd%DDM2_gamma_J(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas))
  allocate(RDMd%DDM2_gamma_K(RDMd%NBF_occ*RDMd%NBF_occ*RDMd%Ngammas)) 
  allocate(RDMd%GAMMAs_old(RDMd%Ngammas))
- allocate(RDMd%DM2_IIII(RDMd%NBF_occ)) 
+ allocate(RDMd%DM2_IIII(RDMd%NBF_occ),RDMd%Dfni_ni(RDMd%NBF_occ)) 
  allocate(RDMd%occ(RDMd%NBF_occ))
 
 end subroutine rdm_init
@@ -183,7 +183,7 @@ subroutine rdm_free(RDMd)
  deallocate(RDMd%occ)
  deallocate(RDMd%DM2_IIII)
  deallocate(RDMd%DM2_J,RDMd%DM2_K) 
- deallocate(RDMd%Docc_gamma) 
+ deallocate(RDMd%Docc_gamma,RDMd%Dfni_ni) 
  deallocate(RDMd%DDM2_gamma_J)
  deallocate(RDMd%DDM2_gamma_K) 
 
