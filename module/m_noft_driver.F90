@@ -87,8 +87,8 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
- logical::ekt,diagLpL
- integer::iorb,iter,ireadGAMMAS2,ireadCOEF2,ireadFdiag2
+ logical::ekt,diagLpL,restart_param
+ integer::iorb,iter
  double precision::Energy,Energy_old
  type(rdm_t),target::RDMd
  type(integ_t),target::INTEGd
@@ -97,7 +97,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  character(len=10)::coef_file
 !************************************************************************
 
- diagLpL=.true.;
+ diagLpL=.true.; restart_param=.false.;
 
  ! Write Header
  write(*,'(a)') ' '
@@ -111,35 +111,37 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a)') ' -------------------------------------------'
  write(*,'(a)') ' '
 
- ! Print initial parameters used by this module
- call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
+ ! Print user defined parameters used in this run
+ if(present(restart)) then
+  if(present(ireadGAMMAS).and.present(ireadCOEF).and.present(ireadFdiag)) then
+   restart_param=.true.
+   call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE_in,restart,ireadGAMMAS,ireadCOEF,ireadFdiag)
+&  itolLambda,ndiis,tolE_in,restart=restart,ireadGAMMAS=ireadGAMMAS,&
+&  ireadCOEF=ireadCOEF,ireadFdiag=ireadFdiag)
+  else
+   write(*,'(a)') 'Warning! Asking for restart but the restart parameters are unspecified (not restarting).' 
+   restart_param=.false.
+   call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
+&  itolLambda,ndiis,tolE_in)
+  endif
+ else 
+  restart_param=.false.
+  call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
+&  itolLambda,ndiis,tolE_in)
+ endif
 
  ! Initialize RDMd, INTEGd, and ELAGd objects.
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ,Overlap_in)
  call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,imethorb,tolE_in)
 
- ! Check for the presence of restart files. If they are available, read them if required (default=not to read)
- if(present(restart)) then
-  if(present(ireadGAMMAS)) then
-   ireadGAMMAS2=ireadGAMMAS
-  else
-   ireadGAMMAS2=0
-  endif
-  if(present(ireadCOEF)) then
-   ireadCOEF2=ireadCOEF
-  else
-   ireadCOEF2=0
-  endif
-  if(present(ireadFdiag)) then
-   ireadFdiag2=ireadFdiag
-  else
-   ireadFdiag2=0
-  endif
+ ! Check for the presence of restart files. If they are available read them if demanded 
+ if(restart_param) then
   write(*,'(a)') ' '
-  call read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS2,ireadCOEF2,ireadFdiag2)
+  call read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadCOEF,ireadFdiag)
   write(*,'(a)') ' '
  endif
 
@@ -269,8 +271,8 @@ subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in
 &  itolLambda,ndiis,tolE_in,restart,ireadGAMMAS,ireadCOEF,ireadFdiag)
 !Arguments ------------------------------------
 !scalars
- integer,optional,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
  logical,optional,intent(in)::restart
+ integer,optional,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
@@ -310,10 +312,16 @@ subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in
  write(*,'(a,i11)') ' Max. number of global iterations   ',itermax
  write(*,'(a,e10.3)') ' Tolerance Energy convergence        ',tolE_in
  write(*,'(a,i12)') ' Print optimal 1,2-RDMs (true=1)   ',iprintdmn
- 
- 
- 
+ ! Check for the presence of restart files. If they are available, read them if required (default=not to read)
+ if(present(restart)) then
+  write(*,'(a,i12)') ' Restart reading GAMMAs (true=1)   ',ireadGAMMAS
+  write(*,'(a,i12)') ' Restart reading COEFs  (true=1)   ',ireadCOEF
+  if(imethorb==1) then
+   write(*,'(a,i12)') ' Restart reading F_pp   (true=1)   ',ireadFdiag
+  endif
+ endif
  write(*,'(a)') ' '
+ 
 end subroutine echo_input
 !!***
 
@@ -403,7 +411,7 @@ subroutine read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadCOEF,ireadFdiag)
  deallocate(GAMMAS_in)
 
  ! Read diag. part of F matrix
- if(ELAGd%ndiis>0.and.ELAGd%imethod==1) then
+ if(ELAGd%imethod==1) then
   open(unit=iunit,form='unformatted',file='F_DIAG',iostat=istat,status='old')
   icount=0
   if(istat==0.and.ireadFdiag==1) then
