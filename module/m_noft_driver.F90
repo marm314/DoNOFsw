@@ -89,7 +89,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 !scalars
  logical::ekt,diagLpL,restart_param
  integer::iorb,iter
- double precision::Energy,Energy_old
+ double precision::Energy,Energy_old,Vee,hONEbody
  type(rdm_t),target::RDMd
  type(integ_t),target::INTEGd
  type(elag_t),target::ELAGd
@@ -203,9 +203,17 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call RDMd%print_orbs(NO_COEF,coef_file)
  call RDMd%print_orbs_bin(NO_COEF)
  
- ! Print final Energy
+ ! Print final Energy and its components
+ hONEbody=0.0d0
+ do iorb=1,RDMd%NBF_occ
+  hONEbody=hONEbody+RDMd%occ(iorb)*INTEGd%hCORE(iorb,iorb)
+ enddo
+ Vee=Energy-hONEbody
  write(*,'(a)') ' '
- write(*,'(a,f15.6,a,i6,a)') 'Final NOF energy= ',Energy+Vnn,' after ',iter,' global iter.'
+ write(*,'(a,f15.6,a,i6,a)') 'Final NOF energy= ',Energy+Vnn,' a.u. after ',iter,' global iter.'
+ write(*,'(a,f15.6,a)') 'hCORE           = ',hONEbody,' a.u.'
+ write(*,'(a,f15.6,a)') 'Vee             = ',Vee,' a.u.'
+ write(*,'(a,f15.6,a)') 'Vnn             = ',Vnn,' a.u.'
  write(*,'(a)') ' '
 
  ! Free all allocated RDMd, INTEGd, and ELAGd arrays
