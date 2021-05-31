@@ -70,14 +70,14 @@ contains
 !! SOURCE
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,iprintints,&
 &  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,Overlap_in,mo_ints,restart,ireadGAMMAS,ireadCOEF,&
 &  ireadFdiag)
 !Arguments ------------------------------------
 !scalars
  integer,optional,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
  logical,optional,intent(in)::restart
- integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda,ndiis
+ integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,iprintints,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
  double precision,intent(in)::Vnn,tolE_in
@@ -117,20 +117,20 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
    restart_param=.true.
    call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE_in,restart=restart,ireadGAMMAS=ireadGAMMAS,&
+&  iprintints,itolLambda,ndiis,tolE_in,restart=restart,ireadGAMMAS=ireadGAMMAS,&
 &  ireadCOEF=ireadCOEF,ireadFdiag=ireadFdiag)
   else
    write(*,'(a)') 'Warning! Asking for restart but the restart parameters are unspecified (not restarting).' 
    restart_param=.false.
    call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE_in)
+&  iprintints,itolLambda,ndiis,tolE_in)
   endif
  else 
   restart_param=.false.
   call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE_in)
+&  iprintints,itolLambda,ndiis,tolE_in)
  endif
 
  ! Initialize RDMd, INTEGd, and ELAGd objects.
@@ -216,6 +216,11 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a,f15.6,a)') 'Vnn             = ',Vnn,' a.u.'
  write(*,'(a)') ' '
 
+ ! Print the hCORE and ERImol ints in the latest NO_COEF basis
+ if(iprintints==1) then
+  call INTEGd%print_int(RDMd%NBF_tot)
+ endif
+
  ! Free all allocated RDMd, INTEGd, and ELAGd arrays
  call ELAGd%free() 
  call INTEGd%free()
@@ -276,12 +281,12 @@ end subroutine run_noft
 
 subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE_in,restart,ireadGAMMAS,ireadCOEF,ireadFdiag)
+&  iprintints,itolLambda,ndiis,tolE_in,restart,ireadGAMMAS,ireadCOEF,ireadFdiag)
 !Arguments ------------------------------------
 !scalars
  logical,optional,intent(in)::restart
  integer,optional,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
- integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda,ndiis
+ integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,iprintints,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
  double precision,intent(in)::tolE_in
@@ -320,6 +325,7 @@ subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in
  write(*,'(a,i11)') ' Max. number of global iterations   ',itermax
  write(*,'(a,e10.3)') ' Tolerance Energy convergence        ',tolE_in
  write(*,'(a,i12)') ' Print optimal 1,2-RDMs (true=1)   ',iprintdmn
+ write(*,'(a,i12)') ' Print last hCORE and ERImol ints  ',iprintints
  ! Check for the presence of restart files. If they are available, read them if required (default=not to read)
  if(present(restart)) then
   write(*,'(a,i12)') ' Restart reading GAMMAs (true=1)   ',ireadGAMMAS

@@ -9,7 +9,7 @@
       EXTERNAL::mo_ints
 C-----------------------------------------------------------------------
       call run_noft(INOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ICGMETHOD,
-     &  1,itermax,1,NTHRESHL,NDIIS,tolE,EN,COEF,OVERLAP2,
+     &  1,itermax,1,1,NTHRESHL,NDIIS,tolE,EN,COEF,OVERLAP2,
      &  mo_ints,restart=LRESTART,ireadGAMMAS=1,ireadCOEF=1,ireadFdiag=1)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT

@@ -40,6 +40,9 @@ module m_integd
    procedure :: eritoeriJK => eri_to_eriJK  
    ! ERImol to ERI_J and ERI_K.
 
+   procedure :: print_int => print_ints 
+   ! Print hCORE and ERImol integrals in their current status
+
  end type integ_t
 
  public :: integ_init     ! Main creation method.
@@ -177,6 +180,69 @@ subroutine eri_to_eriJK(Integd,NBF_occ)
  enddo
 
 end subroutine eri_to_eriJK
+!!***
+
+!!***
+!!****f* DoNOF/print_ints
+!! NAME
+!! print_ints
+!!
+!! FUNCTION
+!!  Print hCORE and ERImol integrals in their current status 
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine print_ints(Integd,NBF_tot)
+!Arguments ------------------------------------
+!scalars
+ integer,intent(in)::NBF_tot
+ class(integ_t),intent(in)::Integd
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1,iorb2,iorb3,iunit=312
+ double precision::tol8=1.0d-8
+!arrays
+!************************************************************************
+ 
+ ! Print ERImol
+ open(unit=iunit,form='unformatted',file='ERImol')
+ do iorb=1,NBF_tot
+  do iorb1=1,NBF_tot
+   do iorb2=1,NBF_tot
+    do iorb3=1,NBF_tot
+     if(dabs(INTEGd%ERImol(iorb,iorb1,iorb2,iorb3))>tol8) then
+      write(iunit) iorb,iorb1,iorb,iorb1,INTEGd%ERImol(iorb,iorb1,iorb2,iorb3)
+     endif
+    enddo
+   enddo
+  enddo
+ enddo 
+ write(iunit) 0,0,0,0,0.0d0
+ write(iunit) 0,0,0,0,0.0d0
+ close(iunit)
+
+ ! Print hCORE
+ open(unit=iunit,form='unformatted',file='hCORE')
+ do iorb=1,NBF_tot
+  do iorb1=1,NBF_tot
+   if(dabs(INTEGd%hCORE(iorb,iorb1))>tol8) then
+    write(iunit) iorb,iorb1,INTEGd%hCORE(iorb,iorb1)
+   endif
+  enddo
+ enddo
+ close(iunit)
+ write(iunit) 0,0,0.0d0
+ close(iunit)
+
+end subroutine print_ints
 !!***
 
 end module m_integd
