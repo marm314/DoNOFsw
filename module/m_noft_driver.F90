@@ -179,7 +179,11 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  enddo
 
+ ! Print optimized 1,2-RDMs
  if(iprintdmn==1) call RDMd%print_dmn(RDMd%DM2_J,RDMd%DM2_K) 
+
+ ! Print hCORE and ERImol integrals in the last (opt) NO_COEF basis
+ if(iprintints==1)  call INTEGd%print_int(RDMd%NBF_tot)
 
  ! Print final diagonalized INTEGd%Lambdas values
  call ELAGd%diag_lag(RDMd,INTEGd,NO_COEF)
@@ -187,10 +191,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Print final Extended Koopmans' Theorem (EKT) values
  if(RDMd%Nsingleocc==0) call ELAGd%diag_lag(RDMd,INTEGd,NO_COEF,ekt=ekt)
 
- ! Print final occ. numbers
+ ! Print optimal occ. numbers
  write(*,'(a)') ' '
  RDMd%occ(:)=2.0d0*RDMd%occ(:)
- write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%occ(:)),' optimized occ. numbers '
+ write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%occ(:)),'. Optimized occ. numbers '
  do iorb=1,(RDMd%NBF_occ/10)*10,10
   write(*,'(f12.6,9f11.6)') RDMd%occ(iorb:iorb+9)
  enddo
@@ -198,7 +202,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(f12.6,*(f11.6))') RDMd%occ(iorb:) 
  write(*,'(a)') ' '
 
- ! Print final nat. orb. coef.
+ ! Print optimized nat. orb. coef.
  coef_file='NO_COEF'
  call RDMd%print_orbs(NO_COEF,coef_file)
  call RDMd%print_orbs_bin(NO_COEF)
@@ -215,11 +219,6 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a,f15.6,a)') 'Vee             = ',Vee,' a.u.'
  write(*,'(a,f15.6,a)') 'Vnn             = ',Vnn,' a.u.'
  write(*,'(a)') ' '
-
- ! Print the hCORE and ERImol ints in the latest NO_COEF basis
- if(iprintints==1) then
-  call INTEGd%print_int(RDMd%NBF_tot)
- endif
 
  ! Free all allocated RDMd, INTEGd, and ELAGd arrays
  call ELAGd%free() 

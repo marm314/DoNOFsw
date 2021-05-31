@@ -408,7 +408,7 @@ subroutine dyson_orbs(ELAGd,RDMd,INTEGd,Eigvec,NO_COEF)
  call RDMd%print_orbs(DYSON_COEF,coef_file)
  ! Print DYSON occ. numbers
  DYSON_OCC(:)=2.0d0*DYSON_OCC(:)
- write(*,'(a,f10.5,a)') 'Dyson occ ',sum(DYSON_OCC(:)),' occ. numbers '
+ write(*,'(a,f10.5,a)') 'Dyson occ ',sum(DYSON_OCC(:)),'. Dyson occ. numbers '
  do iorb=1,(RDMd%NBF_occ/10)*10,10
   write(*,'(f12.6,9f11.6)') DYSON_OCC(iorb:iorb+9)
  enddo
