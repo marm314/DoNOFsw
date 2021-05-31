@@ -29,7 +29,7 @@ module m_noft_driver
 
  implicit none
 
- private :: read_restart
+ private :: read_restart,echo_input
 !!***
 
  public :: run_noft
@@ -71,9 +71,11 @@ contains
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,Overlap_in,mo_ints,restart)
+&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,Overlap_in,mo_ints,restart,ireadGAMMAS,ireadCOEF,&
+&  ireadFdiag)
 !Arguments ------------------------------------
 !scalars
+ integer,optional,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
  logical,optional,intent(in)::restart
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
@@ -86,7 +88,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 !Local variables ------------------------------
 !scalars
  logical::ekt,diagLpL
- integer::iorb,iter
+ integer::iorb,iter,ireadGAMMAS2,ireadCOEF2,ireadFdiag2
  double precision::Energy,Energy_old
  type(rdm_t),target::RDMd
  type(integ_t),target::INTEGd
@@ -109,15 +111,35 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a)') ' -------------------------------------------'
  write(*,'(a)') ' '
 
+ ! Print initial parameters used by this module
+ call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
+&  itolLambda,ndiis,tolE_in,restart,ireadGAMMAS,ireadCOEF,ireadFdiag)
+
  ! Initialize RDMd, INTEGd, and ELAGd objects.
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ,Overlap_in)
  call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,imethorb,tolE_in)
 
- ! Check for the presence of restart files. If they are available, read them
+ ! Check for the presence of restart files. If they are available, read them if required (default=not to read)
  if(present(restart)) then
+  if(present(ireadGAMMAS)) then
+   ireadGAMMAS2=ireadGAMMAS
+  else
+   ireadGAMMAS2=0
+  endif
+  if(present(ireadCOEF)) then
+   ireadCOEF2=ireadCOEF
+  else
+   ireadCOEF2=0
+  endif
+  if(present(ireadFdiag)) then
+   ireadFdiag2=ireadFdiag
+  else
+   ireadFdiag2=0
+  endif
   write(*,'(a)') ' '
-  call read_restart(RDMd,ELAGd,NO_COEF)
+  call read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS2,ireadCOEF2,ireadFdiag2)
   write(*,'(a)') ' '
  endif
 
@@ -166,7 +188,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Print final occ. numbers
  write(*,'(a)') ' '
  RDMd%occ(:)=2.0d0*RDMd%occ(:)
- write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%occ(:)),' occ. numbers '
+ write(*,'(a,f10.5,a)') 'Total occ ',sum(RDMd%occ(:)),' optimized occ. numbers '
  do iorb=1,(RDMd%NBF_occ/10)*10,10
   write(*,'(f12.6,9f11.6)') RDMd%occ(iorb:iorb+9)
  enddo
@@ -217,6 +239,85 @@ end subroutine run_noft
 !!***
 
 !!***
+!!****f* DoNOF/echo_input
+!! NAME
+!! echo_input
+!!
+!! FUNCTION
+!!  Echo all parameters employed in this run of this module
+!!
+!! INPUTS
+!! INOF_in=PNOFi functional to use
+!! Ista_in=Use PNOF7 (Ista_in=0) or PNOF7s (Ista_in=1)
+!! NBF_occ_in=Number of orbitals that are occupied
+!! Nfrozen_in=Number of frozen orbitals that remain with occ=2.0 
+!! Npairs_in=Number of electron pairs
+!! Ncoupled_in=Number of coupled orbitals per electron pair MINUS ONE
+!! Nbeta_elect_in=Number of beta electrons (N/2 for spin compensated systems)
+!! Nalpha_elect_in=Number of beta electrons (N/2 for spin compensated systems)
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
+&  itolLambda,ndiis,tolE_in,restart,ireadGAMMAS,ireadCOEF,ireadFdiag)
+!Arguments ------------------------------------
+!scalars
+ integer,optional,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
+ logical,optional,intent(in)::restart
+ integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,itolLambda,ndiis
+ integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
+ integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
+ double precision,intent(in)::tolE_in
+!arrays
+!Local variables ------------------------------
+!scalars
+!arrays
+!************************************************************************
+ write(*,'(a)') ' '
+ write(*,'(a,i12)') ' NOF approximation in use          ',INOF_in
+ if(INOF_in==7) then
+  if(Ista_in==1) then
+   write(*,'(a,i12)') ' PNOF7s version selected Istat     ',Ista_in
+  else
+   write(*,'(a,i12)') ' PNOF7  version selected Istat     ',Ista_in
+  endif
+ endif
+ write(*,'(a,i12)') ' Numb. of basis functions          ',NBF_tot_in
+ write(*,'(a,i12)') ' Numb. of occ orbitals             ',NBF_occ_in
+ write(*,'(a,i12)') ' Numb. of frozen orbs (occ=2)      ',NBF_occ_in
+ write(*,'(a,i12)') ' Numb. of active e- pairs          ',Npairs_in
+ write(*,'(a,i12)') ' Numb. of "virtual" coupled orbs   ',Ncoupled_in
+ write(*,'(a,i12)') ' Numb. of singly occupied orbs     ',Nalpha_elect_in-Nbeta_elect_in
+ if(imethocc==1) then
+  write(*,'(a,i12)') ' CG method used in occ opt.        ',imethocc
+ else
+  write(*,'(a,i12)') ' L-BFGS method used in occ opt.    ',imethocc
+ endif
+ if(imethorb==1) then
+  write(*,'(a,i12)') ' F_diag method used in orb opt.    ',imethorb
+  write(*,'(a,e10.3)') ' Tolerance Lambda convergence        ',1.0d1**(-itolLambda)
+  write(*,'(a,i12)') ' Numb. of iter used in DIIS        ',ndiis
+ else
+  write(*,'(a,i12)') ' Newton method used in orb opt.    ',imethorb
+ endif
+ write(*,'(a,i11)') ' Max. number of global iterations   ',itermax
+ write(*,'(a,e10.3)') ' Tolerance Energy convergence        ',tolE_in
+ write(*,'(a,i12)') ' Print optimal 1,2-RDMs (true=1)   ',iprintdmn
+ 
+ 
+ 
+ write(*,'(a)') ' '
+end subroutine echo_input
+!!***
+
+!!***
 !!****f* DoNOF/read_restart
 !! NAME
 !!  read_restart
@@ -233,9 +334,10 @@ end subroutine run_noft
 !!
 !! SOURCE
 
-subroutine read_restart(RDMd,ELAGd,NO_COEF)
+subroutine read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadCOEF,ireadFdiag)
 !Arguments ------------------------------------
 !scalars
+ integer,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(inout)::RDMd
 !arrays
@@ -253,7 +355,7 @@ subroutine read_restart(RDMd,ELAGd,NO_COEF)
  allocate(NO_COEF_in(RDMd%NBF_tot,RDMd%NBF_tot))
  open(unit=iunit,form='unformatted',file='NO_COEF_BIN',iostat=istat,status='old')
  icount=0
- if(istat==0) then
+ if(istat==0.and.ireadCOEF==1) then
   do
    read(iunit,iostat=istat) intvar,intvar1,doubvar
    if(istat/=0) then
@@ -278,7 +380,7 @@ subroutine read_restart(RDMd,ELAGd,NO_COEF)
  allocate(GAMMAS_in(RDMd%Ngammas))
  open(unit=iunit,form='unformatted',file='GAMMAS',iostat=istat,status='old')
  icount=0
- if(istat==0) then
+ if(istat==0.and.ireadGAMMAS==1) then
   do 
    read(iunit,iostat=istat) intvar,doubvar
    if(istat/=0) then
@@ -304,7 +406,7 @@ subroutine read_restart(RDMd,ELAGd,NO_COEF)
  if(ELAGd%ndiis>0.and.ELAGd%imethod==1) then
   open(unit=iunit,form='unformatted',file='F_DIAG',iostat=istat,status='old')
   icount=0
-  if(istat==0) then
+  if(istat==0.and.ireadFdiag==1) then
    do 
     read(iunit,iostat=istat) intvar,doubvar
     if(istat/=0) then

@@ -224,7 +224,7 @@ C-----------------------------------------------------------------------
        CHARACTER(80) :: TITLE
        COMMON/TIT/TITLE
        COMMON/INPNOF_GENERALINF/ICOEF,MAXIT,IECP
-       COMMON/INPNOF_PNOF/IPNOF,NTWOPAR
+       COMMON/INPNOF_PNOF/IPNOF,NTWOPAR,INOF
        COMMON/INPNOF_ORBSPACE0/NO1,NDOC,NCO,NCWO,NVIR,NAC,NO0
        LOGICAL HighSpin
        COMMON/INPNOF_ORBSPACE_1/HighSpin
@@ -4428,7 +4428,7 @@ C                      = 3      LBFGS: OPTLBFGS, LBFGSOCUPr
 C
 C-----------------------------------------------------------------------
       NAMELIST/NOFINP/MAXIT,ICOEF,IEINI,NO1,HFID,NTHRESHEID,MAXITID,
-     &                KOOPMANS,IPNOF,Ista,HighSpin,NCWO,NTHRESHL,
+     &                KOOPMANS,IPNOF,INOF,Ista,HighSpin,NCWO,NTHRESHL,
      &                NTHRESHE,NTHRESHEC,NTHRESHEN,NOPTORB,MAXLOOP,
      &                SCALING,NZEROS,NZEROSm,NZEROSr,ITZITER,DIIS,
      &                NTHDIIS,NDIIS,PERDIIS,SC2MCPT,NO1PT2,NEX,OIMP2,
@@ -4457,6 +4457,7 @@ C     Hartree-Fock
 
 C     PNOF Selection
       IPNOF=7
+      INOF=7
       Ista=0                                      ! PNOF7n            
       HighSpin=.FALSE.                            ! Multiplet      
       NCWO=1                                      ! Perfect Pairing

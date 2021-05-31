@@ -65,7 +65,7 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,iorb6,iorb7,iorb8
  integer::igamma,igamma1,igamma2
  integer::mult
- double precision::occ_orb,hole_orb,sqrt_occ_orb,sqrt_hole_orb,SQRTorb
+ double precision::occ_orb,hole_orb,sqrt_occ_orb,sqrt_hole_orb,sqrthole_orb
 !arrays
  double precision,allocatable,dimension(:)::Docc_gamma0,sqrt_occ,Dsqrt_occ_gamma0,hole
  double precision,allocatable,dimension(:,:)::Dsqrt_occ_gamma,Dhole_gamma,Docc_gamma 
@@ -190,25 +190,25 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
    Docc_gamma0(iorb5)  = -dsin(2.0d0*GAMMAs(igamma))
    Dsqrt_occ_gamma0(iorb5) = -dsin(GAMMAs(igamma))
    RDMd%occ(iorb5) = hole(iorb2)*hole_orb
-   SQRTorb = dsqrt(hole(iorb2))
-   sqrt_occ(iorb5)= SQRTorb*sqrt_occ_orb
+   sqrthole_orb = dsqrt(hole(iorb2))
+   sqrt_occ(iorb5)= sqrthole_orb*sqrt_occ_orb
    Docc_gamma(iorb5,igamma1) = Dhole_gamma(iorb2,igamma1)*hole_orb
-   if(SQRTorb>0.0d0) then
-    Dsqrt_occ_gamma(iorb5,igamma1) = 0.5d0*Dhole_gamma(iorb2,igamma1)*sqrt_occ_orb/SQRTorb
+   if(sqrthole_orb>0.0d0) then
+    Dsqrt_occ_gamma(iorb5,igamma1) = 0.5d0*Dhole_gamma(iorb2,igamma1)*sqrt_occ_orb/sqrthole_orb
    else
     Dsqrt_occ_gamma(iorb5,igamma1) = 0.0d0
    endif
    do iorb6=iorb1,iorb2-1            !     iorb1 < iorb6   < iorb2-1
     igamma2 = RDMd%Npairs+iorb6      !   igamma1 < igamma2 < igamma
     Docc_gamma(iorb5,igamma2) = Dhole_gamma(iorb2,igamma2)*hole_orb
-    if(SQRTorb>0.0d0) then
-     Dsqrt_occ_gamma(iorb5,igamma2) = 0.5d0*Dhole_gamma(iorb2,igamma2)*sqrt_occ_orb/SQRTorb
+    if(sqrthole_orb>0.0d0) then
+     Dsqrt_occ_gamma(iorb5,igamma2) = 0.5d0*Dhole_gamma(iorb2,igamma2)*sqrt_occ_orb/sqrthole_orb
     else
      Dsqrt_occ_gamma(iorb5,igamma2) = 0.0d0
     endif
    enddo
    Docc_gamma(iorb5,igamma) = hole(iorb2) *Docc_gamma0(iorb5)
-   Dsqrt_occ_gamma(iorb5,igamma) = SQRTorb*Dsqrt_occ_gamma0(iorb5)
+   Dsqrt_occ_gamma(iorb5,igamma) = sqrthole_orb*Dsqrt_occ_gamma0(iorb5)
 !- - - - iorb4 = iorb2 - last occ  - - - - - - - - - - - - - -
   enddo
   deallocate(hole,Dhole_gamma)
@@ -312,7 +312,7 @@ subroutine dm2_hf(RDMd,Docc_gamma,DM2_IIII,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K
   enddo
  end if
 !-----------------------------------------------------------------------
-!                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
+!                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)*OCC(iorb)
 !-----------------------------------------------------------------------
  do iorb=1,RDMd%NBF_occ
   DM2_IIII(iorb)=RDMd%occ(iorb)*RDMd%occ(iorb)
@@ -391,13 +391,13 @@ subroutine dm2_mbb(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_IIII,DM2_J,DM2_K
   enddo
  end if
 !-----------------------------------------------------------------------
-!                 DM2(iorb,iorb,iorb,iorb)=OCC(iorb)
+!          DM2(iorb,iorb,iorb,iorb)=2*OCC(iorb)*OCC(iorb)-OCC(iorb)
 !-----------------------------------------------------------------------
  do iorb=1,RDMd%NBF_occ
-  DM2_IIII(iorb)=RDMd%occ(iorb)*RDMd%occ(iorb)-RDMd%occ(iorb)
+  DM2_IIII(iorb)=2.0d0*RDMd%occ(iorb)*RDMd%occ(iorb)-RDMd%occ(iorb)
   DM2_J(iorb,iorb)=0.0d0
   DM2_K(iorb,iorb)=0.0d0
-  RDMd%Dfni_ni(iorb)=2.0d0*RDMd%occ(iorb)-1.0d0
+  RDMd%Dfni_ni(iorb)=4.0d0*RDMd%occ(iorb)-1.0d0
   DDM2_gamma_J(iorb,iorb,:)=0.0d0
   DDM2_gamma_K(iorb,iorb,:)=0.0d0
  enddo
