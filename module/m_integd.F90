@@ -238,7 +238,6 @@ subroutine print_ints(Integd,NBF_tot)
    endif
   enddo
  enddo
- close(iunit)
  write(iunit) 0,0,0.0d0
  close(iunit)
 
