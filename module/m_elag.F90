@@ -319,14 +319,14 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,INTEGd,NO_COEF,ekt)
  if(present(ekt)) then
   Eigval=-Eigval
   call ELAGd%dyson_orb(RDMd,INTEGd,Eigvec,NO_COEF)
-  write(*,'(a)') 'EKT ionization potentials'
+  write(*,'(a)') 'EKT ionization potentials (a.u.)'
  else
   coef_file='CANON_COEF'
   allocate(CANON_COEF(RDMd%NBF_tot,RDMd%NBF_tot))
   CANON_COEF=matmul(NO_COEF,Eigvec)
   call RDMd%print_orbs(CANON_COEF,coef_file)
   deallocate(CANON_COEF)
-  write(*,'(a)') 'Canonical orbital eigenvalues'
+  write(*,'(a)') 'Canonical orbital eigenvalues (a.u.)'
  endif
 
  Eigval_nocc(1:RDMd%NBF_occ)=Eigval(1:RDMd%NBF_occ)
