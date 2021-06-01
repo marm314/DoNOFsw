@@ -29,7 +29,7 @@ module m_noft_driver
 
  implicit none
 
- private :: read_restart,echo_input
+ private :: read_restart,echo_input,occtogamma
 !!***
 
  public :: run_noft
@@ -71,11 +71,11 @@ contains
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,iprintints,&
-&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,Overlap_in,mo_ints,restart,ireadGAMMAS,ireadCOEF,&
-&  ireadFdiag)
+&  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,Overlap_in,mo_ints,restart,ireadGAMMAS,ireadOCC,&
+&  ireadCOEF,ireadFdiag)
 !Arguments ------------------------------------
 !scalars
- integer,optional,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
+ integer,optional,intent(in)::ireadGAMMAS,ireadOCC,ireadCOEF,ireadFdiag
  logical,optional,intent(in)::restart
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,iprintints,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
@@ -113,12 +113,12 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 
  ! Print user defined parameters used in this run
  if(present(restart)) then
-  if(present(ireadGAMMAS).and.present(ireadCOEF).and.present(ireadFdiag)) then
+  if(present(ireadGAMMAS).and.present(ireadCOEF).and.present(ireadFdiag).and.present(ireadOCC)) then
    restart_param=.true.
    call echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
 &  iprintints,itolLambda,ndiis,tolE_in,restart=restart,ireadGAMMAS=ireadGAMMAS,&
-&  ireadCOEF=ireadCOEF,ireadFdiag=ireadFdiag)
+&  ireadOCC=ireadOCC,ireadCOEF=ireadCOEF,ireadFdiag=ireadFdiag)
   else
    write(*,'(a)') 'Warning! Asking for restart but the restart parameters are unspecified (not restarting).' 
    restart_param=.false.
@@ -134,14 +134,15 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  endif
 
  ! Initialize RDMd, INTEGd, and ELAGd objects.
- call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in)
+ call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,&
+& Nbeta_elect_in,Nalpha_elect_in)
  call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ,Overlap_in)
  call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,imethorb,tolE_in)
 
- ! Check for the presence of restart files. If they are available read them if demanded 
+ ! Check for the presence of restart files. Then, if they are available read them (only if required)
  if(restart_param) then
   write(*,'(a)') ' '
-  call read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadCOEF,ireadFdiag)
+  call read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadOCC,ireadCOEF,ireadFdiag)
   write(*,'(a)') ' '
  endif
 
@@ -207,7 +208,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  call RDMd%print_orbs(NO_COEF,coef_file)
  call RDMd%print_orbs_bin(NO_COEF)
  
- ! Print final Energy and its components
+ ! Print final Energy and its components (occs are already [0:2])
  hONEbody=0.0d0
  do iorb=1,RDMd%NBF_occ
   hONEbody=hONEbody+RDMd%occ(iorb)*INTEGd%hCORE(iorb,iorb)
@@ -280,11 +281,11 @@ end subroutine run_noft
 
 subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
 &  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,&
-&  iprintints,itolLambda,ndiis,tolE_in,restart,ireadGAMMAS,ireadCOEF,ireadFdiag)
+&  iprintints,itolLambda,ndiis,tolE_in,restart,ireadGAMMAS,ireadOCC,ireadCOEF,ireadFdiag)
 !Arguments ------------------------------------
 !scalars
  logical,optional,intent(in)::restart
- integer,optional,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
+ integer,optional,intent(in)::ireadGAMMAS,ireadOCC,ireadCOEF,ireadFdiag
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,iprintints,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
@@ -328,6 +329,7 @@ subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in
  ! Check for the presence of restart files. If they are available, read them if required (default=not to read)
  if(present(restart)) then
   write(*,'(a,i12)') ' Restart reading GAMMAs (true=1)   ',ireadGAMMAS
+  write(*,'(a,i12)') ' Restart reading DM1 file (true=1) ',ireadOCC
   write(*,'(a,i12)') ' Restart reading COEFs  (true=1)   ',ireadCOEF
   if(imethorb==1) then
    write(*,'(a,i12)') ' Restart reading F_pp   (true=1)   ',ireadFdiag
@@ -355,10 +357,10 @@ end subroutine echo_input
 !!
 !! SOURCE
 
-subroutine read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadCOEF,ireadFdiag)
+subroutine read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadOCC,ireadCOEF,ireadFdiag)
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::ireadGAMMAS,ireadCOEF,ireadFdiag
+ integer,intent(in)::ireadGAMMAS,ireadOCC,ireadCOEF,ireadFdiag
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(inout)::RDMd
 !arrays
@@ -373,61 +375,92 @@ subroutine read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadCOEF,ireadFdiag)
 !************************************************************************
 
  ! Read NO_COEF for guess
- allocate(NO_COEF_in(RDMd%NBF_tot,RDMd%NBF_tot))
- open(unit=iunit,form='unformatted',file='NO_COEF_BIN',iostat=istat,status='old')
- icount=0
- if(istat==0.and.ireadCOEF==1) then
-  do
-   read(iunit,iostat=istat) intvar,intvar1,doubvar
-   if(istat/=0) then
-    exit
-   endif
-   if(((intvar/=0).and.(intvar1/=0)).and.intvar*intvar1<=RDMd%NBF_tot*RDMd%NBF_tot) then
-    NO_COEF_in(intvar,intvar1)=doubvar
-    icount=icount+1
-   else
-    exit
-   endif
-  enddo
+ if(ireadCOEF==1) then
+  allocate(NO_COEF_in(RDMd%NBF_tot,RDMd%NBF_tot))
+  open(unit=iunit,form='unformatted',file='NO_COEF_BIN',iostat=istat,status='old')
+  icount=0
+  if(istat==0) then
+   do
+    read(iunit,iostat=istat) intvar,intvar1,doubvar
+    if(istat/=0) then
+     exit
+    endif
+    if(((intvar/=0).and.(intvar1/=0)).and.intvar*intvar1<=RDMd%NBF_tot*RDMd%NBF_tot) then
+     NO_COEF_in(intvar,intvar1)=doubvar
+     icount=icount+1
+    else
+     exit
+    endif
+   enddo
+  endif
+  if(icount==RDMd%NBF_tot*RDMd%NBF_tot) then
+   NO_COEF(:,:)=NO_COEF_in(:,:)
+   write(*,'(a)') 'NO coefs. read from checkpoint file'
+  endif
+  close(iunit)
+  deallocate(NO_COEF_in)
  endif
- if(icount==RDMd%NBF_tot*RDMd%NBF_tot) then
-  NO_COEF(:,:)=NO_COEF_in(:,:)
-  write(*,'(a)') 'NO coefs. read from checkpoint file'
- endif
- close(iunit)
- deallocate(NO_COEF_in)
 
- ! Read GAMMAs indep. parameters used to compute occs.
- allocate(GAMMAS_in(RDMd%Ngammas))
- open(unit=iunit,form='unformatted',file='GAMMAS',iostat=istat,status='old')
- icount=0
- if(istat==0.and.ireadGAMMAS==1) then
-  do 
-   read(iunit,iostat=istat) intvar,doubvar
-   if(istat/=0) then
-    exit
-   endif
-   if((intvar/=0).and.intvar<=RDMd%Ngammas) then
-    GAMMAs_in(intvar)=doubvar
-    icount=icount+1
-   else
-    exit
-   endif
-  enddo
+ ! Read GAMMAs (indep. parameters used to optimize occs.) from GAMMAS file
+ if(ireadGAMMAS==1) then
+  allocate(GAMMAS_in(RDMd%Ngammas))
+  open(unit=iunit,form='unformatted',file='GAMMAS',iostat=istat,status='old')
+  icount=0
+  if(istat==0) then
+   do 
+    read(iunit,iostat=istat) intvar,doubvar
+    if(istat/=0) then
+     exit
+    endif
+    if((intvar/=0).and.intvar<=RDMd%Ngammas) then
+     GAMMAs_in(intvar)=doubvar
+     icount=icount+1
+    else
+     exit
+    endif
+   enddo
+  endif
+  if(icount==RDMd%Ngammas) then
+   RDMd%GAMMAs_old(:)=GAMMAS_in(:)
+   RDMd%GAMMAs_nread=.false.
+   write(*,'(a)') 'GAMMAs (indep. variables) read from checkpoint file'
+  endif
+  close(iunit)
+  deallocate(GAMMAS_in)
  endif
- if(icount==RDMd%Ngammas) then
-  RDMd%GAMMAs_old(:)=GAMMAS_in(:)
-  RDMd%GAMMAs_nread=.false.
-  write(*,'(a)') 'GAMMAs (indep. variables) read from checkpoint file'
+ if(ireadOCC==1) then
+  open(unit=iunit,form='unformatted',file='DM1',iostat=istat,status='old')
+  icount=0
+  if(istat==0) then
+   do
+    read(iunit,iostat=istat) intvar,intvar,doubvar
+    if(istat/=0) then
+     exit
+    endif
+    if((intvar/=0).and.intvar<=RDMd%NBF_occ) then
+     RDMd%occ(intvar)=doubvar
+     icount=icount+1
+    else
+     exit
+    endif
+   enddo
+  endif
+  if(icount==RDMd%NBF_occ) then
+   if(ireadGAMMAS==1) write(*,'(a)') 'Comment: computing GAMMAs using occ. read from DM1 file'
+   RDMd%occ(:)=0.5d0*RDMd%occ(:)
+   call occtogamma(RDMd) 
+   RDMd%occ=0.0d0   
+   RDMd%GAMMAs_nread=.false.
+   write(*,'(a)') 'GAMMAs (indep. variables) calculated using DM1 file'
+  endif
+  close(iunit)
  endif
- close(iunit)
- deallocate(GAMMAS_in)
 
- ! Read diag. part of F matrix
- if(ELAGd%imethod==1) then
+ ! Read diag. part of the F matrix for Lambda_pq - Lambda_qp* method
+ if(ELAGd%imethod==1.and.ireadFdiag==1) then
   open(unit=iunit,form='unformatted',file='F_DIAG',iostat=istat,status='old')
   icount=0
-  if(istat==0.and.ireadFdiag==1) then
+  if(istat==0) then
    do 
     read(iunit,iostat=istat) intvar,doubvar
     if(istat/=0) then
@@ -449,6 +482,70 @@ subroutine read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadCOEF,ireadFdiag)
  endif
 
 end subroutine read_restart
+!!***
+
+!!***
+!!****f* DoNOF/occtogamma
+!! NAME
+!!  occtogamma
+!!
+!! FUNCTION
+!!
+!! INPUTS
+!!
+!! OUTPUT
+!!
+!! PARENTS
+!!  
+!! CHILDREN
+!!
+!! SOURCE
+
+subroutine occtogamma(RDMd)
+!Arguments ------------------------------------
+!scalars
+ type(rdm_t),intent(inout)::RDMd
+!arrays
+!Local variables ------------------------------
+!scalars
+ integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,iorb6,iorb7,iorb8
+ double precision::argum,hole_iorb1 
+!arrays
+ double precision,allocatable,dimension(:)::Holes
+!************************************************************************
+
+ allocate(Holes(RDMd%Npairs*(RDMd%Ncoupled-1)))
+ do iorb=1,RDMd%Npairs
+  iorb1 = RDMd%Nfrozen+iorb                                           ! iorb1=RDMd%Nfrozen+1,RDMd%Nbeta_elect
+  RDMd%GAMMAs_old(iorb) = dacos(dsqrt(2.0d0*RDMd%occ(iorb1)-1.0d0))
+  if(RDMd%Ncoupled/=1) then
+   iorb2 = (RDMd%Ncoupled-1)*(iorb-1)+1
+   iorb3 = (RDMd%Ncoupled-1)*iorb
+   hole_iorb1 = 1.0d0 - RDMd%occ(iorb1)
+   Holes(iorb2:iorb3) = hole_iorb1
+   do iorb6=1,RDMd%Ncoupled-1
+    iorb4 = (RDMd%Ncoupled-1)*(iorb-1)+iorb6                          ! iorb4=1,RDMd%pairs*(RDMd%Ncoupled-1)
+    iorb5 = RDMd%Npairs+iorb4                                         ! iorb5=RDMd%pairs+1,RDMd%pairs*RDMd%Ncoupled
+    iorb1 = RDMd%Nalpha_elect+RDMd%Ncoupled*(RDMd%Npairs-iorb)+iorb6  ! iorb1=RDMd%Nalpha_elect+1,RDMd%Nalpha_elect+RDMd%Ncoupled*RDMd%pairs-1         
+    if(Holes(iorb4)>0.0d0) then
+     argum=dsqrt(RDMd%occ(iorb1)/Holes(iorb4))
+     if(argum>1.0d0)argum=1.0d0
+     RDMd%GAMMAs_old(iorb5)=dasin(argum)
+    else
+     RDMd%GAMMAs_old(iorb5) = 0.0d0
+    endif
+    if(iorb6<RDMd%Ncoupled-1) then
+     do iorb7=1,RDMd%Ncoupled-1-iorb6
+      iorb8 = iorb4+iorb7                                             ! iorb4 < iorb8 < iorb*(RDMd%Ncoupled-1)
+      Holes(iorb8) = Holes(iorb8) - RDMd%occ(iorb1)
+     enddo
+    endif
+   enddo
+  endif
+ enddo
+ deallocate(Holes)
+
+end subroutine occtogamma
 !!***
 
 end module m_noft_driver

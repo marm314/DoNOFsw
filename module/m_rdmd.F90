@@ -246,7 +246,7 @@ double precision::tol8=1.0d-8
  ! Print the 1-RDM
  open(unit=iunit,form='unformatted',file='DM1')
  do iorb=1,RDMd%NBF_occ
-  if(dabs(RDMd%occ(iorb))>tol8) write(iunit) iorb,iorb,2.0d0*RDMd%occ(iorb)
+  write(iunit) iorb,iorb,2.0d0*RDMd%occ(iorb)
  enddo
  write(iunit) 0,0,0.0d0
  close(iunit)

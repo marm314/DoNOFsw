@@ -4,7 +4,8 @@
 
 # Intel Fortran
 #F90 = ifort -i8 -r8 -fpp -static -O3 -mkl
-F90 = ifort -i8 -r8 -fpp -static -O0 -mkl
+#F90 = ifort -i8 -r8 -fpp -static -O0 -mkl
+F90 = ifort -i8 -r8 -fpp -static -O2 -mkl
 MPIF90 = mpiifort -DMPI -r8 -i8 -fpp -O3 -mkl
 
 # GNU Fortran
