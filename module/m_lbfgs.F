@@ -1,5 +1,6 @@
       module m_lbfgs 
 
+      USE m_vars
       INTEGER LP,MP
       DOUBLE PRECISION GTOL,STPMIN,STPMAX
       COMMON /LB3/MP,LP,GTOL,STPMIN,STPMAX

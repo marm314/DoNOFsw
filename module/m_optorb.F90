@@ -60,18 +60,18 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::iter,imethod
- double precision,intent(in)::Vnn
- double precision,intent(inout)::Energy
+ real(dp),intent(in)::Vnn
+ real(dp),intent(inout)::Energy
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(inout)::RDMd
  type(integ_t),intent(inout)::INTEGd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
  logical::convLambda,nogamma
  integer::icall
- double precision::sumdiff,maxdiff,Ediff,Energy_old
+ real(dp)::sumdiff,maxdiff,Ediff,Energy_old
 !arrays
 !************************************************************************
 
@@ -170,14 +170,14 @@ subroutine lambda_conv(ELAGd,RDMd,converg_lamb,sumdiff,maxdiff)
 !Arguments ------------------------------------
 !scalars
  logical,intent(inout)::converg_lamb
- double precision,intent(inout)::sumdiff,maxdiff
+ real(dp),intent(inout)::sumdiff,maxdiff
  type(elag_t),intent(in)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1
- double precision::diff,tol_dif_Lambda
+ real(dp)::diff,tol_dif_Lambda
 !arrays
 !************************************************************************
 

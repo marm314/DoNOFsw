@@ -53,18 +53,18 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
 !scalars
  integer,intent(in)::iter
  integer,intent(inout)::icall
- double precision,intent(in)::maxdiff
+ real(dp),intent(in)::maxdiff
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,lwork,info
- double precision::thresholddiis
+ real(dp)::thresholddiis
 !arrays
- double precision,allocatable,dimension(:)::Work
- double precision,allocatable,dimension(:,:)::Eigvec,New_NO_COEF ! Eigvec is initailly the F matrix
+ real(dp),allocatable,dimension(:)::Work
+ real(dp),allocatable,dimension(:,:)::Eigvec,New_NO_COEF ! Eigvec is initailly the F matrix
 !************************************************************************
  
  thresholddiis=1.0d1**(-ELAGd%itoldiis)
@@ -142,13 +142,13 @@ subroutine scale_F(MaxScaling,Fpq)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::MaxScaling
- double precision,intent(inout)::Fpq
+ real(dp),intent(inout)::Fpq
 !arrays
 !Local variables ------------------------------
 !scalars
  integer::iscale
 !arrays
- double precision::Abs_Fpq
+ real(dp)::Abs_Fpq
 !************************************************************************
  do iscale=1,MaxScaling
   Abs_Fpq=dabs(Fpq)
@@ -186,7 +186,7 @@ subroutine diis_F(RDMd,ELAGd,Eigvec)
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::Eigvec
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::Eigvec
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,idiis1,idiisp1,info
@@ -244,7 +244,7 @@ function traceF(RDMd,ELAGd,idiis_in) result(traceFF)
 !Arguments ------------------------------------
 !scalars
  integer::idiis_in
- double precision::traceFF
+ real(dp)::traceFF
  type(elag_t),intent(in)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays

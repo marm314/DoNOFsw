@@ -5,6 +5,7 @@
 # Intel Fortran
 #F90 = ifort -i8 -r8 -fpp -static -O3 -mkl
 #F90 = ifort -i8 -r8 -fpp -static -O0 -mkl
+#F90 = ifort -i8 -r8 -fpp -static -O1 -mkl
 F90 = ifort -i8 -r8 -fpp -static -O2 -mkl
 MPIF90 = mpiifort -DMPI -r8 -i8 -fpp -O3 -mkl
 
@@ -20,7 +21,7 @@ all: serial #serialg mpi
 
 serial:
 
-	$(F90) -o donof.x m_rdmd.F90 m_integd.F90 m_elag.F90 m_diagf.F90 m_cg.F90 m_lbfgs.F m_gammatodm2.F90 m_e_grad_occ.F90 m_optocc.F90 m_optorb.F90 m_noft_driver.F90 m_ccsd.f90 donof1.f mbpt.f extern_opt.f donof2.f90 gauss_legendre.f90 
+	$(F90) -o donof.x m_vars.F90 m_integd.F90 m_rdmd.F90 m_elag.F90 m_diagf.F90 m_cg.F90 m_lbfgs.F m_gammatodm2.F90 m_e_grad_occ.F90 m_optocc.F90 m_optorb.F90 m_noft_driver.F90 m_ccsd.f90 donof1.f mbpt.f extern_opt.f donof2.f90 gauss_legendre.f90 
 
 ########################################################################
 

@@ -15,6 +15,7 @@
 
 module m_integd
 
+ use m_vars
  implicit none
 
 !!****t* m_integd/integ_t
@@ -29,9 +30,9 @@ module m_integd
  type,public :: integ_t
 
 ! arrays 
- double precision,allocatable,dimension(:)::ERI_J,ERI_K
- double precision,allocatable,dimension(:,:)::hCORE,Overlap
- double precision,allocatable,dimension(:,:,:,:)::ERImol
+ real(dp),allocatable,dimension(:)::ERI_J,ERI_K
+ real(dp),allocatable,dimension(:,:)::hCORE,Overlap
+ real(dp),allocatable,dimension(:,:,:,:)::ERImol
 
  contains 
    procedure :: free => integ_free
@@ -76,11 +77,11 @@ subroutine integ_init(Integd,NBF_tot,NBF_occ,Overlap_in)
 !scalars
  integer,intent(in)::NBF_tot,NBF_occ
  type(integ_t),intent(inout)::Integd
- double precision,dimension(NBF_tot,NBF_tot),intent(in)::Overlap_in
+ real(dp),dimension(NBF_tot,NBF_tot),intent(in)::Overlap_in
 !Local variables ------------------------------
 !scalars
  integer::NBF_ldiag
- double precision::totMEM
+ real(dp)::totMEM
 !arrays
 !************************************************************************
 
@@ -208,7 +209,7 @@ subroutine print_ints(Integd,NBF_tot)
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iunit=312
- double precision::tol8=1.0d-8
+ real(dp)::tol8=1.0d-8
 !arrays
 !************************************************************************
  

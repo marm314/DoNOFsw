@@ -1,5 +1,6 @@
 module m_cg
 
+use m_vars
 implicit none
 
 public:: deflt,sumit
@@ -20,7 +21,7 @@ subroutine deflt ( alg, iv, liv, lv, v )
 
   integer alg
   integer iv(liv)
-  double precision v(lv)
+  real(dp) v(lv)
   external vdflt
   integer miv, mv
   integer miniv(2), minv(2)
@@ -125,9 +126,9 @@ subroutine vdflt ( alg, lv, v )
   implicit none
 
   integer alg, lv
-  double precision v(lv)
-  double precision rmdcon
-  double precision machep, mepcrt, one, sqteps, three
+  real(dp) v(lv)
+  real(dp) rmdcon
+  real(dp) machep, mepcrt, one, sqteps, three
   integer afctol, bias, cosmin, decfac, delta0, dfac, dinit, dltfdc
   integer dltfdj, dtinit, d0init, epslon, eta0, fuzz, huberc
   integer incfac, lmax0, lmaxs, phmnfc, phmxfc, rdfcmn, rdfcmx
@@ -249,17 +250,17 @@ subroutine sumit ( d, fx, g, iv, liv, lv, n, v, x)
   integer n
 
   integer iv(liv)
-  double precision d(n)
-  double precision fx
-  double precision g(n)
-  double precision v(lv)
-  double precision x(n)
+  real(dp) d(n)
+  real(dp) fx
+  real(dp) g(n)
+  real(dp) v(lv)
+  real(dp) x(n)
   integer dg1, g01, i, k, l, lstgst, nwtst1, step1
   integer        temp1, w, x01, z
-  double precision t
-  double precision half, negone, one, onep2, zero
+  real(dp) t
+  real(dp) half, negone, one, onep2, zero
   logical stopx
-  double precision dotprd, reldst, v2norm
+  real(dp) dotprd, reldst, v2norm
   integer cnvcod, dg, dgnorm, dinit, dstnrm, dst0, f, f0, fdif
   integer gthg, gtstep, g0, incfac, inith, irc, kagqt, lmat, lmax0
   integer lmaxs, mode, model, mxfcal, mxiter, nextv, nfcall, nfgcal
@@ -579,14 +580,14 @@ subroutine parck ( alg, d, iv, liv, lv, n, v )
 !
   integer alg, liv, lv, n
   integer iv(liv)
-  double precision d(n), v(lv)
-  double precision rmdcon
+  real(dp) d(n), v(lv)
+  real(dp) rmdcon
   integer max0
   integer i, ii, iv1, j, k, l, m, miv1, miv2, ndfalt, parsv1, pu
   integer ijmp, jlim(2), miniv(2), ndflt(2)
   character*1 varnm(2), sh(2)
   character*4 cngd(3), dflt(3), vn(2,34), which(3)
-  double precision big, machep, tiny, vk, vm(34), vx(34)
+  real(dp) big, machep, tiny, vk, vm(34), vx(34)
   integer algsav, dinit, dtype, dtype0, epslon, inits, ivneed
   integer lastiv, lastv, lmat, nextiv, nextv, nvdflt, oldn
   integer parprt, parsav, perm, prunit, vneed
@@ -858,14 +859,14 @@ subroutine itsum ( d, g, iv, liv, lv, p, v, x )
   integer lv
   integer p
 
-  double precision d(p)
-  double precision g(p)
+  real(dp) d(p)
+  real(dp) g(p)
   integer iv(liv)
-  double precision v(lv)
-  double precision x(p)
+  real(dp) v(lv)
+  real(dp) x(p)
   integer alg, i, iv1, m, nf, ng, ol, pu
   character*4 model1(6), model2(6)
-  double precision nreldf, oldf, preldf, reldf
+  real(dp) nreldf, oldf, preldf, reldf
   integer algsav, dstnrm, f, fdif, f0, needhd, nfcall, nfcov, ngcov
   integer ngcall, niter, nreduc, outlev, preduc, prntit, prunit
   integer reldx, solprt, statpr, stppar, sused, x0prt
@@ -1083,13 +1084,13 @@ function v2norm ( p, x )
 !
   integer p
 
-  double precision x(p)
+  real(dp) x(p)
   integer i, j
-  double precision r, scale
-  double precision, save :: sqteta = 0.0D+00
-  double precision t, xi
-  double precision rmdcon
-  double precision v2norm
+  real(dp) r, scale
+  real(dp), save :: sqteta = 0.0D+00
+  real(dp) t, xi
+  real(dp) rmdcon
+  real(dp) v2norm
 
   v2norm = 0.0D+00
 
@@ -1169,8 +1170,8 @@ function rmdcon ( k )
 !         k = 6... largest machine no. big such that -big exists.
 !
   integer k
-  double precision rmdcon
-  double precision big, eta, machep
+  real(dp) rmdcon
+  real(dp) big, eta, machep
   integer bigi(4), etai(4), machei(4)
   equivalence (big,bigi(1)), (eta,etai(1)), (machep,machei(1))
 !
@@ -1239,7 +1240,7 @@ function rmdcon ( k )
 !  port library -- requires more than just a data statement...
 !
 !     external d1mach
-!     double precision d1mach, zero
+!     real(dp) d1mach, zero
 !     data big/0.d+0/, eta/0.d+0/, machep/0.d+0/, zero/0.d+0/
 !     if (big > 0.0D+00) go to 1
 !        big = d1mach(2)
@@ -1284,8 +1285,8 @@ subroutine vcopy ( p, y, x )
   implicit none
 
   integer p
-  double precision x(p)
-  double precision y(p)
+  real(dp) x(p)
+  real(dp) y(p)
 
   y(1:p) = x(1:p)
 
@@ -1298,8 +1299,8 @@ subroutine vscopy ( p, y, s )
 !
   implicit none
   integer p
-  double precision s
-  double precision y(p)
+  real(dp) s
+  real(dp) y(p)
 
   y(1:p) = s
 
@@ -1313,9 +1314,9 @@ subroutine vvmulp ( n, x, y, z, k )
   implicit none
   integer n
   integer k
-  double precision x(n)
-  double precision y(n)
-  double precision z(n)
+  real(dp) x(n)
+  real(dp) y(n)
+  real(dp) z(n)
 
   if ( k < 0 ) then
     x(1:n) = y(1:n) / z(1:n)
@@ -1337,10 +1338,10 @@ subroutine lvmul ( n, x, l, y )
 !
   integer n
 
-  double precision x(n), l(*), y(n)
+  real(dp) x(n), l(*), y(n)
 !     dimension l(n*(n+1)/2)
   integer i, ii, ij, i0, j, np1
-  double precision t
+  real(dp) t
 
   np1 = n + 1
   i0 = n*(n+1)/2
@@ -1371,11 +1372,11 @@ subroutine livmul ( n, x, l, y )
 !
   integer n
 
-  double precision x(n), l(*), y(n)
+  real(dp) x(n), l(*), y(n)
   external dotprd
-  double precision dotprd
+  real(dp) dotprd
   integer i, j, k
-  double precision t
+  real(dp) t
 
   do k = 1, n
     if (y(k) /= 0.0D+00 ) go to 20
@@ -1416,11 +1417,11 @@ subroutine litvmu ( n, x, l, y )
 !
   integer n
 
-  double precision l(*)
-  double precision x(n)
-  double precision y(n)
+  real(dp) l(*)
+  real(dp) x(n)
+  real(dp) y(n)
   integer i, ii, ij, i0, j
-  double precision xi
+  real(dp) xi
 
   x(1:n) = y(1:n)
 
@@ -1455,10 +1456,10 @@ subroutine ltvmul ( n, x, l, y )
 !    x and y may occupy the same storage.
 !
   integer n
-  double precision x(n), l(*), y(n)
+  real(dp) x(n), l(*), y(n)
 !     dimension l(n*(n+1)/2)
   integer i, ij, i0, j
-  double precision yi
+  real(dp) yi
 
   i0 = 0
   do i = 1, n
@@ -1514,13 +1515,13 @@ subroutine lupdat ( beta, gamma, l, lambda, lplus, n, w, z )
 !             correction to  l.
 !
   integer n
-  double precision beta(n), gamma(n), l(*), lambda(n), lplus(*), w(n), z(n)
+  real(dp) beta(n), gamma(n), l(*), lambda(n), lplus(*), w(n), z(n)
 !     dimension l(n*(n+1)/2), lplus(n*(n+1)/2)
 !
   integer i, ij, j, jj, jp1, k, nm1
   integer np1
-  double precision a, b, bj, eta, gj, lj, lij, ljj, nu, s, theta, wj, zj
-  double precision one
+  real(dp) a, b, bj, eta, gj, lj, lij, ljj, nu, s, theta, wj, zj
+  real(dp) one
 
   parameter (one=1.d+0 )
 
@@ -1666,12 +1667,12 @@ subroutine dbdog ( dig, lv, n, nwtstp, step, v )
   integer lv
   integer n
 
-  double precision dig(n), nwtstp(n), step(n), v(lv)
+  real(dp) dig(n), nwtstp(n), step(n), v(lv)
   external dotprd, v2norm
-  double precision dotprd, v2norm
-  double precision cfact, cnorm, ctrnwt, ghinvg, femnsq, gnorm
-  double precision nwtnrm, relax, rlambd, t, t1, t2
-  double precision half, two
+  real(dp) dotprd, v2norm
+  real(dp) cfact, cnorm, ctrnwt, ghinvg, femnsq, gnorm
+  real(dp) nwtnrm, relax, rlambd, t, t1, t2
+  real(dp) half, two
   integer bias, dgnorm, dstnrm, dst0, grdfac, gthg, gtstep
   integer nreduc, nwtfac, preduc, radius, stppar
   parameter (half=0.5d+0, two=2.d+0)
@@ -1773,13 +1774,13 @@ function dotprd ( p, x, y )
 !
   integer p
 
-  double precision dotprd
+  real(dp) dotprd
   integer i
-  double precision rmdcon
-  double precision, save :: sqteta = 0.0D+00
-  double precision t
-  double precision x(p)
-  double precision y(p)
+  real(dp) rmdcon
+  real(dp), save :: sqteta = 0.0D+00
+  real(dp) t
+  real(dp) x(p)
+  real(dp) y(p)
 
   dotprd = 0.0D+00
 
@@ -1840,10 +1841,10 @@ subroutine vaxpy ( p, w, a, x, y )
 
   integer p
 
-  double precision a
-  double precision w(p)
-  double precision x(p)
-  double precision y(p)
+  real(dp) a
+  real(dp) w(p)
+  real(dp) x(p)
+  real(dp) y(p)
 
   w(1:p) = a * x(1:p) + y(1:p)
 
@@ -1856,10 +1857,10 @@ function reldst ( p, d, x, x0 )
 !
   integer p
 
-  double precision reldst
-  double precision d(p), x(p), x0(p)
+  real(dp) reldst
+  real(dp) d(p), x(p), x0(p)
   integer i
-  double precision emax, t, xmax
+  real(dp) emax, t, xmax
 
   emax = 0.0D+00
   xmax = 0.0D+00
@@ -2076,11 +2077,11 @@ subroutine assst ( iv, liv, lv, v )
   integer lv
 
   integer iv(liv)
-  double precision v(lv)
+  real(dp) v(lv)
   logical goodx
   integer i, nfc
-  double precision emax, emaxs, gts, rfac1, xmax
-  double precision half, one, onep2, two
+  real(dp) emax, emaxs, gts, rfac1, xmax
+  real(dp) half, one, onep2, two
   integer afctol, decfac, dstnrm, dstsav, dst0, f, fdif, flstgd, f0
   integer gtslst, gtstep, incfac, irc, lmaxs, mlstgd, model, nfcall
   integer nfgcal, nreduc, plstgd, preduc, radfac, radinc, rdfcmn
@@ -2418,19 +2419,19 @@ subroutine wzbfgs ( l, n, s, w, y, z )
 
   integer n
 
-  double precision dotprd
-  double precision cs
-  double precision cy
-  double precision, parameter :: eps = 0.1D+00
-  double precision epsrt
-  double precision l(n*(n+1)/2)
-  double precision s(n)
-  double precision shs
-  double precision theta
-  double precision w(n)
-  double precision y(n)
-  double precision ys
-  double precision z(n)
+  real(dp) dotprd
+  real(dp) cs
+  real(dp) cy
+  real(dp), parameter :: eps = 0.1D+00
+  real(dp) epsrt
+  real(dp) l(n*(n+1)/2)
+  real(dp) s(n)
+  real(dp) shs
+  real(dp) theta
+  real(dp) w(n)
+  real(dp) y(n)
+  real(dp) ys
+  real(dp) z(n)
 
   call ltvmul ( n, w, l, s )
   shs = dotprd ( n, w, w )

@@ -64,12 +64,12 @@ subroutine calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K,nogamma)
 !Arguments ------------------------------------
 !scalars
  logical,optional,intent(in)::nogamma
- double precision,intent(inout)::Energy
+ real(dp),intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%Ngammas),intent(in)::GAMMAs
- double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::hCORE
+ real(dp),dimension(RDMd%Ngammas),intent(in)::GAMMAs
+ real(dp),dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::hCORE
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,ipair
@@ -219,10 +219,10 @@ subroutine calc_Grad_occ(RDMd,Grad,hCORE,ERI_J,ERI_K)
 !Arguments ------------------------------------
 !scalars
  type(rdm_t),intent(inout)::RDMd
- double precision,dimension(RDMd%Ngammas),intent(inout)::Grad
+ real(dp),dimension(RDMd%Ngammas),intent(inout)::Grad
 !arrays
- double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::hCORE
+ real(dp),dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::hCORE
 !Local variables ------------------------------
 !scalars
  integer::igamma,iorb,iorb1,ipair
@@ -350,12 +350,12 @@ end subroutine calc_Grad_occ
 function dm2_x_eri(RDMd,icase,iorb,DM2_JKL,ERI) result(E_dm2ERI_iorb)
 !Arguments ------------------------------------
 !scalars
- double precision::E_dm2ERI_iorb
+ real(dp)::E_dm2ERI_iorb
  integer,intent(in)::icase,iorb
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(in)::DM2_JKL 
- double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI 
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(in)::DM2_JKL 
+ real(dp),dimension(RDMd%NBF_ldiag),intent(in)::ERI 
 !Local variables ------------------------------
 !scalars
  integer::iorb1
@@ -430,12 +430,12 @@ end function dm2_x_eri
 function occ_x_eri(RDMd,icase,iorb,OCC,ERI) result(E_occERI_iorb)
 !Arguments ------------------------------------
 !scalars
- double precision::E_occERI_iorb
+ real(dp)::E_occERI_iorb
  integer,intent(in)::icase,iorb
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ),intent(in)::OCC
- double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI 
+ real(dp),dimension(RDMd%NBF_occ),intent(in)::OCC
+ real(dp),dimension(RDMd%NBF_ldiag),intent(in)::ERI 
 !Local variables ------------------------------
 !scalars
  integer::iorb1
@@ -498,12 +498,12 @@ end function occ_x_eri
 function Ddm2_gamma_x_ERI(RDMd,icase,iorb,igamma,DDM2_JorK,ERI) result(Grad_Ddm2_ERI_iorb)
 !Arguments ------------------------------------
 !scalars
- double precision::Grad_Ddm2_ERI_iorb
+ real(dp)::Grad_Ddm2_ERI_iorb
  integer,intent(in)::icase,iorb,igamma
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(in)::DDM2_JorK
- double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI 
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(in)::DDM2_JorK
+ real(dp),dimension(RDMd%NBF_ldiag),intent(in)::ERI 
 !Local variables ------------------------------
 !scalars
  integer::iorb1
@@ -578,12 +578,12 @@ end function Ddm2_gamma_x_ERI
 function Docc_gamma_x_ERI(RDMd,icase,iorb,igamma,Docc_gamma,ERI) result(Grad_Docc_ERI_iorb)
 !Arguments ------------------------------------
 !scalars
- double precision::Grad_Docc_ERI_iorb
+ real(dp)::Grad_Docc_ERI_iorb
  integer,intent(in)::icase,iorb,igamma
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Docc_gamma
- double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI 
+ real(dp),dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Docc_gamma
+ real(dp),dimension(RDMd%NBF_ldiag),intent(in)::ERI 
 !Local variables ------------------------------
 !scalars
  integer::iorb1

@@ -48,14 +48,14 @@ module m_elag
   integer::idiis=0               ! Current DIIS iteration
   integer::ndiis=5               ! The number of iterations required to apply DIIS is ndiis+1
   integer::ndiis_array           ! Size of the arrays used in DIIS (ndiis+2)
-  double precision::sumdiff_old  ! Old value of sum_pq |F_pq|  for p/=q 
-  double precision::tolE         ! Tolerance that will be imposed in Energy convergence
+  real(dp)::sumdiff_old  ! Old value of sum_pq |F_pq|  for p/=q 
+  real(dp)::tolE         ! Tolerance that will be imposed in Energy convergence
 ! arrays 
-  double precision,allocatable,dimension(:)::F_diag       ! F_pp (Diag. part of the F matrix)
-  double precision,allocatable,dimension(:)::Coef_DIIS    ! DIIS coefs. used to build linear comb. of F matrices
-  double precision,allocatable,dimension(:,:)::Lambdas    ! Lambda_pq (Lagrange multipliers matrix)
-  double precision,allocatable,dimension(:,:)::DIIS_mat   ! DIIS matrix used to solve the system of eqs. DIIS_MAT*Coef_DIIS = (0 0 ... 0 1) 
-  double precision,allocatable,dimension(:,:,:)::F_DIIS   ! F matrices used by DIIS
+  real(dp),allocatable,dimension(:)::F_diag       ! F_pp (Diag. part of the F matrix)
+  real(dp),allocatable,dimension(:)::Coef_DIIS    ! DIIS coefs. used to build linear comb. of F matrices
+  real(dp),allocatable,dimension(:,:)::Lambdas    ! Lambda_pq (Lagrange multipliers matrix)
+  real(dp),allocatable,dimension(:,:)::DIIS_mat   ! DIIS matrix used to solve the system of eqs. DIIS_MAT*Coef_DIIS = (0 0 ... 0 1) 
+  real(dp),allocatable,dimension(:,:,:)::F_DIIS   ! F matrices used by DIIS
 
  contains 
    procedure :: free => elag_free
@@ -109,11 +109,11 @@ subroutine elag_init(ELAGd,NBF_tot,diagLpL_in,itolLambda_in,ndiis_in,imethod_in,
 !scalars
  logical,intent(in)::diagLpL_in
  integer,intent(in)::NBF_tot,itolLambda_in,ndiis_in,imethod_in
- double precision,intent(in)::tolE_in
+ real(dp),intent(in)::tolE_in
  type(elag_t),intent(inout)::ELAGd
 !Local variables ------------------------------
 !scalars
- double precision::totMEM
+ real(dp)::totMEM
 !arrays
 !************************************************************************
 
@@ -214,11 +214,11 @@ subroutine build_elag(ELAGd,RDMd,INTEGd,DM2_J,DM2_K)
  type(rdm_t),intent(inout)::RDMd
  type(integ_t),intent(in)::INTEGd
 !arrays
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1
- double precision::tol10=1.0d-10
+ real(dp)::tol10=1.0d-10
 !arrays
 !************************************************************************
 
@@ -270,15 +270,15 @@ subroutine diag_lambda_ekt(ELAGd,RDMd,INTEGd,NO_COEF,ekt)
  type(rdm_t),intent(in)::RDMd
  type(integ_t),intent(in)::INTEGd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::NO_COEF
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::NO_COEF
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,lwork,info
- double precision::sqrt_occ_iorb,sqrt_occ_iorb1,tol6=1d-6
+ real(dp)::sqrt_occ_iorb,sqrt_occ_iorb1,tol6=1d-6
 !arrays
  character(len=10)::coef_file
- double precision,allocatable,dimension(:)::Eigval,Eigval_nocc,Work
- double precision,allocatable,dimension(:,:)::Eigvec,CANON_COEF
+ real(dp),allocatable,dimension(:)::Eigval,Eigval_nocc,Work
+ real(dp),allocatable,dimension(:,:)::Eigvec,CANON_COEF
 !************************************************************************
 
  allocate(Eigvec(RDMd%NBF_tot,RDMd%NBF_tot),Eigval(RDMd%NBF_tot),Work(1))
@@ -370,14 +370,14 @@ subroutine dyson_orbs(ELAGd,RDMd,INTEGd,Eigvec,NO_COEF)
  type(rdm_t),intent(in)::RDMd
  type(integ_t),intent(in)::INTEGd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::Eigvec,NO_COEF
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::Eigvec,NO_COEF
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2
 !arrays
  character(len=10)::coef_file
- double precision,allocatable,dimension(:)::DYSON_OCC
- double precision,allocatable,dimension(:,:)::DYSON_COEF
+ real(dp),allocatable,dimension(:)::DYSON_OCC
+ real(dp),allocatable,dimension(:,:)::DYSON_COEF
 !************************************************************************
  allocate(DYSON_COEF(RDMd%NBF_tot,RDMd%NBF_tot),DYSON_OCC(RDMd%NBF_occ))
  DYSON_COEF=0.0d0; DYSON_OCC=0.0d0;

@@ -60,22 +60,22 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCORE,ERI_J,ERI_K)
 !scalars
  integer,intent(inout)::iter
  integer,intent(in)::imethod
- double precision,intent(in)::Vnn
- double precision,intent(inout)::Energy
+ real(dp),intent(in)::Vnn
+ real(dp),intent(inout)::Energy
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::hCORE
- double precision,dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::hCORE
+ real(dp),dimension(RDMd%NBF_ldiag),intent(in)::ERI_J,ERI_K 
 !Local variables ------------------------------
 !scalars
  logical::diagco,conveg=.false.
  integer,parameter::msave=7,nextv=47,nfcall=6,nfgcal=7,g=28,toobig=2,vneed=4
  integer::igamma,iflag,ig,icall,icall1,Mtosave,Nwork,Nwork2
- double precision::eps,xtol,tolgamma=1.0d-6
+ real(dp)::eps,xtol,tolgamma=1.0d-6
 !arrays
  integer,dimension(2)::info_print
  integer,allocatable,dimension(:)::iWork
- double precision,allocatable,dimension(:)::GAMMAs,Grad_GAMMAs,diag,Work,Work2
+ real(dp),allocatable,dimension(:)::GAMMAs,Grad_GAMMAs,diag,Work,Work2
 !************************************************************************
 
  Energy=0.0d0

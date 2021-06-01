@@ -15,6 +15,7 @@
 
 module m_rdmd 
 
+ use m_vars
  implicit none
 
 !!****t* m_rdmd/rdm_t
@@ -42,13 +43,13 @@ module m_rdmd
   integer::Npairs                ! Number of electron pairs
   integer::Npairs_p_sing         ! Number of electron pairs plus number of singly occ orbitals
   integer::Ngammas               ! Number of gammas (independet variables used in occ optimization procedure)
-  double precision::Sums
+  real(dp)::Sums
 ! arrays 
-  double precision,allocatable,dimension(:)::occ
-  double precision,allocatable,dimension(:)::GAMMAs_old
-  double precision,allocatable,dimension(:)::DM2_J,DM2_K,DM2_IIII
-  double precision,allocatable,dimension(:)::Docc_gamma,Dfni_ni
-  double precision,allocatable,dimension(:)::DDM2_gamma_J,DDM2_gamma_K
+  real(dp),allocatable,dimension(:)::occ
+  real(dp),allocatable,dimension(:)::GAMMAs_old
+  real(dp),allocatable,dimension(:)::DM2_J,DM2_K,DM2_IIII
+  real(dp),allocatable,dimension(:)::Docc_gamma,Dfni_ni
+  real(dp),allocatable,dimension(:)::DDM2_gamma_J,DDM2_gamma_K
 
  contains 
    procedure :: free => rdm_free
@@ -111,7 +112,7 @@ subroutine rdm_init(RDMd,INOF,Ista,NBF_tot,NBF_occ,Nfrozen,Npairs,&
  type(rdm_t),intent(inout)::RDMd
 !Local variables ------------------------------
 !scalars
- double precision::totMEM
+ real(dp)::totMEM
 !arrays
 !************************************************************************
 
@@ -214,11 +215,11 @@ subroutine print_rdm(RDMd,DM2_J,DM2_K)
 !scalars
  class(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(in)::DM2_J,DM2_K
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(in)::DM2_J,DM2_K
 !Local variables ------------------------------
 !scalars
 integer::iorb,iorb1,iunit=312
-double precision::tol8=1.0d-8
+real(dp)::tol8=1.0d-8
 !arrays
 
 !************************************************************************
@@ -280,7 +281,7 @@ subroutine print_orb_coefs(RDMd,COEF,name_file)
  class(rdm_t),intent(in)::RDMd
 !arrays
  character(len=10)::name_file 
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::COEF
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::COEF
 !Local variables ------------------------------
 !scalars
 integer::iorb,iorb1,iunit=312
@@ -326,7 +327,7 @@ subroutine print_orb_coefs_bin(RDMd,COEF)
 !scalars
  class(rdm_t),intent(in)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::COEF
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(in)::COEF
 !Local variables ------------------------------
 !scalars
 integer::iorb,iorb1,iunit=312

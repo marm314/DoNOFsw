@@ -80,16 +80,16 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,iprintints,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
- double precision,intent(in)::Vnn,tolE_in
+ real(dp),intent(in)::Vnn,tolE_in
  external::mo_ints
 !arrays
- double precision,dimension(NBF_tot_in,NBF_tot_in),intent(in)::Overlap_in
- double precision,dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
+ real(dp),dimension(NBF_tot_in,NBF_tot_in),intent(in)::Overlap_in
+ real(dp),dimension(NBF_tot_in,NBF_tot_in),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
  logical::ekt,diagLpL,restart_param
  integer::iorb,iter
- double precision::Energy,Energy_old,Vee,hONEbody
+ real(dp)::Energy,Energy_old,Vee,hONEbody
  type(rdm_t),target::RDMd
  type(integ_t),target::INTEGd
  type(elag_t),target::ELAGd
@@ -289,7 +289,7 @@ subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,iprintints,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
  integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
- double precision,intent(in)::tolE_in
+ real(dp),intent(in)::tolE_in
 !arrays
 !Local variables ------------------------------
 !scalars
@@ -364,13 +364,13 @@ subroutine read_restart(RDMd,ELAGd,NO_COEF,ireadGAMMAS,ireadOCC,ireadCOEF,ireadF
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
+ real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
  integer::iunit,istat,intvar,intvar1,icount
- double precision::doubvar
- double precision,allocatable,dimension(:)::GAMMAS_in
- double precision,allocatable,dimension(:,:)::NO_COEF_in
+ real(dp)::doubvar
+ real(dp),allocatable,dimension(:)::GAMMAS_in
+ real(dp),allocatable,dimension(:,:)::NO_COEF_in
 !arrays
 !************************************************************************
 
@@ -509,9 +509,9 @@ subroutine occtogamma(RDMd)
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,iorb6,iorb7,iorb8
- double precision::argum,hole_iorb1 
+ real(dp)::argum,hole_iorb1 
 !arrays
- double precision,allocatable,dimension(:)::Holes
+ real(dp),allocatable,dimension(:)::Holes
 !************************************************************************
 
  allocate(Holes(RDMd%Npairs*(RDMd%Ncoupled-1)))

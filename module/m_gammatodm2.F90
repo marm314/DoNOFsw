@@ -59,16 +59,16 @@ subroutine gamma_to_2rdm(RDMd,GAMMAs)
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%Ngammas),intent(in)::GAMMAs
+ real(dp),dimension(RDMd%Ngammas),intent(in)::GAMMAs
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,iorb6,iorb7,iorb8
  integer::igamma,igamma1,igamma2
  integer::mult
- double precision::occ_orb,hole_orb,sqrt_occ_orb,sqrt_hole_orb,sqrthole_orb
+ real(dp)::occ_orb,hole_orb,sqrt_occ_orb,sqrt_hole_orb,sqrthole_orb
 !arrays
- double precision,allocatable,dimension(:)::Docc_gamma0,sqrt_occ,Dsqrt_occ_gamma0,hole
- double precision,allocatable,dimension(:,:)::Dsqrt_occ_gamma,Dhole_gamma,Docc_gamma 
+ real(dp),allocatable,dimension(:)::Docc_gamma0,sqrt_occ,Dsqrt_occ_gamma0,hole
+ real(dp),allocatable,dimension(:,:)::Dsqrt_occ_gamma,Dhole_gamma,Docc_gamma 
 !************************************************************************
 
 !-----------------------------------------------------------------------
@@ -279,10 +279,10 @@ subroutine dm2_hf(RDMd,Docc_gamma,DM2_IIII,DM2_J,DM2_K,DDM2_gamma_J,DDM2_gamma_K
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Docc_gamma
- double precision,dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
+ real(dp),dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Docc_gamma
+ real(dp),dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,igamma
@@ -357,11 +357,11 @@ subroutine dm2_mbb(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_IIII,DM2_J,DM2_K
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
- double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
- double precision,dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
+ real(dp),dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
+ real(dp),dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
+ real(dp),dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,igamma
@@ -436,11 +436,11 @@ subroutine dm2_pnof5(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_IIII,DM2_J,DM2
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
- double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
- double precision,dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
+ real(dp),dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
+ real(dp),dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
+ real(dp),dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,igamma
@@ -546,17 +546,17 @@ subroutine dm2_pnof7(RDMd,Docc_gamma,sqrt_occ,Dsqrt_occ_gamma,DM2_IIII,DM2_J,DM2
 !scalars
  type(rdm_t),intent(inout)::RDMd
 !arrays
- double precision,dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
- double precision,dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
- double precision,dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
- double precision,dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
+ real(dp),dimension(RDMd%NBF_occ),intent(in)::sqrt_occ
+ real(dp),dimension(RDMd%NBF_occ,RDMd%Ngammas),intent(in)::Dsqrt_occ_gamma,Docc_gamma
+ real(dp),dimension(RDMd%NBF_occ),intent(inout)::DM2_IIII
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ),intent(inout)::DM2_J,DM2_K
+ real(dp),dimension(RDMd%NBF_occ,RDMd%NBF_occ,RDMd%Ngammas),intent(inout)::DDM2_gamma_J,DDM2_gamma_K
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iorb4,iorb5,igamma
 !arrays
- double precision,allocatable,dimension(:)::FIs
- double precision,allocatable,dimension(:,:)::DFIs
+ real(dp),allocatable,dimension(:)::FIs
+ real(dp),allocatable,dimension(:,:)::DFIs
 !************************************************************************
 
 !-----------------------------------------------------------------------
