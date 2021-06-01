@@ -215,10 +215,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  enddo
  Vee=Energy-hONEbody
  write(*,'(a)') ' '
- write(*,'(a,f15.6,a,i6,a)') 'Final NOF energy= ',Energy+Vnn,' a.u. after ',iter,' global iter.'
- write(*,'(a,f15.6,a)') 'hCORE           = ',hONEbody,' a.u.'
- write(*,'(a,f15.6,a)') 'Vee             = ',Vee,' a.u.'
- write(*,'(a,f15.6,a)') 'Vnn             = ',Vnn,' a.u.'
+ write(*,'(a,f15.6,a,i6,a)') 'Final NOF energy = ',Energy+Vnn,' a.u. after ',iter,' global iter.'
+ write(*,'(a,f15.6,a)') 'hCORE            = ',hONEbody,' a.u.'
+ write(*,'(a,f15.6,a)') 'Vee              = ',Vee,' a.u.'
+ write(*,'(a,f15.6,a)') 'Vnn              = ',Vnn,' a.u.'
  write(*,'(a)') ' '
 
  ! Free all allocated RDMd, INTEGd, and ELAGd arrays
