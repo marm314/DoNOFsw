@@ -54,14 +54,23 @@ contains
 !! Ncoupled_in=Number of coupled orbitals per electron pair MINUS ONE
 !! Nbeta_elect_in=Number of beta electrons (N/2 for spin compensated systems)
 !! Nalpha_elect_in=Number of beta electrons (N/2 for spin compensated systems)
-!!
+!! iERItyp_in=Index organization used for ERIs ({ij|lk}, <ij|kl>, and (ik|jl))
+!! imethocc=Method used for OCC opt. CG (1) or L-BFGS (2)
+!! imethorb=Method used to opt. orbs. currently only F_diag (1)
+!! itermax=Max. number of global iters
+!! iprintdmn=Print opt. 1,2-DMNs 
+!! iprintints=Print ERIs in MO basis
+!! itolLambda=Tol for Lambda_pq - Lambda_qp* is 10**-itolLambda
+!! ndiis=Numb. of iter. used in orb. opt. to call DIIS
+!! tolE_in=Tolerance on energy convergence
+!! Vnn=Fixed nuclear-nuclear interaction energy
+!! NO_COEF=Guess NO coefs (probably HF ones)
+!! Overlap_in= Overlap of Atomic. orbs. matrix
+!! mo_ints=External subroutine that for given NO_COEF gives back hCORE and ERImol
+!! restart=Logical parameter to decided whether we do restart
+!! ireadGAMMAS, ireadOCC, ireadCOEF, ireadFdiag =Integer restart parameters to read files (true=1)
+!! 
 !! OUTPUT
-!! occ=Occupancies of the frozen + active orbitals
-!! DM2_J=DM2 elements that use J integrals 
-!! DM2_K=DM2 elements that use K integrals 
-!! DDM2_gamma_J=Derivative of the DM2 elements w.r.t. gamma that use J integrals 
-!! DDM2_gamma_K=Derivative of the DM2 elements w.r.t. gamma that use K integrals
-!! Docc_gamma=Derivative of the occupancies w.r.t. gamma
 !!
 !! PARENTS
 !!  
@@ -95,6 +104,10 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  type(elag_t),target::ELAGd
 !arrays
  character(len=10)::coef_file
+ character(8)::date
+ character(10)::time
+ character(5)::zone
+ integer,dimension(8)::tvalues
 !************************************************************************
 
  diagLpL=.true.; restart_param=.false.;
@@ -107,6 +120,12 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  write(*,'(a)') ' Developed by: Dr. M. Rodriguez-Mayorga '
  write(*,'(a)') ' '
  write(*,'(a)') '  First version: VU Amsterdam 2021 '
+ write(*,'(a)') ' '
+ call date_and_time(date=date,time=time,zone=zone,values=tvalues)
+ write(*,'(a)') ' Starting date and time'
+ write(*,'(a,a2,a,a2,a,a4,a,i2,a,i2,a,i2)') " ",date(7:8),"/",date(5:6),"/",date(1:4)," ",tvalues(5),":",&
+ & tvalues(6),":",tvalues(7)
+ write(*,'(a)') ' '
  write(*,'(a)') ' '
  write(*,'(a)') ' -------------------------------------------'
  write(*,'(a)') ' '
@@ -229,6 +248,11 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Write Footer
  write(*,'(a)') ' '
  write(*,'(a)') ' -------------------------------------------'
+ write(*,'(a)') ' '
+ call date_and_time(date=date,time=time,zone=zone,values=tvalues)
+ write(*,'(a)') ' Final date and time'
+ write(*,'(a,a2,a,a2,a,a4,a,i2,a,i2,a,i2)') " ",date(7:8),"/",date(5:6),"/",date(1:4)," ",tvalues(5),":",&
+ & tvalues(6),":",tvalues(7)
  write(*,'(a)') ' '
  write(*,'(a)') ' Normal termination of RUN-NOF module.'
  write(*,'(a)') ' '
