@@ -328,6 +328,27 @@ subroutine echo_input(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in
    write(*,'(a,i12)') ' PNOF7  version selected Istat     ',Ista_in
   endif
  endif
+ if(INOF_in==0) then
+  write(*,'(a)') ' Using Hartree-Fock approximation'
+  write(*,'(a)') ' L. Cohen and C. Frisberg, J. Chem. Phys, 65, 4234 (1976)'
+ elseif(INOF_in==-1) then
+  write(*,'(a)') ' Using Muller-Baerends-Buijse approximation'
+  write(*,'(a)') ' A.M.K. Muller, Phys. Lett., 105A, 446 (1984)'
+  write(*,'(a)') ' M.A. Buijse and E.J. Baerends, Mol. Phys., 100, 401 (2002)'
+ elseif(INOF_in==5) then
+  write(*,'(a)') ' Using PNOF5e approximation'
+  write(*,'(a)') ' M. Piris, X. Lopez, F. Ruiperez, J.M. Matxain, and J. M. Ugalde, J. Chem. Phys., 134, 164102 (2011)'
+ elseif(INOF_in==7.and.Ista_in==0) then
+  write(*,'(a)') ' Using PNOF7(-) approximation'
+  write(*,'(a)') ' M. Piris, Phys. Rev. Lett., 119, 063002 (2017)'
+  write(*,'(a)') ' I. Mitxelena, M. Rodriguez-Mayorga, and M. Piris, Eur. Phys. J. B, 91, 109 (2018)'
+ elseif(INOF_in==7.and.Ista_in==1) then
+  write(*,'(a)') ' Using PNOF7s approximation'
+  write(*,'(a)') ' M. Piris, Phys. Rev. A, 98, 022504 (2018)'
+  write(*,'(a)') ' M. Piris, Phys. Rev. A, 100, 032508 (2019)'
+ else
+  ! Nth
+ endif
  write(*,'(a,i12)') ' Numb. of basis functions          ',NBF_tot_in
  write(*,'(a,i12)') ' Numb. of occ orbitals             ',NBF_occ_in
  write(*,'(a,i12)') ' Numb. of frozen orbs (occ=2)      ',NBF_occ_in
