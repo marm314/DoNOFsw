@@ -29,6 +29,7 @@ module m_integd
 
  type,public :: integ_t
 
+ integer::iERItyp=0              ! Type of ERI notation to use DoNOF=0, Physicist = 1, Chemist = 2   
 ! arrays 
  real(dp),allocatable,dimension(:)::ERI_J,ERI_K
  real(dp),allocatable,dimension(:,:)::hCORE,Overlap
@@ -72,11 +73,11 @@ CONTAINS  !=====================================================================
 !!
 !! SOURCE
 
-subroutine integ_init(Integd,NBF_tot,NBF_occ,Overlap_in)
+subroutine integ_init(INTEGd,NBF_tot,NBF_occ,iERItyp_in,Overlap_in)
 !Arguments ------------------------------------
 !scalars
- integer,intent(in)::NBF_tot,NBF_occ
- type(integ_t),intent(inout)::Integd
+ integer,intent(in)::NBF_tot,NBF_occ,iERItyp_in
+ type(integ_t),intent(inout)::INTEGd
  real(dp),dimension(NBF_tot,NBF_tot),intent(in)::Overlap_in
 !Local variables ------------------------------
 !scalars
@@ -85,6 +86,7 @@ subroutine integ_init(Integd,NBF_tot,NBF_occ,Overlap_in)
 !arrays
 !************************************************************************
 
+ INTEGd%iERItyp=iERItyp_in
  NBF_ldiag=NBF_occ*(NBF_occ+1)/2
  ! Calculate memory needed
  totMEM=2*NBF_ldiag+2*NBF_tot*NBF_tot+NBF_tot*NBF_tot*NBF_tot*NBF_tot
@@ -98,10 +100,10 @@ subroutine integ_init(Integd,NBF_tot,NBF_occ,Overlap_in)
   write(*,'(a,f10.3,a)') 'Mem. required for storing INTEGd object ',totMEM,' Mb'
  endif
  ! Allocate arrays
- allocate(Integd%ERI_J(NBF_ldiag),Integd%ERI_K(NBF_ldiag))
- allocate(Integd%hCORE(NBF_tot,NBF_tot),Integd%Overlap(NBF_tot,NBF_tot))
- allocate(Integd%ERImol(NBF_tot,NBF_tot,NBF_tot,NBF_tot))
- Integd%Overlap=Overlap_in
+ allocate(INTEGd%ERI_J(NBF_ldiag),INTEGd%ERI_K(NBF_ldiag))
+ allocate(INTEGd%hCORE(NBF_tot,NBF_tot),INTEGd%Overlap(NBF_tot,NBF_tot))
+ allocate(INTEGd%ERImol(NBF_tot,NBF_tot,NBF_tot,NBF_tot))
+ INTEGd%Overlap=Overlap_in
 
 end subroutine integ_init
 !!***
@@ -124,20 +126,20 @@ end subroutine integ_init
 !!
 !! SOURCE
 
-subroutine integ_free(Integd)
+subroutine integ_free(INTEGd)
 !Arguments ------------------------------------
 !scalars
- class(integ_t),intent(inout)::Integd
+ class(integ_t),intent(inout)::INTEGd
 !Local variables ------------------------------
 !scalars
 !arrays
 !************************************************************************
 
- deallocate(Integd%hCORE) 
- deallocate(Integd%Overlap) 
- deallocate(Integd%ERImol) 
- deallocate(Integd%ERI_J) 
- deallocate(Integd%ERI_K) 
+ deallocate(INTEGd%hCORE) 
+ deallocate(INTEGd%Overlap) 
+ deallocate(INTEGd%ERImol) 
+ deallocate(INTEGd%ERI_J) 
+ deallocate(INTEGd%ERI_K) 
 
 end subroutine integ_free
 !!***
@@ -160,11 +162,11 @@ end subroutine integ_free
 !!
 !! SOURCE
 
-subroutine eri_to_eriJK(Integd,NBF_occ)
+subroutine eri_to_eriJK(INTEGd,NBF_occ)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::NBF_occ
- class(integ_t),intent(inout)::Integd
+ class(integ_t),intent(inout)::INTEGd
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2
@@ -174,8 +176,18 @@ subroutine eri_to_eriJK(Integd,NBF_occ)
  iorb2=1
  do iorb=1,NBF_occ
   do iorb1=1,iorb
-   Integd%ERI_J(iorb2)=Integd%ERImol(iorb,iorb1,iorb1,iorb) ! J in DoNOF
-   Integd%ERI_K(iorb2)=Integd%ERImol(iorb,iorb1,iorb,iorb1) ! K in DoNOF
+   if(INTEGd%iERItyp==0) then
+    INTEGd%ERI_J(iorb2)=INTEGd%ERImol(iorb,iorb1,iorb1,iorb) ! J in DoNOF {ij|ji}
+    INTEGd%ERI_K(iorb2)=INTEGd%ERImol(iorb,iorb1,iorb,iorb1) ! K in DoNOF {ij|ij}
+   elseif(INTEGd%iERItyp==1) then
+    INTEGd%ERI_J(iorb2)=INTEGd%ERImol(iorb,iorb1,iorb,iorb1) ! J in <ij|ij>
+    INTEGd%ERI_K(iorb2)=INTEGd%ERImol(iorb,iorb1,iorb1,iorb) ! K in <ij|ji>
+   elseif(INTEGd%iERItyp==2) then
+    INTEGd%ERI_J(iorb2)=INTEGd%ERImol(iorb,iorb,iorb1,iorb1) ! J in (ii|jj)
+    INTEGd%ERI_K(iorb2)=INTEGd%ERImol(iorb,iorb1,iorb1,iorb) ! K in (ij|ji)
+   else 
+    ! Nth
+   endif
    iorb2=iorb2+1
   enddo
  enddo
@@ -201,11 +213,11 @@ end subroutine eri_to_eriJK
 !!
 !! SOURCE
 
-subroutine print_ints(Integd,NBF_tot)
+subroutine print_ints(INTEGd,NBF_tot)
 !Arguments ------------------------------------
 !scalars
  integer,intent(in)::NBF_tot
- class(integ_t),intent(in)::Integd
+ class(integ_t),intent(in)::INTEGd
 !Local variables ------------------------------
 !scalars
  integer::iorb,iorb1,iorb2,iorb3,iunit=312
@@ -220,7 +232,15 @@ subroutine print_ints(Integd,NBF_tot)
    do iorb2=1,NBF_tot
     do iorb3=1,NBF_tot
      if(dabs(INTEGd%ERImol(iorb,iorb1,iorb2,iorb3))>tol8) then
-      write(iunit) iorb,iorb1,iorb,iorb1,INTEGd%ERImol(iorb,iorb1,iorb2,iorb3)
+      if(INTEGd%iERItyp==0) then
+       write(iunit) iorb,iorb1,iorb3,iorb2,INTEGd%ERImol(iorb,iorb1,iorb2,iorb3) ! DoNOF {ij|lk} 
+      elseif(INTEGd%iERItyp==1) then
+       write(iunit) iorb,iorb1,iorb2,iorb3,INTEGd%ERImol(iorb,iorb1,iorb2,iorb3) ! <ij|kl>
+      elseif(INTEGd%iERItyp==2) then
+       write(iunit) iorb,iorb2,iorb1,iorb3,INTEGd%ERImol(iorb,iorb1,iorb2,iorb3) ! (ik|jl)
+      else
+       ! Nth
+      endif
      endif
     enddo
    enddo

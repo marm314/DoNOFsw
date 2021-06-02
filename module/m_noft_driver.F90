@@ -70,7 +70,7 @@ contains
 !! SOURCE
 
 subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
-&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,imethocc,imethorb,itermax,iprintdmn,iprintints,&
+&  Ncoupled_in,Nbeta_elect_in,Nalpha_elect_in,iERItyp_in,imethocc,imethorb,itermax,iprintdmn,iprintints,&
 &  itolLambda,ndiis,tolE_in,Vnn,NO_COEF,Overlap_in,mo_ints,restart,ireadGAMMAS,ireadOCC,&
 &  ireadCOEF,ireadFdiag)
 !Arguments ------------------------------------
@@ -79,7 +79,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  logical,optional,intent(in)::restart
  integer,intent(in)::INOF_in,Ista_in,imethocc,imethorb,itermax,iprintdmn,iprintints,itolLambda,ndiis
  integer,intent(in)::NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in
- integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in
+ integer,intent(in)::Nbeta_elect_in,Nalpha_elect_in,iERItyp_in
  real(dp),intent(in)::Vnn,tolE_in
  external::mo_ints
 !arrays
@@ -136,7 +136,7 @@ subroutine run_noft(INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,&
  ! Initialize RDMd, INTEGd, and ELAGd objects.
  call rdm_init(RDMd,INOF_in,Ista_in,NBF_tot_in,NBF_occ_in,Nfrozen_in,Npairs_in,Ncoupled_in,&
 & Nbeta_elect_in,Nalpha_elect_in)
- call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ,Overlap_in)
+ call integ_init(INTEGd,RDMd%NBF_tot,RDMd%NBF_occ,iERItyp_in,Overlap_in)
  call elag_init(ELAGd,RDMd%NBF_tot,diagLpL,itolLambda,ndiis,imethorb,tolE_in)
 
  ! Check for the presence of restart files. Then, if they are available read them (only if required)
