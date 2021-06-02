@@ -69,7 +69,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
  real(dp),dimension(RDMd%NBF_tot,RDMd%NBF_tot),intent(inout)::NO_COEF
 !Local variables ------------------------------
 !scalars
- logical::convLambda,nogamma
+ logical::convLambda,nogamma,diddiis
  integer::icall
  real(dp)::sumdiff,maxdiff,Ediff,Energy_old
 !arrays
@@ -84,6 +84,9 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
  call mo_ints(NO_COEF,INTEGd%hCORE,INTEGd%ERImol)
  call INTEGd%eritoeriJK(RDMd%NBF_occ)
  do
+  ! If we used a DIIS step, do not stop after DIIS for small Energy dif.
+  diddiis=.false.
+
   ! Build Lambda matrix
   call ELAGd%build(RDMd,INTEGd,RDMd%DM2_J,RDMd%DM2_K)
 
@@ -107,7 +110,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
 
   ! Update NO_COEF
   if(imethod==1) then ! Build F matrix for iterative diagonalization
-   call diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) ! Build new NO_COEF and set icall=icall+1
+   call diagF_to_coef(iter,icall,maxdiff,diddiis,ELAGd,RDMd,NO_COEF) ! Build new NO_COEF and set icall=icall+1
   else                ! Use Newton method to produce new COEFs
    ! TODO
   endif
@@ -124,7 +127,7 @@ subroutine opt_orb(iter,imethod,ELAGd,RDMd,INTEGd,Vnn,Energy,NO_COEF,mo_ints)
 
   ! For this icall using the new NO_COEF (and fixed RDMs). Is the Energy still changing?
   Ediff=Energy_old-Energy
-  if((icall>1).and.(dabs(Ediff)<ELAGd%tolE)) then ! The energy is not changing anymore
+  if((icall>1).and.(dabs(Ediff)<ELAGd%tolE).and.(.not.diddiis)) then ! The energy is not changing anymore (not stopping for DIIS)
    write(*,'(a)') 'Lambda_pq - Lambda_qp* converged for small energy differences'
    exit
   endif

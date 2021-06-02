@@ -48,9 +48,10 @@ contains
 !!
 !! SOURCE
 
-subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF) 
+subroutine diagF_to_coef(iter,icall,maxdiff,diddiis,ELAGd,RDMd,NO_COEF) 
 !Arguments ------------------------------------
 !scalars
+ logical,intent(inout)::diddiis
  integer,intent(in)::iter
  integer,intent(inout)::icall
  real(dp),intent(in)::maxdiff
@@ -92,7 +93,7 @@ subroutine diagF_to_coef(iter,icall,maxdiff,ELAGd,RDMd,NO_COEF)
 
  ! Decide whether to do DIIS before diagonalizing
  if(maxdiff<thresholddiis.and.ELAGd%ndiis>0) then
-  call diis_F(RDMd,ELAGd,Eigvec)
+  call diis_F(diddiis,RDMd,ELAGd,Eigvec)
  endif 
 
  ! Prepare F_pq diagonalization (stored as Eigvec) and diagonalize it to produce the rot. matrix
@@ -180,9 +181,10 @@ end subroutine scale_F
 !!
 !! SOURCE
 
-subroutine diis_F(RDMd,ELAGd,Eigvec) 
+subroutine diis_F(diddiis,RDMd,ELAGd,Eigvec) 
 !Arguments ------------------------------------
 !scalars
+ logical,intent(inout)::diddiis
  type(elag_t),intent(inout)::ELAGd
  type(rdm_t),intent(in)::RDMd
 !arrays
@@ -204,6 +206,7 @@ subroutine diis_F(RDMd,ELAGd,Eigvec)
  enddo
  ELAGd%DIIS_mat(idiisp1,idiisp1) = 0.0d0
  if(ELAGd%idiis>ELAGd%ndiis) then
+  diddiis=.true.
   allocate(IPIV(ELAGd%ndiis_array))
   IPIV=0
   ELAGd%Coef_DIIS=0.0d0
