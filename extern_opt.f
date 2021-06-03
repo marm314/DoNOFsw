@@ -16,19 +16,20 @@ C-----------------------------------------------------------------------
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 
-      SUBROUTINE mo_ints(COEF,HCORE,ERImol)
+      SUBROUTINE mo_ints(NBFin,COEF,HCORE,ERImol)
       USE M_VARS
       USE PARCOM
       USE PARCOM2
-      real(dp),DIMENSION(NBF,NBF),intent(inout)::HCORE
-      real(dp),DIMENSION(NBF,NBF,NBF,NBF),intent(inout)::ERImol
-      real(dp),DIMENSION(NBF,NBF),intent(in)::COEF
+      INTEGER,intent(in)::NBFin
+      real(dp),DIMENSION(NBFin,NBFin),intent(inout)::HCORE
+      real(dp),DIMENSION(NBFin,NBFin,NBFin,NBFin),intent(inout)::ERImol
+      real(dp),DIMENSION(NBFin,NBFin),intent(in)::COEF
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       HCORE=0.0d0; ERImol=0.0d0;
       CALL HCOREc(COEF,HCORE)
-      CALL ERIC1c(ERImol,IJKL,XIJKL,COEF,NBF)
-      CALL ERIC23c(ERImol,COEF,NBF)
-      CALL ERIC4c(ERImol,COEF,NBF)
+      CALL ERIC1c(ERImol,IJKL,XIJKL,COEF,NBFin)
+      CALL ERIC23c(ERImol,COEF,NBFin)
+      CALL ERIC4c(ERImol,COEF,NBFin)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE mo_ints
 
