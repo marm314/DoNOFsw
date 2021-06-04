@@ -158,7 +158,7 @@ subroutine opt_occ(iter,imethod,RDMd,Vnn,Energy,hCORE,ERI_J,ERI_K)
    do
     call calc_E_occ(RDMd,GAMMAs,Energy,hCORE,ERI_J,ERI_K)
     call calc_Grad_occ(RDMd,Grad_GAMMAs,hCORE,ERI_J,ERI_K)
-    call LBFGS(RDMd%Ngammas,Mtosave,GAMMAs,Energy,Grad_GAMMAs,diagco,diag,info_print,eps,xtol,Work,iflag)
+    call LBFGS_INTERN(RDMd%Ngammas,Mtosave,GAMMAs,Energy,Grad_GAMMAs,diagco,diag,info_print,eps,xtol,Work,iflag)
     if(iflag<=0) exit
     icall=icall+1
 !  We allow at most 2000 evaluations of Energy and Gradient
