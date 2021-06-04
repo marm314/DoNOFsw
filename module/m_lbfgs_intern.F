@@ -1,4 +1,4 @@
-      module m_lbfgs 
+      module m_lbfgs_intern 
 
       USE m_vars
       INTEGER LP,MP

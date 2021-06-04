@@ -21,7 +21,7 @@ all: serial #serialg mpi
 
 serial:
 
-	$(F90) -o donof.x m_vars.F90 m_integd.F90 m_rdmd.F90 m_elag.F90 m_diagf.F90 m_cg.F90 m_lbfgs.F m_gammatodm2.F90 m_e_grad_occ.F90 m_optocc.F90 m_optorb.F90 m_noft_driver.F90 m_ccsd.f90 donof1.f mbpt.f extern_opt.f donof2.f90 gauss_legendre.f90 
+	$(F90) -o donof.x m_vars.F90 m_integd.F90 m_rdmd.F90 m_elag.F90 m_diagf.F90 m_cg.F90 m_lbfgs_intern.F m_gammatodm2.F90 m_e_grad_occ.F90 m_optocc.F90 m_optorb.F90 m_noft_driver.F90 m_ccsd.f90 donof1.f mbpt.f extern_opt.f donof2.f90 gauss_legendre.f90 
 
 ########################################################################
 
