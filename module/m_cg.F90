@@ -130,7 +130,7 @@ subroutine vdflt ( alg, lv, v )
 
   integer alg, lv
   real(dp) v(lv)
-  real(dp) rmdcon
+!  real(dp) rmdcon
   real(dp) machep, mepcrt, one, sqteps, three
   integer afctol, bias, cosmin, decfac, delta0, dfac, dinit, dltfdc
   integer dltfdj, dtinit, d0init, epslon, eta0, fuzz, huberc
@@ -262,8 +262,8 @@ subroutine sumit ( d, fx, g, iv, liv, lv, n, v, x)
   integer        temp1, w, x01, z
   real(dp) t
   real(dp) half, negone, one, onep2, zero
-  logical stopx
-  real(dp) dotprd, reldst, v2norm
+  !logical stopx
+  !real(dp) dotprd, reldst, v2norm
   integer cnvcod, dg, dgnorm, dinit, dstnrm, dst0, f, f0, fdif
   integer gthg, gtstep, g0, incfac, inith, irc, kagqt, lmat, lmax0
   integer lmaxs, mode, model, mxfcal, mxiter, nextv, nfcall, nfgcal
@@ -584,7 +584,7 @@ subroutine parck ( alg, d, iv, liv, lv, n, v )
   integer alg, liv, lv, n
   integer iv(liv)
   real(dp) d(n), v(lv)
-  real(dp) rmdcon
+!  real(dp) rmdcon
   integer max0
   integer i, ii, iv1, j, k, l, m, miv1, miv2, ndfalt, parsv1, pu
   integer ijmp, jlim(2), miniv(2), ndflt(2)
@@ -1092,7 +1092,7 @@ function v2norm ( p, x ) result(vv2norm)
   real(dp) r, scale
   real(dp), save :: sqteta = 0.0D+00
   real(dp) t, xi
-  real(dp) rmdcon
+!  real(dp) rmdcon
   real(dp) vv2norm
 
   vv2norm = 0.0D+00
@@ -1375,7 +1375,7 @@ subroutine livmul ( n, x, l, y )
 
   real(dp) x(n), l(*), y(n)
 !  external dotprd
-  real(dp) dotprd
+!  real(dp) dotprd
   integer i, j, k
   real(dp) t
 
@@ -1670,7 +1670,7 @@ subroutine dbdog ( dig, lv, n, nwtstp, step, v )
 
   real(dp) dig(n), nwtstp(n), step(n), v(lv)
 !  external dotprd, v2norm
-  real(dp) dotprd, v2norm
+!  real(dp) dotprd, v2norm
   real(dp) cfact, cnorm, ctrnwt, ghinvg, femnsq, gnorm
   real(dp) nwtnrm, relax, rlambd, t, t1, t2
   real(dp) half, two
@@ -1776,7 +1776,7 @@ function dotprd ( p, x, y ) result(dtpr)
   integer p
   integer i
   real(dp) dtpr
-  real(dp) rmdcon
+!  real(dp) rmdcon
   real(dp), save :: sqteta = 0.0D+00
   real(dp) t
   real(dp) x(p)
@@ -2416,7 +2416,7 @@ subroutine wzbfgs ( l, n, s, w, y, z )
 
   integer n
 
-  real(dp) dotprd
+!  real(dp) dotprd
   real(dp) cs
   real(dp) cy
   real(dp), parameter :: eps = 0.1D+00
