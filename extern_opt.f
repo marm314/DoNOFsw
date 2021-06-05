@@ -8,13 +8,16 @@
       real(dp)::tolE=1.0d-8,tol_dif_Lambda=1.0d-4
       real(dp),DIMENSION(NBF,NBF)::COEF
       real(dp)::Enof
+      real(dp),allocatable,dimension(:,:)::occup
       EXTERNAL::mo_ints
 C-----------------------------------------------------------------------
+      allocate(occup(NBF,1))
+      occup=0.0d0
       call run_noft(INOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ie,ICGMETHOD,
      &  1,itermax,1,1,NTHRESHL,NDIIS,Enof,tolE,EN,COEF,OVERLAP2,
-     &  mo_ints,restart=LRESTART,ireadGAMMAS=1,ireadOCC=1,ireadCOEF=1,
-     &  ireadFdiag=1)
-      write(*,*) 'OPT ENERGY IN DONOF ',Enof
+     &  occup(:,1),mo_ints,restart=LRESTART,ireadGAMMAS=1,ireadOCC=1,
+     &  ireadCOEF=1,ireadFdiag=1)
+      deallocate(occup)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 
