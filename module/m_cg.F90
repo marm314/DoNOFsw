@@ -25,7 +25,7 @@ subroutine deflt ( alg, iv, liv, lv, v )
   integer alg
   integer iv(liv)
   real(dp) v(lv)
-  external vdflt
+  !external vdflt
   integer miv, mv
   integer miniv(2), minv(2)
   integer algsav, covprt, covreq, dtype, hc, ierr, inith, inits
