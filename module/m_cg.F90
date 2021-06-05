@@ -3,6 +3,8 @@ module m_cg
 use m_vars
 implicit none
 
+private::vdflt,parck,itsum,v2norm,rmdcon,lvmul,livmul,litvmu,ltvmul,lupdat,dbdog,dotprd,stopx,vaxpy,reldst,assst,wzbfgs
+
 public:: deflt,sumit
 
 contains
@@ -112,7 +114,7 @@ subroutine deflt ( alg, iv, liv, lv, v )
   end if
 
   return
-end
+end subroutine deflt
 
 subroutine vdflt ( alg, lv, v )
 !
@@ -194,7 +196,7 @@ subroutine vdflt ( alg, lv, v )
   end if
 
   return
-end
+end subroutine vdflt
 
 subroutine sumit ( d, fx, g, iv, liv, lv, n, v, x)
 !
@@ -568,7 +570,7 @@ subroutine sumit ( d, fx, g, iv, liv, lv, n, v, x)
  300  call itsum(d, g, iv, liv, lv, n, v, x)
 
   return
-end
+end subroutine sumit 
 
 subroutine parck ( alg, d, iv, liv, lv, n, v )
 !
@@ -848,7 +850,7 @@ subroutine parck ( alg, d, iv, liv, lv, n, v )
  350  format(/10h /// alg =,i5,15h must be 1 or 2)
 
   return
-end
+end subroutine parck
 
 subroutine itsum ( d, g, iv, liv, lv, p, v, x )
 
@@ -1070,7 +1072,7 @@ subroutine itsum ( d, g, iv, liv, lv, p, v, x )
  999  continue
 
   return
-end
+end subroutine itsum
 
 function v2norm ( p, x )
 !
@@ -1145,7 +1147,7 @@ function v2norm ( p, x )
   v2norm = scale * sqrt(t)
 
   return
-end
+end function v2norm
 
 function rmdcon ( k )
 !
@@ -1358,7 +1360,7 @@ subroutine lvmul ( n, x, l, y )
   end do
 
   return
-end
+end subroutine lvmul
 
 subroutine livmul ( n, x, l, y )
 !
@@ -1403,7 +1405,7 @@ subroutine livmul ( n, x, l, y )
   end do
 
   return
-end
+end subroutine livmul
 
 subroutine litvmu ( n, x, l, y )
 !
@@ -1444,7 +1446,7 @@ subroutine litvmu ( n, x, l, y )
   end do
 
   return
-end
+end subroutine litvmu
 
 subroutine ltvmul ( n, x, l, y )
 !
@@ -1473,7 +1475,7 @@ subroutine ltvmul ( n, x, l, y )
   end do
 
   return
-end
+end subroutine ltvmul
 
 subroutine lupdat ( beta, gamma, l, lambda, lplus, n, w, z )
 !
@@ -1592,7 +1594,7 @@ subroutine lupdat ( beta, gamma, l, lambda, lplus, n, w, z )
   end do
 
   return
-end
+end subroutine lupdat
 
 subroutine dbdog ( dig, lv, n, nwtstp, step, v )
 !
@@ -1766,7 +1768,7 @@ subroutine dbdog ( dig, lv, n, nwtstp, step, v )
   step(1:n) = t1 * dig(1:n) + t2 * nwtstp(1:n)
 
   return
-end
+end subroutine dbdog
 
 function dotprd ( p, x, y )
 !
@@ -1802,7 +1804,7 @@ function dotprd ( p, x, y )
   end do
 
   return
-end
+end function dotprd
 
 function stopx ( )
 !
@@ -1825,7 +1827,7 @@ function stopx ( )
   stopx = .false.
 
   return
-end
+end function stopx
 
 subroutine vaxpy ( p, w, a, x, y )
 !
@@ -1849,7 +1851,7 @@ subroutine vaxpy ( p, w, a, x, y )
   w(1:p) = a * x(1:p) + y(1:p)
 
   return
-end
+end subroutine vaxpy
 
 function reldst ( p, d, x, x0 )
 !
@@ -1876,7 +1878,7 @@ function reldst ( p, d, x, x0 )
   if ( xmax > 0.0D+00 ) reldst = emax / xmax
 
   return
-end
+end function reldst
 
 subroutine assst ( iv, liv, lv, v )
 !
@@ -2383,7 +2385,7 @@ subroutine assst ( iv, liv, lv, v )
  290  if (-v(nreduc) <= v(rfctol) * abs(v(f0))) iv(irc) = 11
 
   return
-end
+end subroutine assst
 
 subroutine wzbfgs ( l, n, s, w, y, z )
 !
@@ -2452,6 +2454,6 @@ subroutine wzbfgs ( l, n, s, w, y, z )
   z(1:n) = cy * z(1:n) - cs * w(1:n)
 
   return
-end
+end subroutine wzbfgs
 
 end module m_cg
