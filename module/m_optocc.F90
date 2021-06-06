@@ -16,7 +16,7 @@
 !! SOURCE
 module m_optocc
 
- use m_output
+ use m_nofoutput
  use m_rdmd
  use m_cg
  use m_lbfgs_intern

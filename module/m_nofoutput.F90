@@ -11,7 +11,7 @@
 !!
 !! SOURCE
 
-module m_output
+module m_nofoutput
 
  implicit none
  
@@ -126,5 +126,5 @@ subroutine close_output()
 end subroutine close_output
 !!***
 
-end module m_output
+end module m_nofoutput
 !!***

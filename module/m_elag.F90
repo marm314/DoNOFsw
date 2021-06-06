@@ -20,7 +20,7 @@
 
 module m_elag
 
- use m_output
+ use m_nofoutput
  use m_rdmd
  use m_integd
 

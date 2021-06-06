@@ -15,7 +15,7 @@
 
 module m_rdmd 
 
- use m_output
+ use m_nofoutput
  use m_vars
  implicit none
 

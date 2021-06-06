@@ -16,7 +16,7 @@
 !! SOURCE
 module m_optorb
 
- use m_output
+ use m_nofoutput
  use m_rdmd
  use m_integd
  use m_elag
