@@ -1,4 +1,5 @@
 all:
+	gfortran -c m_output.F90
 	gfortran -c m_vars.F90
 	gfortran -c m_cg.F90
 	gfortran -w -ffixed-form -fd-lines-as-comments -c m_lbfgs_intern.F

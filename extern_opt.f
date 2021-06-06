@@ -9,15 +9,19 @@
       real(dp),DIMENSION(NBF,NBF)::COEF
       real(dp)::Enof
       real(dp),allocatable,dimension(:,:)::occup
+      character(len=100)::ofile_name
       EXTERNAL::mo_ints
 C-----------------------------------------------------------------------
+      write(*,'(a)') 'Entering external RUN_NOFT optimization'
       allocate(occup(NBF,1))
       occup=0.0d0
+      ofile_name='res.noft'
       call run_noft(INOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ie,ICGMETHOD,
      &  1,itermax,1,1,NTHRESHL,NDIIS,Enof,tolE,EN,COEF,OVERLAP2,
-     &  occup(:,1),mo_ints,restart=LRESTART,ireadGAMMAS=1,ireadOCC=1,
-     &  ireadCOEF=1,ireadFdiag=1)
+     &  occup(:,1),mo_ints,ofile_name,restart=LRESTART,ireadGAMMAS=1,
+     &  ireadOCC=1,ireadCOEF=1,ireadFdiag=1)
       deallocate(occup)
+      write(*,'(a,f12.6)') 'Optimized energy',Enof
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 
