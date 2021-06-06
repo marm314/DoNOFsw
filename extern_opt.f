@@ -25,11 +25,11 @@ C-----------------------------------------------------------------------
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       END SUBROUTINE EXTERN_OPT
 
-      SUBROUTINE mo_ints(NBFin,COEF,HCORE,ERImol)
+      SUBROUTINE mo_ints(NBFin,NBFin2,COEF,HCORE,ERImol)
       USE M_VARS
       USE PARCOM
       USE PARCOM2
-      INTEGER,intent(in)::NBFin
+      INTEGER,intent(in)::NBFin,NBFin2
       real(dp),DIMENSION(NBFin,NBFin),intent(inout)::HCORE
       real(dp),DIMENSION(NBFin,NBFin,NBFin,NBFin),intent(inout)::ERImol
       real(dp),DIMENSION(NBFin,NBFin),intent(in)::COEF
