@@ -69,7 +69,7 @@ C-----------------------------------------------------------------------
       real(dp),ALLOCATABLE,DIMENSION(:,:,:)::QD
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
       ALLOCATE (G(NBF,NBF5),QD(NBF,NBF,NBF),nCK12(NBF5,NBF5))
-      nCK12=-CK12
+      nCK12=-CK12 ! In the module the 2-RDM has its sign!
       CALL ENERGY1r(AHCORE2,IJKL,XIJKL,QD,COEF,RO,CJ12,nCK12,ELAG,
      &              DIPN,ADIPx,ADIPy,ADIPz,G)
       DEALLOCATE(G,QD)
