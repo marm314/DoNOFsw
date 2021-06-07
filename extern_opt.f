@@ -4,7 +4,7 @@
       USE PARCOM2
       use m_noft_driver
       LOGICAL::LRESTART
-      INTEGER::itermax=1000,ie=0
+      INTEGER::itermax=1000,ie=0,nprt=0
       real(dp)::tolE=1.0d-8,tol_dif_Lambda=1.0d-4
       real(dp),DIMENSION(NBF,NBF)::COEF
       real(dp)::Enof
@@ -17,9 +17,10 @@ C-----------------------------------------------------------------------
       occup=0.0d0
       ofile_name='res.noft'
       call run_noft(INOF,Ista,NBF,NBF5,NO1,NDOC,NCWO,NB,NA,ie,ICGMETHOD,
-     &  1,itermax,1,1,NTHRESHL,NDIIS,Enof,tolE,EN,COEF,OVERLAP2,
-     &  occup(:,1),mo_ints,ofile_name,restart=LRESTART,ireadGAMMAS=1,
-     &  ireadOCC=1,ireadCOEF=1,ireadFdiag=1)
+     &  1,itermax,nprt,nprt,NTHRESHL,NDIIS,Enof,tolE,EN,COEF,OVERLAP2,
+     &  occup(:,1),mo_ints,ofile_name)
+!     &  occup(:,1),mo_ints,ofile_name,restart=LRESTART,ireadGAMMAS=1,
+!     &  ireadOCC=1,ireadCOEF=1,ireadFdiag=1)
       deallocate(occup)
       write(*,'(a,f12.6)') 'Optimized energy',Enof
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -56,19 +57,21 @@ C-----------------------------------------------------------------------
 C-----------------------------------------------------------------------
       END SUBROUTINE HCOREc
 
-!      SUBROUTINE elag_extern(COEF,RO,CJ12,CK12,ELAG)
-!      USE PARCOM
-!      USE PARCOM2
-!      real(dp),DIMENSION(3)::DIPN
-!      real(dp),DIMENSION(NBF5)::RO
-!      real(dp),DIMENSION(NBF,NBF)::COEF,ELAG
-!      real(dp),DIMENSION(NBF5,NBF5)::CJ12,CK12
-!      real(dp),ALLOCATABLE,DIMENSION(:,:)::G
-!      real(dp),ALLOCATABLE,DIMENSION(:,:,:)::QD
+      SUBROUTINE elag_extern(COEF,RO,CJ12,CK12,ELAG)
+      USE M_VARS
+      USE PARCOM
+      USE PARCOM2
+      real(dp),DIMENSION(3)::DIPN
+      real(dp),DIMENSION(NBF5)::RO
+      real(dp),DIMENSION(NBF,NBF)::COEF,ELAG
+      real(dp),DIMENSION(NBF5,NBF5)::CJ12,CK12
+      real(dp),ALLOCATABLE,DIMENSION(:,:)::G,nCK12
+      real(dp),ALLOCATABLE,DIMENSION(:,:,:)::QD
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!      ALLOCATE (G(NBF,NBF5),QD(NBF,NBF,NBF))
-!      CALL ENERGY1r(AHCORE2,IJKL,XIJKL,QD,COEF,RO,CJ12,CK12,ELAG,
-!     &              DIPN,ADIPx,ADIPy,ADIPz,G)
-!      DEALLOCATE(G,QD)
+      ALLOCATE (G(NBF,NBF5),QD(NBF,NBF,NBF),nCK12(NBF5,NBF5))
+      nCK12=-CK12
+      CALL ENERGY1r(AHCORE2,IJKL,XIJKL,QD,COEF,RO,CJ12,nCK12,ELAG,
+     &              DIPN,ADIPx,ADIPy,ADIPz,G)
+      DEALLOCATE(G,QD)
 C- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-!      END SUBROUTINE elag_extern
+      END SUBROUTINE elag_extern
