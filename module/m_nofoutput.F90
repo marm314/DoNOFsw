@@ -17,7 +17,7 @@ module m_nofoutput
  
  character(len=100)::output_file
 
- public::init_output,write_output,write_header
+ public::init_output,write_output,write_header,write_footer
 
 contains
 
