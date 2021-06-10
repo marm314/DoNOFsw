@@ -15,4 +15,4 @@ all:
 clean:
 	/bin/rm -rf *.o *.mod
 tar:
-	tar -cvf module_noft.tar *F90 *F
+	tar -cvf module_noft.tar *F90 *F README
